@@ -55,7 +55,7 @@ struct SavedRoutesView: View {
                         .rounded(16, weight: .semibold)
                         .foregroundStyle(.white)
                         .lineLimit(1)
-                    Text("\(route.distanceKm.oneDecimal) km")
+                    Text("≈ \(route.distanceKm.oneDecimal) km")
                         .rounded(13)
                         .foregroundStyle(Color.aigosTextSecondary)
                 }

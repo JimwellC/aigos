@@ -85,7 +85,7 @@ struct HistoryView: View {
             // Labeled stats row (replaces the bare bar chart).
             HStack(spacing: Space.sm) {
                 statBlock(label: "Trips", value: "\(count)")
-                statBlock(label: "Distance", value: "\(Int(km.rounded())) km")
+                statBlock(label: "Distance", value: "≈ \(Int(km.rounded())) km")
                 statBlock(label: "Avg / trip", value: "PHP \(Int(avg.rounded()))")
             }
 

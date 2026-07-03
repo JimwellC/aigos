@@ -21,7 +21,7 @@ struct TripRowView: View {
                     .font(.system(size: 16, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white)
                     .lineLimit(1)
-                Text("\(trip.distanceKm.oneDecimal) km · \(trip.vehicleName) · \(trip.adjustedLitres.oneDecimal) L")
+                Text("≈ \(trip.distanceKm.oneDecimal) km · \(trip.vehicleName) · \(trip.adjustedLitres.oneDecimal) L")
                     .font(.system(size: 13, weight: .medium, design: .rounded))
                     .foregroundStyle(Color.white.opacity(0.65))
                     .lineLimit(1)

@@ -25,7 +25,7 @@ struct ResultCard: View {
             DashedDivider()
 
             VStack(spacing: 12) {
-                infoRow("map.fill", "Distance", "\(estimate.distanceKm.oneDecimal) km")
+                infoRow("map.fill", "Distance", "≈ \(estimate.distanceKm.oneDecimal) km")
                 infoRow("drop.fill", "Base fuel",
                         "\(estimate.baseLitres.oneDecimal) L",
                         detail: "at \(fuelUnit.format(kmL: estimate.baseEfficiencyKmL))")

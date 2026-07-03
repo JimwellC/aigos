@@ -268,7 +268,7 @@ struct TalkToAigosView: View {
             rushHour: query.rushHour,
             load: query.load
         )
-        let text = "\(query.origin.capitalized) → \(query.destination.capitalized) is about \(route.distanceKm.oneDecimal) km\(condText). In your \(vehicle.name), that's roughly \(est.estimatedCost.phpString)."
+        let text = "\(query.origin.capitalized) → \(query.destination.capitalized) is ≈\(route.distanceKm.oneDecimal) km\(condText). In your \(vehicle.name), that's roughly \(est.estimatedCost.phpString)."
         return ChatMessage(role: .aigos, text: text, result: ChatResult(draft: draft, costText: est.estimatedCost.phpString))
     }
 }
