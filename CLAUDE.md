@@ -69,6 +69,8 @@ Per-vehicle, set via the "Talk to aigos" hybrid interview (mascot chat bubble + 
 
 "Talk to aigos" (`Views/TalkToAigos/`) answers plain-English trip queries. Entry point is the chat button in `CalculateView`'s header. Pipeline: `TripQueryParser.parse` extracts origin/destination/vehicle (reusing the gazetteer via `GazetteerRouteResolver.lookup`/`isPlace`/`isPlaceKey`) → `CalculationEngine` estimates → the reply offers "Open in Calculator", which hands a `CalculatorDraft` to `CalculateView` for the real (saved + learning) calc. `AIAvailability` is the gate (`#if canImport(FoundationModels)` for the real system model, else offline parser) and drives the header badge + `AIGateView`. **The core app — and Talk to aigos — must work 100% without Apple Intelligence on any iOS 17+ device** (the parser is deterministic and offline); AI only enhances understanding when present.
 
+**Conversational follow-ups:** the chat keeps `lastQuery`. A message with no route of its own but with condition hints / a follow-up phrase / a vehicle change (e.g. "same trip but it's EDSA on a Friday", "what about with cargo", "in my truck") is routed through `FollowUp.merge` (in `Services/FollowUp.swift`), which layers the new `TripHints` (from `TripQueryParser.hints(from:)`) onto the previous trip — unspecified fields keep their prior value, so conditions accumulate.
+
 ### Routing (highest technical risk — prototype first)
 
 OSRM + a bundled Philippine OpenStreetMap dataset, fully offline, zero per-call cost. Target the compressed bundle under 100MB; if it exceeds the limit, fall back to manual distance entry (or App Store on-demand resources). Prototype and de-risk this before building anything else in Sprint 1.

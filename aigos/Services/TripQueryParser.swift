@@ -22,6 +22,16 @@ struct TripQuery: Equatable {
     var load: VehicleLoad?            // "with cargo" / "full load" / passengers
 }
 
+/// Trip-condition hints detected in free text (no route required).
+struct TripHints: Equatable {
+    var traffic: TrafficCondition?
+    var acOn: Bool?
+    var rushHour: Bool?
+    var load: VehicleLoad?
+
+    var hasAny: Bool { traffic != nil || acOn != nil || rushHour != nil || load != nil }
+}
+
 enum TripQueryParser {
     private static let stopwords: Set<String> = [
         "how", "much", "many", "will", "would", "it", "cost", "costs", "to",
@@ -95,16 +105,18 @@ enum TripQueryParser {
         return nil
     }
 
-    private struct Hints { var traffic: TrafficCondition?; var acOn: Bool?; var rushHour: Bool?; var load: VehicleLoad? }
-
-    private static func makeQuery(_ origin: String, _ destination: String, _ vehicle: String?, _ h: Hints) -> TripQuery {
+    private static func makeQuery(_ origin: String, _ destination: String, _ vehicle: String?, _ h: TripHints) -> TripQuery {
         TripQuery(origin: origin, destination: destination, vehicleName: vehicle,
                   traffic: h.traffic, acOn: h.acOn, rushHour: h.rushHour, load: h.load)
     }
 
+    /// Detect trip-condition hints from arbitrary text — used for follow-up
+    /// messages like "same trip but with heavy traffic".
+    static func hints(from text: String) -> TripHints { detectHints(text.lowercased()) }
+
     /// Detect trip-condition hints from the raw query (traffic, rush hour, AC, load).
-    private static func detectHints(_ text: String) -> Hints {
-        var h = Hints()
+    private static func detectHints(_ text: String) -> TripHints {
+        var h = TripHints()
 
         // Traffic — check the most severe phrases first. "EDSA" implies standstill.
         if text.contains("standstill") || text.contains("bumper") || text.contains("gridlock")

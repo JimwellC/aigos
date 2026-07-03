@@ -22,6 +22,7 @@ struct TalkToAigosView: View {
     @State private var messages: [ChatMessage] = []
     @State private var input = ""
     @State private var showingGate = false
+    @State private var lastQuery: TripQuery?   // for conversational follow-ups
 
     private let suggestions = [
         "Manila to Batangas",
@@ -151,7 +152,10 @@ struct TalkToAigosView: View {
         ))
         #if DEBUG
         if let q = DebugSupport.talkQuery {
-            DispatchQueue.main.async { send(q) }
+            DispatchQueue.main.async {
+                send(q)
+                if let q2 = DebugSupport.talkQuery2 { send(q2) }
+            }
         }
         #endif
     }
@@ -166,12 +170,36 @@ struct TalkToAigosView: View {
     }
 
     private func reply(to text: String) -> ChatMessage {
-        guard let query = TripQueryParser.parse(text, vehicles: vehicles, personalPlaces: personalPlaces) else {
-            return ChatMessage(
-                role: .aigos,
-                text: "I couldn't spot a route in that. Try something like “Manila to Batangas”, or set your Home and Office in Settings and ask “home to office”."
-            )
+        // A full trip in the message starts (and remembers) a new context.
+        if let query = TripQueryParser.parse(text, vehicles: vehicles, personalPlaces: personalPlaces) {
+            lastQuery = query
+            return estimate(for: query)
         }
+        // Otherwise treat it as a follow-up modifying the previous trip.
+        if let prev = lastQuery {
+            let hints = TripQueryParser.hints(from: text)
+            let vehicleName = matchedVehicleName(in: text)
+            if FollowUp.isFollowUp(text, hints: hints, vehicleChanged: vehicleName != nil) {
+                let merged = FollowUp.merge(previous: prev, hints: hints, vehicleName: vehicleName)
+                lastQuery = merged
+                return estimate(for: merged)
+            }
+        }
+        return ChatMessage(
+            role: .aigos,
+            text: "I couldn't spot a route in that. Try “Manila to Batangas”, or set your Home and Office in Settings and ask “home to office”."
+        )
+    }
+
+    /// Match a vehicle named anywhere in the text (for "same trip in my truck").
+    private func matchedVehicleName(in text: String) -> String? {
+        let lower = text.lowercased()
+        return vehicles.first { v in
+            v.name.lowercased().split(separator: " ").contains { $0.count >= 3 && lower.contains($0) }
+        }?.name
+    }
+
+    private func estimate(for query: TripQuery) -> ChatMessage {
         // Personal shortcuts (Home/Office/…) resolve before the gazetteer.
         guard let route = PlaceResolver.route(from: query.origin, to: query.destination, personalPlaces: personalPlaces) else {
             return ChatMessage(role: .aigos, text: "I don't know one of those places yet. Try a nearby city or type the distance in the calculator.")
@@ -193,7 +221,7 @@ struct TalkToAigosView: View {
         let load = query.load ?? .light
 
         let price = PriceService.price(for: vehicle.fuelType, in: context)
-        let estimate = CalculationEngine.estimate(
+        let est = CalculationEngine.estimate(
             distanceKm: route.distanceKm,
             baseEfficiencyKmL: vehicle.efficiencyKmL,
             fuelPricePerLitre: price,
@@ -223,8 +251,8 @@ struct TalkToAigosView: View {
             rushHour: query.rushHour,
             load: query.load
         )
-        let text = "\(query.origin.capitalized) → \(query.destination.capitalized) is about \(route.distanceKm.oneDecimal) km\(condText). In your \(vehicle.name), that's roughly \(estimate.estimatedCost.phpString)."
-        return ChatMessage(role: .aigos, text: text, result: ChatResult(draft: draft, costText: estimate.estimatedCost.phpString))
+        let text = "\(query.origin.capitalized) → \(query.destination.capitalized) is about \(route.distanceKm.oneDecimal) km\(condText). In your \(vehicle.name), that's roughly \(est.estimatedCost.phpString)."
+        return ChatMessage(role: .aigos, text: text, result: ChatResult(draft: draft, costText: est.estimatedCost.phpString))
     }
 }
 

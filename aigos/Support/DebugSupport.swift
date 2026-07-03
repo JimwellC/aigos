@@ -31,6 +31,13 @@ enum DebugSupport {
         return args[i + 1]
     }
 
+    /// A follow-up message sent after -talkQuery, to exercise conversational context.
+    static var talkQuery2: String? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-talkQuery2"), i + 1 < args.count else { return nil }
+        return args[i + 1]
+    }
+
     static var initialTab: Tab? {
         let args = ProcessInfo.processInfo.arguments
         guard let i = args.firstIndex(of: "-tab"), i + 1 < args.count else { return nil }
