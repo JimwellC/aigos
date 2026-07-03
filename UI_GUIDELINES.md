@@ -34,9 +34,10 @@ let bgGradientTop: Color = Color(hex: "#F5C97A")   // Gradient start (top)
 let bgGradientBottom: Color = Color(hex: "#C4793A") // Gradient end (bottom)
 
 // Glass / Card
-let glassWhite: Color = Color.white.opacity(0.20)  // Card fill (higher contrast)
+// Cards use .ultraThinMaterial as a blur base + a white 0.12 tint on top.
+let glassWhite: Color = Color.white.opacity(0.20)  // Card tint (higher contrast)
 let glassBorder: Color = Color.white.opacity(0.45) // Card stroke, lineWidth 1.5
-let glassShadow: Color = Color.black.opacity(0.18) // Card shadow, radius 16
+let glassShadow: Color = Color.black.opacity(0.25) // Card shadow, radius 20, y 8
 
 // Text
 let textPrimary: Color = Color.white               // On gradient backgrounds

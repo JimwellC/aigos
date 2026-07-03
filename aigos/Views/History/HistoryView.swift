@@ -18,7 +18,7 @@ struct HistoryView: View {
 
     var body: some View {
         ZStack {
-            AigosBackground()
+            AigosBackground(variant: 1)
 
             if trips.isEmpty {
                 emptyState
@@ -28,6 +28,7 @@ struct HistoryView: View {
                         Text("HISTORY").screenTitle()
 
                         summaryCard
+                        if trips.count >= 2 { spendChart }
 
                         ForEach(months) { group in
                             VStack(alignment: .leading, spacing: Space.sm) {
@@ -64,25 +65,22 @@ struct HistoryView: View {
         let delta = this - last
         let hasLast = last > 0
 
+        let count = trips.filter { Calendar.current.isDate($0.calculatedAt, equalTo: Date(), toGranularity: .month) }.count
+
         return VStack(alignment: .leading, spacing: Space.sm) {
-            Text("THIS MONTH")
-                .rounded(12, weight: .medium)
-                .kerning(1.5)
-                .foregroundStyle(Color.aigosTextSecondary)
+            FieldLabel("This month")
             Text(this.phpString)
-                .font(.system(size: 40, weight: .bold, design: .rounded))
+                .font(.system(size: 44, weight: .black, design: .rounded))
                 .foregroundStyle(.white)
-            if hasLast {
-                HStack(spacing: 6) {
-                    Image(systemName: delta >= 0 ? "arrow.up.right" : "arrow.down.right")
-                    Text("\(abs(delta).phpString) vs last month")
-                        .rounded(14, weight: .medium)
+                .minimumScaleFactor(0.6)
+                .lineLimit(1)
+            HStack(spacing: Space.sm) {
+                statPill(icon: "car.fill", text: "\(count) trip\(count == 1 ? "" : "s")", tint: .white.opacity(0.85))
+                if hasLast {
+                    statPill(icon: delta >= 0 ? "arrow.up.right" : "arrow.down.right",
+                             text: "\(abs(delta).phpString) vs last month",
+                             tint: delta >= 0 ? Color.aigosAmber : Color(hex: "#8FE39B"))
                 }
-                .foregroundStyle(delta >= 0 ? Color.aigosAmber : Color(hex: "#8FE39B"))
-            } else {
-                Text("Your spending trend appears once you have a prior month.")
-                    .rounded(13)
-                    .foregroundStyle(Color.aigosTextTertiary)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -90,20 +88,43 @@ struct HistoryView: View {
         .glassCard(cornerRadius: Radius.lg)
     }
 
-    private var emptyState: some View {
-        VStack(spacing: Space.md) {
-            Image(systemName: "clock.badge.questionmark")
-                .font(.system(size: 52))
-                .foregroundStyle(.white.opacity(0.8))
-            Text("No trips yet")
-                .rounded(22, weight: .semibold)
-                .foregroundStyle(.white)
-            Text("Your calculations are saved here automatically.")
-                .rounded(15)
-                .foregroundStyle(Color.aigosTextSecondary)
-                .multilineTextAlignment(.center)
+    private func statPill(icon: String, text: String, tint: Color) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: icon).font(.system(size: 11, weight: .bold))
+            Text(text).font(.system(size: 13, weight: .semibold, design: .rounded))
         }
-        .padding(Space.xl)
+        .foregroundStyle(tint)
+        .padding(.horizontal, 10).padding(.vertical, 6)
+        .background(Capsule().fill(Color.white.opacity(0.14)))
+    }
+
+    /// Amber bar chart of the most recent trips' spend.
+    private var spendChart: some View {
+        let recent = Array(trips.prefix(8).reversed())
+        let maxCost = recent.map(\.totalCostPHP).max() ?? 1
+        return VStack(alignment: .leading, spacing: Space.sm) {
+            FieldLabel("Recent spend")
+            HStack(alignment: .bottom, spacing: 8) {
+                ForEach(recent) { trip in
+                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                        .fill(LinearGradient(colors: [Color.aigosAmberLight, Color.aigosAmberDeep],
+                                             startPoint: .top, endPoint: .bottom))
+                        .frame(height: max(10, CGFloat(trip.totalCostPHP / maxCost) * 92))
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .frame(height: 100)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(Space.md)
+        .glassCard()
+    }
+
+    private var emptyState: some View {
+        MascotEmptyState(
+            title: "No trips yet",
+            message: "Your trips will appear here. Calculate your first trip!"
+        )
     }
 
     private func delete(_ trip: TripRecord) {

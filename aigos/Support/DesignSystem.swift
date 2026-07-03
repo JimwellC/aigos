@@ -83,34 +83,46 @@ enum Radius {
 
 // MARK: - Background
 
-/// Full-screen warm amber gradient with soft bokeh depth. The base layer of every
-/// main screen.
+/// Full-screen warm amber gradient with 3 soft glowing bokeh orbs for depth. The
+/// base layer of every screen. `variant` shifts the orb positions so screens feel
+/// distinct.
 struct AigosBackground: View {
-    var deep: Bool = false
+    var variant: Int = 0
+
+    private struct Orb { let color: Color; let size: CGFloat; let blur: CGFloat; let x: CGFloat; let y: CGFloat }
+
+    private var orbs: [Orb] {
+        let sets: [[Orb]] = [
+            [Orb(color: .white.opacity(0.12), size: 340, blur: 70, x: -100, y: -200),
+             Orb(color: Color.aigosAmber.opacity(0.24), size: 260, blur: 55, x: 130, y: 100),
+             Orb(color: Color.aigosAmberLight.opacity(0.18), size: 210, blur: 48, x: -70, y: 400)],
+            [Orb(color: .white.opacity(0.12), size: 300, blur: 65, x: 130, y: -170),
+             Orb(color: Color.aigosAmber.opacity(0.22), size: 290, blur: 60, x: -120, y: 150),
+             Orb(color: Color.aigosAmberLight.opacity(0.16), size: 230, blur: 52, x: 100, y: 430)],
+            [Orb(color: .white.opacity(0.10), size: 320, blur: 68, x: -40, y: -230),
+             Orb(color: Color.aigosAmber.opacity(0.24), size: 250, blur: 56, x: 140, y: 260),
+             Orb(color: Color.aigosAmberLight.opacity(0.18), size: 200, blur: 46, x: -110, y: 60)],
+        ]
+        return sets[variant % sets.count]
+    }
 
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: deep
-                    ? [Color.aigosAmberDeep, Color(hex: "#8B4A1A")]
-                    : [Color.aigosBGTop, Color.aigosBGBottom],
-                startPoint: .top,
-                endPoint: .bottom
+                colors: [Color.aigosBGTop, Color.aigosBGBottom],
+                startPoint: .top, endPoint: .bottom
             )
             .ignoresSafeArea()
 
-            Circle()
-                .fill(Color.white.opacity(0.08))
-                .frame(width: 300, height: 300)
-                .blur(radius: 60)
-                .offset(x: -80, y: -120)
-
-            Circle()
-                .fill(Color.aigosAmber.opacity(0.15))
-                .frame(width: 200, height: 200)
-                .blur(radius: 40)
-                .offset(x: 100, y: 200)
+            ForEach(Array(orbs.enumerated()), id: \.offset) { _, orb in
+                Circle()
+                    .fill(orb.color)
+                    .frame(width: orb.size, height: orb.size)
+                    .blur(radius: orb.blur)
+                    .offset(x: orb.x, y: orb.y)
+            }
         }
+        .ignoresSafeArea()
     }
 }
 
@@ -120,14 +132,16 @@ private struct GlassCardModifier: ViewModifier {
     var cornerRadius: CGFloat = Radius.md
 
     func body(content: Content) -> some View {
-        content
-            .background(Color.aigosGlassFill)
-            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(Color.aigosGlassStroke, lineWidth: 1.5)
-            )
-            .shadow(color: .black.opacity(0.18), radius: 16, x: 0, y: 8)
+        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        return content
+            .background {
+                shape
+                    .fill(.ultraThinMaterial)             // real frosted blur of what's behind
+                    .overlay(shape.fill(Color.white.opacity(0.12)))  // warm glass tint
+            }
+            .clipShape(shape)
+            .overlay(shape.stroke(Color.aigosGlassStroke, lineWidth: 1.5))
+            .shadow(color: .black.opacity(0.25), radius: 20, x: 0, y: 8)
     }
 }
 
@@ -224,24 +238,24 @@ struct GlassField: View {
 
 // MARK: - Small building blocks
 
-/// Uppercased, tracked section label (size 11, semibold, white 0.6).
+/// Uppercased, tracked section header (size 13, semibold, white 0.6, kern 2.0).
 struct FieldLabel: View {
     let text: String
     init(_ text: String) { self.text = text }
     var body: some View {
         Text(text.uppercased())
-            .font(.system(size: 11, weight: .semibold, design: .rounded))
-            .kerning(1.5)
+            .font(.system(size: 13, weight: .semibold, design: .rounded))
+            .kerning(2.0)
             .foregroundStyle(Color.white.opacity(0.6))
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
 extension Text {
-    /// Large premium screen title (size 34, black, tracked, pure white).
+    /// Large premium screen title (size 34, black, tracked, pure white, caps).
     func screenTitle() -> some View {
         self.font(.system(size: 34, weight: .black, design: .rounded))
-            .kerning(2.0)
+            .kerning(1.5)
             .foregroundStyle(.white)
     }
 }

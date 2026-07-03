@@ -19,6 +19,7 @@ struct OnboardingView: View {
     @Binding var hasOnboarded: Bool
 
     @State private var step = 0
+    @State private var welcomeIn = false
 
     // Vehicle
     @State private var name = "My Car"
@@ -39,11 +40,19 @@ struct OnboardingView: View {
 
     var body: some View {
         ZStack {
-            AigosBackground()
+            AigosBackground(variant: step)
+
+            // Large low-opacity SF Symbol texture behind the content.
+            Image(systemName: bgSymbol)
+                .font(.system(size: 340, weight: .bold))
+                .foregroundStyle(.white.opacity(0.06))
+                .offset(x: 90, y: -30)
+                .allowsHitTesting(false)
 
             VStack(spacing: Space.lg) {
-                ProgressDots(count: 4, index: step)
+                ProgressBar(progress: Double(step + 1) / 4)
                     .padding(.top, Space.xl)
+                    .padding(.horizontal, Space.xs)
 
                 Group {
                     switch step {
@@ -64,12 +73,26 @@ struct OnboardingView: View {
         }
     }
 
+    private var bgSymbol: String {
+        switch step {
+        case 0: "sparkles"
+        case 1: "car.fill"
+        case 2: "steeringwheel"
+        default: "fuelpump.fill"
+        }
+    }
+
     // MARK: - Screen 1
 
     private var welcome: some View {
         VStack(spacing: Space.lg) {
             Spacer()
-            MascotView(size: 160)
+            MascotView(size: 160, floating: true)
+                .offset(y: welcomeIn ? 0 : 100)
+                .opacity(welcomeIn ? 1 : 0)
+                .onAppear {
+                    withAnimation(.spring(response: 0.7, dampingFraction: 0.7)) { welcomeIn = true }
+                }
             Text("aigos")
                 .rounded(44, weight: .bold)
                 .foregroundStyle(.white)
@@ -227,18 +250,21 @@ struct OnboardingView: View {
 
 // MARK: - Small components
 
-private struct ProgressDots: View {
-    let count: Int
-    let index: Int
+/// Amber progress bar that animates its fill across the screen.
+private struct ProgressBar: View {
+    let progress: Double   // 0…1
     var body: some View {
-        HStack(spacing: Space.sm) {
-            ForEach(0..<count, id: \.self) { i in
+        GeometryReader { g in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.white.opacity(0.2))
                 Capsule()
-                    .fill(i == index ? Color.aigosAmber : Color.white.opacity(0.35))
-                    .frame(width: i == index ? 22 : 8, height: 8)
-                    .animation(.spring(response: 0.4, dampingFraction: 0.7), value: index)
+                    .fill(LinearGradient(colors: [Color.aigosAmberLight, Color.aigosAmber],
+                                         startPoint: .leading, endPoint: .trailing))
+                    .frame(width: max(8, g.size.width * progress))
             }
         }
+        .frame(height: 6)
+        .animation(.spring(response: 0.5, dampingFraction: 0.8), value: progress)
     }
 }
 
@@ -343,19 +369,50 @@ private struct MascotBubble: View {
 }
 
 /// Placeholder jeepney mascot — a glowing amber badge until real art lands.
+/// `floating: true` gives it a gentle up/down bob.
 struct MascotView: View {
     var size: CGFloat = 120
+    var floating: Bool = false
+    @State private var floatUp = false
+
     var body: some View {
         ZStack {
             Circle()
-                .fill(Color.aigosAmber.opacity(0.25))
+                .fill(Color.aigosAmber.opacity(0.28))
                 .frame(width: size, height: size)
-                .blur(radius: 20)
+                .blur(radius: size * 0.18)
             Image(systemName: "bus.fill")
                 .font(.system(size: size * 0.5))
                 .foregroundStyle(.white)
-                .shadow(color: Color.aigosAmber.opacity(0.8), radius: 16)
+                .shadow(color: Color.aigosAmber.opacity(0.85), radius: size * 0.14)
         }
         .frame(width: size, height: size)
+        .offset(y: floating && floatUp ? -5 : 0)
+        .onAppear {
+            if floating {
+                withAnimation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true)) { floatUp = true }
+            }
+        }
+    }
+}
+
+/// Full-screen empty state: floating mascot + a friendly title and message.
+struct MascotEmptyState: View {
+    let title: String
+    let message: String
+
+    var body: some View {
+        VStack(spacing: Space.lg) {
+            MascotView(size: 120, floating: true)
+            Text(title)
+                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+            Text(message)
+                .font(.system(size: 16, weight: .medium, design: .rounded))
+                .foregroundStyle(Color.white.opacity(0.7))
+                .multilineTextAlignment(.center)
+        }
+        .padding(Space.xl)
+        .frame(maxWidth: .infinity)
     }
 }

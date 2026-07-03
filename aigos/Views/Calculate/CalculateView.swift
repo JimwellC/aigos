@@ -42,6 +42,7 @@ struct CalculateView: View {
     @State private var showingVehiclePicker = false
     @State private var showingTalk = false
     @State private var demoSearchOpen = false
+    @State private var glowPulse = false
 
     private var selectedVehicle: VehicleProfile? {
         vehicles.first { $0.id == selectedVehicleID } ?? vehicles.first
@@ -75,7 +76,8 @@ struct CalculateView: View {
                         calculateButton
 
                         if let estimate {
-                            ResultCard(estimate: estimate, heroCost: heroCost, confidence: confidenceText)
+                            ResultCard(estimate: estimate, heroCost: heroCost, confidence: confidenceText,
+                                       tankLiters: selectedVehicle?.type.typicalTankLiters)
                                 .id("result")
                                 .transition(.move(edge: .bottom).combined(with: .opacity))
 
@@ -126,28 +128,44 @@ struct CalculateView: View {
                 Image(systemName: "bolt.fill")
                 Text("Calculate")
             }
-            .rounded(17, weight: .semibold)
+            .rounded(18, weight: .bold)
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
-            .background(Color.aigosAmber.opacity(canCalculate ? 1 : 0.4))
-            .clipShape(Capsule())
-            .shadow(color: Color.aigosAmber.opacity(canCalculate ? 0.4 : 0), radius: 12, x: 0, y: 6)
+            .padding(.vertical, 17)
+            .background(
+                Capsule().fill(
+                    LinearGradient(
+                        colors: canCalculate
+                            ? [Color.aigosAmberLight, Color.aigosAmber, Color.aigosAmberDeep]
+                            : [Color.aigosAmber.opacity(0.4), Color.aigosAmberDeep.opacity(0.4)],
+                        startPoint: .topLeading, endPoint: .bottomTrailing
+                    )
+                )
+            )
+            .shadow(color: Color.aigosAmber.opacity(canCalculate ? (glowPulse ? 0.7 : 0.45) : 0),
+                    radius: canCalculate ? (glowPulse ? 24 : 16) : 0, x: 0, y: 8)
         }
         .buttonStyle(PressableStyle())
+        .onAppear {
+            withAnimation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true)) { glowPulse = true }
+        }
     }
 
     // MARK: - Header
 
     private var header: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
+        HStack(spacing: Space.md) {
+            MascotView(size: 44)
+            VStack(alignment: .leading, spacing: 0) {
                 Text("aigos")
-                    .rounded(15, weight: .semibold)
+                    .rounded(14, weight: .semibold)
                     .foregroundStyle(Color.aigosTextSecondary)
-                Text("CALCULATE").screenTitle()
+                Text("CALCULATE")
+                    .screenTitle()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
             }
-            Spacer()
+            Spacer(minLength: Space.sm)
             Button {
                 Haptics.tap(.light)
                 showingTalk = true
@@ -173,10 +191,11 @@ struct CalculateView: View {
         } label: {
             HStack(spacing: Space.md) {
                 Image(systemName: selectedVehicle?.type.systemImage ?? "car.fill")
-                    .font(.system(size: 22))
+                    .font(.system(size: 28, weight: .semibold))
                     .foregroundStyle(Color.aigosAmber)
-                    .frame(width: 44, height: 44)
-                    .background(Color.white.opacity(0.12), in: Circle())
+                    .frame(width: 56, height: 56)
+                    .background(Color.white.opacity(0.14), in: Circle())
+                    .overlay(Circle().stroke(Color.aigosAmber.opacity(0.35), lineWidth: 1.5))
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(selectedVehicle?.name ?? "Add a vehicle")
@@ -208,6 +227,7 @@ struct CalculateView: View {
                        selectedKey: $originKey, personalPlaces: personalPlaces,
                        showError: submitAttempted, startOpen: demoSearchOpen)
                 .zIndex(2)   // its dropdown overlays the destination field
+            routeConnector
             PlaceField(placeholder: "To (e.g. Batangas)", text: $destination,
                        selectedKey: $destinationKey, personalPlaces: personalPlaces,
                        showError: submitAttempted)
@@ -318,6 +338,25 @@ struct CalculateView: View {
                 }
             }
         }
+    }
+
+    /// Amber origin→destination route connector (dot · dashed · pin).
+    private var routeConnector: some View {
+        HStack(spacing: Space.sm) {
+            HStack(spacing: 5) {
+                Circle().fill(Color.aigosAmber).frame(width: 7, height: 7)
+                ForEach(0..<6, id: \.self) { _ in
+                    Circle().fill(Color.aigosAmber.opacity(0.55)).frame(width: 3, height: 3)
+                }
+                Image(systemName: "location.north.fill")
+                    .rotationEffect(.degrees(135))
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(Color.aigosAmber)
+            }
+            Spacer()
+        }
+        .padding(.leading, Space.sm)
+        .frame(height: 14)
     }
 
     private var roadTypePicker: some View {

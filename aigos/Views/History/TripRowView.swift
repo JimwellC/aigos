@@ -10,27 +10,42 @@ import SwiftUI
 struct TripRowView: View {
     let trip: TripRecord
 
+    private var efficiency: Double {
+        trip.adjustedLitres > 0 ? trip.distanceKm / trip.adjustedLitres : 0
+    }
+
     var body: some View {
         HStack(spacing: Space.md) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("\(trip.origin) → \(trip.destination)")
-                    .rounded(16, weight: .semibold)
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white)
                     .lineLimit(1)
                 Text("\(trip.distanceKm.oneDecimal) km · \(trip.vehicleName) · \(trip.adjustedLitres.oneDecimal) L")
-                    .rounded(13)
-                    .foregroundStyle(Color.aigosTextSecondary)
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .foregroundStyle(Color.white.opacity(0.65))
                     .lineLimit(1)
-                Text(trip.calculatedAt.formatted(date: .abbreviated, time: .shortened))
-                    .rounded(11)
-                    .foregroundStyle(Color.aigosTextTertiary)
+                efficiencyBadge
             }
             Spacer()
             Text(trip.totalCostPHP.phpString)
-                .font(.system(size: 17, weight: .bold, design: .rounded))
+                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .monospacedDigit()
                 .foregroundStyle(.white)
         }
         .padding(Space.md)
         .glassCard()
+    }
+
+    private var efficiencyBadge: some View {
+        HStack(spacing: 3) {
+            Image(systemName: "leaf.fill").font(.system(size: 9, weight: .bold))
+                .foregroundStyle(Color.aigosAmber)
+            Text("\(efficiency.oneDecimal) km/L")
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white)
+        }
+        .padding(.horizontal, 8).padding(.vertical, 3)
+        .background(Capsule().fill(Color.white.opacity(0.14)))
     }
 }

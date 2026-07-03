@@ -19,8 +19,9 @@ struct PriceRowView: View {
     var body: some View {
         HStack(spacing: Space.md) {
             RoundedRectangle(cornerRadius: 2)
-                .fill(Color.aigosAmber)
-                .frame(width: 3, height: 30)
+                .fill(price.fuelType.accentColor)
+                .frame(width: 4, height: 32)
+                .shadow(color: price.fuelType.accentColor.opacity(0.6), radius: 4)
 
             Text(price.fuelType.label)
                 .font(.system(size: 17, weight: .semibold, design: .rounded))

@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 enum VehicleType: String, Codable, CaseIterable, Identifiable {
     case car, motorcycle, truck, van
@@ -65,6 +66,16 @@ enum FuelType: String, Codable, CaseIterable, Identifiable {
         case .ron95: 73.00
         case .ron97: 76.00
         case .diesel: 69.10
+        }
+    }
+
+    /// Per-grade accent colour for the Prices screen left border.
+    var accentColor: Color {
+        switch self {
+        case .ron91: Color(hex: "#7ED957")   // green
+        case .ron95: Color(hex: "#5AA9E6")   // blue
+        case .ron97: Color(hex: "#B57EDC")   // purple
+        case .diesel: Color(hex: "#F2994A")  // orange
         }
     }
 }

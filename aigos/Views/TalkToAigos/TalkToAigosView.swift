@@ -48,7 +48,7 @@ struct TalkToAigosView: View {
 
     private var header: some View {
         HStack(spacing: Space.md) {
-            MascotView(size: 44)
+            MascotView(size: 44, floating: true)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Talk to aigos")
                     .rounded(20, weight: .bold)

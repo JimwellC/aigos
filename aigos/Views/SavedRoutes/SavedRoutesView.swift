@@ -17,7 +17,7 @@ struct SavedRoutesView: View {
 
     var body: some View {
         ZStack {
-            AigosBackground()
+            AigosBackground(variant: 2)
 
             if routes.isEmpty {
                 emptyState
@@ -76,19 +76,10 @@ struct SavedRoutesView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: Space.md) {
-            Image(systemName: "star.slash")
-                .font(.system(size: 52))
-                .foregroundStyle(.white.opacity(0.8))
-            Text("No saved routes")
-                .rounded(22, weight: .semibold)
-                .foregroundStyle(.white)
-            Text("Tap “Save this route” after a calculation to keep it here for one-tap recalculation.")
-                .rounded(15)
-                .foregroundStyle(Color.aigosTextSecondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding(Space.xl)
+        MascotEmptyState(
+            title: "No saved routes",
+            message: "Star any trip to save it for one-tap recalculation."
+        )
     }
 
     private func recalculate(_ route: SavedRoute) {

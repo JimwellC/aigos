@@ -21,7 +21,7 @@ struct SettingsView: View {
 
     var body: some View {
         ZStack {
-            AigosBackground()
+            AigosBackground(variant: 1)
 
             ScrollView {
                 VStack(alignment: .leading, spacing: Space.lg) {
@@ -260,7 +260,7 @@ struct PersonalPlaceEditor: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                AigosBackground()
+                AigosBackground(variant: 1)
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: Space.md) {

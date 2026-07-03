@@ -61,11 +61,11 @@ struct VehiclePicker: View {
                         }
 
                         if vehicles.isEmpty {
-                            Text("No vehicles yet. Add your first to start calculating.")
-                                .rounded(15)
-                                .foregroundStyle(Color.aigosTextSecondary)
-                                .multilineTextAlignment(.center)
-                                .padding(.top, Space.xl)
+                            MascotEmptyState(
+                                title: "No vehicles yet",
+                                message: "Add your vehicle to get started."
+                            )
+                            .padding(.top, Space.xl)
                         }
                     }
                     .padding(.horizontal, Space.screen)

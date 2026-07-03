@@ -42,11 +42,24 @@ struct PricesView: View {
                     .padding(.vertical, Space.xs)
                     .glassCard()
 
-                    if let lastUpdated {
-                        Text("Last updated \(lastUpdated.formatted(date: .abbreviated, time: .omitted)). Tap any price to edit it before calculating.")
-                            .font(.system(size: 12, weight: .regular, design: .rounded))
-                            .foregroundStyle(Color.white.opacity(0.55))
+                    HStack {
+                        if let lastUpdated {
+                            HStack(spacing: 6) {
+                                Image(systemName: "clock.fill").font(.system(size: 11, weight: .semibold))
+                                Text("Updated \(lastUpdated.formatted(date: .abbreviated, time: .omitted))")
+                                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            }
+                            .foregroundStyle(Color.white.opacity(0.85))
+                            .padding(.horizontal, Space.md)
+                            .padding(.vertical, 7)
+                            .background(Capsule().fill(Color.white.opacity(0.15)))
+                        }
+                        Spacer()
                     }
+
+                    Text("Tap a price to edit it before calculating.")
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundStyle(Color.white.opacity(0.5))
                 }
                 .padding(.horizontal, Space.screen)
                 .padding(.top, Space.xl)
