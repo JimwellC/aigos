@@ -1,0 +1,10 @@
+{
+  "lastUpdated": "2026-04-28",
+  "note": "Developer updates weekly from DOE pump-price bulletins (published Tuesdays). Users can override any price in the Prices tab.",
+  "prices": {
+    "ron91": 59.10,
+    "ron95": 62.55,
+    "ron97": 65.20,
+    "diesel": 56.45
+  }
+}
