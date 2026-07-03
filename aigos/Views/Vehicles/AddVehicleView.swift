@@ -56,13 +56,14 @@ struct AddVehicleView: View {
             .onAppear { if efficiencyText.isEmpty { efficiencyText = fuelUnit.defaultInput } }
             .navigationTitle("Add Vehicle")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color.aigosBGTop, for: .navigationBar)
+            .toolbarBackground(Color.aigosAmberDeep, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }.tint(Color.aigosAmberDeep)
+                    Button("Cancel") { dismiss() }.tint(.white)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: save).disabled(!canSave).tint(Color.aigosAmberDeep)
+                    Button("Save", action: save).disabled(!canSave).tint(.white)
                 }
             }
         }

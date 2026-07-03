@@ -62,7 +62,7 @@ struct TalkToAigosView: View {
                         Image(systemName: "info.circle")
                             .font(.system(size: 10))
                     }
-                    .foregroundStyle(Color.aigosTextSecondary)
+                    .foregroundStyle(Color.white.opacity(0.8))
                 }
             }
             Spacer()
@@ -137,7 +137,7 @@ struct TalkToAigosView: View {
                     .rounded(18, weight: .bold)
                     .foregroundStyle(.white)
                     .frame(width: 48, height: 48)
-                    .background(Color.aigosAmber.opacity(input.trimmingCharacters(in: .whitespaces).isEmpty ? 0.4 : 1), in: Circle())
+                    .background(Color.aigosAmber.opacity(input.trimmingCharacters(in: .whitespaces).isEmpty ? 0.55 : 1), in: Circle())
             }
             .buttonStyle(.plain)
             .disabled(input.trimmingCharacters(in: .whitespaces).isEmpty)

@@ -331,11 +331,11 @@ struct CalculateView: View {
                     let on = selection.wrappedValue == item
                     Text(label(item))
                         .rounded(13, weight: on ? .bold : .semibold)
-                        .foregroundStyle(on ? .white : .white.opacity(0.8))
+                        .foregroundStyle(.white)
                         .padding(.horizontal, Space.md)
                         .padding(.vertical, 8)
-                        .background(on ? Color.aigosAmber : Color.white.opacity(0.18), in: Capsule())
-                        .overlay(Capsule().stroke(on ? Color.clear : Color.white.opacity(0.3), lineWidth: 1))
+                        .background(on ? Color.aigosAmber : Color.white.opacity(0.25), in: Capsule())
+                        .overlay(Capsule().stroke(on ? Color.clear : Color.white.opacity(0.5), lineWidth: 1))
                         .onTapGesture { Haptics.tap(.light); selection.wrappedValue = item }
                 }
             }
@@ -371,11 +371,11 @@ struct CalculateView: View {
                 } label: {
                     Text(type.label)
                         .rounded(14, weight: selected ? .bold : .semibold)
-                        .foregroundStyle(selected ? .white : .white.opacity(0.8))
+                        .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
-                        .background(selected ? Color.aigosAmber : Color.white.opacity(0.18), in: Capsule())
-                        .overlay(Capsule().stroke(selected ? Color.clear : Color.white.opacity(0.3), lineWidth: 1))
+                        .background(selected ? Color.aigosAmber : Color.white.opacity(0.25), in: Capsule())
+                        .overlay(Capsule().stroke(selected ? Color.clear : Color.white.opacity(0.5), lineWidth: 1))
                 }
                 .buttonStyle(.plain)
             }

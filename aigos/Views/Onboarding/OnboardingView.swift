@@ -271,8 +271,8 @@ private struct ProgressBar: View {
 private extension View {
     /// Shared amber/glass pill styling for the driving-style option rows.
     func onboardingPill(selected: Bool) -> some View {
-        self.background(selected ? Color.aigosAmber : Color.white.opacity(0.18), in: Capsule())
-            .overlay(Capsule().stroke(selected ? Color.clear : Color.white.opacity(0.3), lineWidth: 1))
+        self.background(selected ? Color.aigosAmber : Color.white.opacity(0.25), in: Capsule())
+            .overlay(Capsule().stroke(selected ? Color.clear : Color.white.opacity(0.5), lineWidth: 1))
     }
 }
 
@@ -309,7 +309,7 @@ private struct FlowPills: View {
                     HStack {
                         Text(option)
                             .rounded(15, weight: selected ? .bold : .medium)
-                            .foregroundStyle(selected ? .white : .white.opacity(0.8))
+                            .foregroundStyle(.white)
                         Spacer()
                         if selected {
                             Image(systemName: "checkmark.circle.fill")

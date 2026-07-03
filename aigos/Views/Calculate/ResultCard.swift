@@ -103,7 +103,7 @@ struct ResultCard: View {
             if let detail {
                 Text(detail)
                     .font(.system(size: 12, weight: .medium, design: .rounded))
-                    .foregroundStyle(Color.white.opacity(0.5))
+                    .foregroundStyle(Color.white.opacity(0.6))
             }
             Text(value)
                 .font(.system(size: emphasised ? 20 : 17, weight: .bold, design: .rounded))
@@ -127,7 +127,7 @@ struct ResultCard: View {
             if !litreText.isEmpty {
                 Text(litreText)
                     .font(.system(size: 12, weight: .medium, design: .rounded))
-                    .foregroundStyle(Color.white.opacity(0.5))
+                    .foregroundStyle(Color.white.opacity(0.6))
             }
             Text(factor.factorPercentString)
                 .font(.system(size: 13, weight: .bold, design: .rounded))

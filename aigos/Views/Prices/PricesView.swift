@@ -59,7 +59,7 @@ struct PricesView: View {
 
                     Text("Tap a price to edit it before calculating.")
                         .font(.system(size: 12, weight: .medium, design: .rounded))
-                        .foregroundStyle(Color.white.opacity(0.5))
+                        .foregroundStyle(Color.white.opacity(0.6))
                 }
                 .padding(.horizontal, Space.screen)
                 .padding(.top, Space.xl)

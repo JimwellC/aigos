@@ -34,7 +34,7 @@ extension Color {
     // Text (on gradient)
     static let aigosText = Color.white
     static let aigosTextSecondary = Color.white.opacity(0.75)
-    static let aigosTextTertiary = Color.white.opacity(0.50)
+    static let aigosTextTertiary = Color.white.opacity(0.55)   // readability floor
 
     /// Hex-string initializer (per the design guidelines), supporting #RGB, #RRGGBB
     /// and #AARRGGBB.
@@ -239,19 +239,19 @@ struct GlassField: View {
     var autocap: TextInputAutocapitalization = .sentences
 
     var body: some View {
-        TextField("", text: $text, prompt: Text(placeholder).foregroundColor(Color.aigosTextTertiary))
+        TextField("", text: $text, prompt: Text(placeholder).foregroundColor(Color.white.opacity(0.6)))
             .rounded(17, weight: .medium)
-            .foregroundStyle(.white)
+            .foregroundStyle(.white.opacity(0.95))
             .tint(.white)
             .keyboardType(keyboard)
             .textInputAutocapitalization(autocap)
             .padding(.horizontal, Space.md)
             .padding(.vertical, 14)
-            .background(Color.white.opacity(0.15))
+            .background(Color.black.opacity(0.12))   // darker glass so text has contrast
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(Color.white.opacity(0.35), lineWidth: 1)
+                    .stroke(Color.white.opacity(0.4), lineWidth: 1)
             )
     }
 }
@@ -307,11 +307,11 @@ struct SelectablePillFlow<T: Hashable & Identifiable>: View {
                 let selected = item == selection
                 Text(label(item))
                     .rounded(14, weight: selected ? .bold : .semibold)
-                    .foregroundStyle(selected ? .white : .white.opacity(0.8))
+                    .foregroundStyle(.white)
                     .padding(.horizontal, Space.md)
                     .padding(.vertical, 10)
-                    .background(selected ? Color.aigosAmber : Color.white.opacity(0.18), in: Capsule())
-                    .overlay(Capsule().stroke(selected ? Color.clear : Color.white.opacity(0.3), lineWidth: 1))
+                    .background(selected ? Color.aigosAmber : Color.white.opacity(0.25), in: Capsule())
+                    .overlay(Capsule().stroke(selected ? Color.clear : Color.white.opacity(0.5), lineWidth: 1))
                     .onTapGesture {
                         Haptics.tap(.light)
                         selection = item
@@ -332,7 +332,7 @@ struct FieldLabel: View {
         Text(text.uppercased())
             .font(.system(size: 13, weight: .semibold, design: .rounded))
             .kerning(2.0)
-            .foregroundStyle(Color.white.opacity(0.75))
+            .foregroundStyle(Color.white.opacity(0.85))
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

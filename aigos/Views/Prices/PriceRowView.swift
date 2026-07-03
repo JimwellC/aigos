@@ -30,7 +30,7 @@ struct PriceRowView: View {
             if price.updatedBy == "user" {
                 Image(systemName: "pencil")
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.45))
+                    .foregroundStyle(.white.opacity(0.6))
             }
 
             Spacer()

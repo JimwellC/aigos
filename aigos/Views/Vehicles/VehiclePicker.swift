@@ -74,14 +74,15 @@ struct VehiclePicker: View {
             }
             .navigationTitle("Vehicles")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color.aigosBGTop, for: .navigationBar)
+            .toolbarBackground(Color.aigosAmberDeep, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Done") { dismiss() }.tint(Color.aigosAmberDeep)
+                    Button("Done") { dismiss() }.tint(.white)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { showingAddVehicle = true } label: { Image(systemName: "plus") }
-                        .tint(Color.aigosAmberDeep)
+                        .tint(.white)
                 }
             }
             .sheet(isPresented: $showingAddVehicle) {

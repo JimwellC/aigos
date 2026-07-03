@@ -70,11 +70,11 @@ struct SettingsView: View {
                         let selected = fuelUnit == unit
                         Text(unit.label)
                             .rounded(13, weight: selected ? .bold : .semibold)
-                            .foregroundStyle(selected ? .white : .white.opacity(0.8))
+                            .foregroundStyle(.white)
                             .padding(.horizontal, Space.md)
                             .padding(.vertical, 8)
-                            .background(selected ? Color.aigosAmber : Color.white.opacity(0.18), in: Capsule())
-                            .overlay(Capsule().stroke(selected ? Color.clear : Color.white.opacity(0.3), lineWidth: 1))
+                            .background(selected ? Color.aigosAmber : Color.white.opacity(0.25), in: Capsule())
+                            .overlay(Capsule().stroke(selected ? Color.clear : Color.white.opacity(0.5), lineWidth: 1))
                             .onTapGesture { Haptics.tap(.light); fuelUnit = unit }
                     }
                 }
@@ -324,10 +324,11 @@ struct PersonalPlaceEditor: View {
             }
             .navigationTitle("Edit Place")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color.aigosBGTop, for: .navigationBar)
+            .toolbarBackground(Color.aigosAmberDeep, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { save(); dismiss() }.tint(Color.aigosAmberDeep)
+                    Button("Done") { save(); dismiss() }.tint(.white)
                 }
             }
         }
