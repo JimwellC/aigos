@@ -46,9 +46,9 @@ struct PlaceField: View {
 
     private var field: some View {
         HStack(spacing: Space.sm) {
-            TextField("", text: $text, prompt: Text(placeholder).foregroundColor(Color.aigosTextTertiary))
+            TextField("", text: $text, prompt: Text(placeholder).foregroundColor(Color.white.opacity(0.7)))
                 .rounded(17, weight: .medium)
-                .foregroundStyle(.white)
+                .foregroundStyle(.white.opacity(0.95))
                 .tint(.white)
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.words)
@@ -60,7 +60,7 @@ struct PlaceField: View {
                     .foregroundStyle(.white)
             } else if !text.isEmpty {
                 Button { clear() } label: {
-                    Image(systemName: "xmark.circle.fill").foregroundStyle(Color.aigosTextTertiary)
+                    Image(systemName: "xmark.circle.fill").foregroundStyle(Color.white.opacity(0.6))
                 }
                 .buttonStyle(.plain)
             }

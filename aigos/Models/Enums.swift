@@ -51,7 +51,7 @@ enum FuelType: String, Codable, CaseIterable, Identifiable {
     var label: String {
         switch self {
         case .ron91: "RON 91"
-        case .ron95: "RON 95"
+        case .ron95: "Premium 95"
         case .ron97: "RON 97"
         case .diesel: "Diesel"
         }

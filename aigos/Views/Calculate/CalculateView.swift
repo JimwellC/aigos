@@ -142,8 +142,9 @@ struct CalculateView: View {
                     )
                 )
             )
-            .shadow(color: Color.aigosAmber.opacity(canCalculate ? (glowPulse ? 0.7 : 0.45) : 0),
-                    radius: canCalculate ? (glowPulse ? 24 : 16) : 0, x: 0, y: 8)
+            // Amber glow beneath the CTA (#E9A84C · 0.5 · r20 · y8), gently pulsing.
+            .shadow(color: Color.aigosAmber.opacity(canCalculate ? (glowPulse ? 0.6 : 0.5) : 0),
+                    radius: canCalculate ? (glowPulse ? 24 : 20) : 0, x: 0, y: 8)
         }
         .buttonStyle(PressableStyle())
         .onAppear {
@@ -159,7 +160,7 @@ struct CalculateView: View {
             VStack(alignment: .leading, spacing: 0) {
                 Text("aigos")
                     .rounded(14, weight: .semibold)
-                    .foregroundStyle(Color.aigosTextSecondary)
+                    .foregroundStyle(Color.white.opacity(0.7))
                 Text("CALCULATE")
                     .screenTitle()
                     .lineLimit(1)
@@ -240,7 +241,7 @@ struct CalculateView: View {
             } else {
                 Text("Pick both places from the suggestions to estimate the distance.")
                     .rounded(12)
-                    .foregroundStyle(Color.aigosTextTertiary)
+                    .foregroundStyle(Color.white.opacity(0.6))
             }
         }
         .padding(Space.md)
@@ -259,7 +260,7 @@ struct CalculateView: View {
                         withAnimation(.snappy) { showingDrivingDetails = true }
                     }
                     .rounded(13, weight: .semibold)
-                    .foregroundStyle(.white.opacity(0.9))
+                    .foregroundStyle(.white)
                 }
             }
 
@@ -344,15 +345,15 @@ struct CalculateView: View {
     /// Amber origin→destination route connector (dot · dashed · pin).
     private var routeConnector: some View {
         HStack(spacing: Space.sm) {
-            HStack(spacing: 5) {
-                Circle().fill(Color.white).frame(width: 7, height: 7)
+            HStack(spacing: 6) {
+                Circle().fill(Color.white).frame(width: 8, height: 8)
                 ForEach(0..<6, id: \.self) { _ in
-                    Circle().fill(Color.white.opacity(0.5)).frame(width: 3, height: 3)
+                    Circle().fill(Color.white.opacity(0.8)).frame(width: 4, height: 4)
                 }
                 Image(systemName: "location.north.fill")
                     .rotationEffect(.degrees(135))
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.9))
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.white)
             }
             Spacer()
         }
