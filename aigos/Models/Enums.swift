@@ -149,6 +149,15 @@ enum ACUsage: String, Codable, CaseIterable, Identifiable {
     }
 
     var isOn: Bool { self != .off }
+
+    /// Fuel multiplier: full AC +12%, occasional AC +6%, off baseline.
+    var acFactor: Double {
+        switch self {
+        case .always: 1.12
+        case .sometimes: 1.06
+        case .off: 1.0
+        }
+    }
 }
 
 enum ProfileConfidence: String, Codable {

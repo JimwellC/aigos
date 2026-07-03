@@ -453,7 +453,8 @@ struct CalculateView: View {
             roadType: roadType,
             traffic: traffic,
             load: vehicleLoad,
-            availableFuelLitres: availableFuelLitres
+            availableFuelLitres: availableFuelLitres,
+            acUsage: acUsage        // real 3-state factor (Always/Sometimes/Off)
         )
 
         estimate = result

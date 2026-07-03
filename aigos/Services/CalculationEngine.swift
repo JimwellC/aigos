@@ -90,7 +90,8 @@ enum CalculationEngine {
         roadType: RoadType,
         traffic: TrafficCondition = .light,
         load: VehicleLoad = .light,
-        availableFuelLitres: Double? = nil
+        availableFuelLitres: Double? = nil,
+        acUsage: ACUsage? = nil       // when set, its 3-state factor overrides acInUse
     ) -> FuelEstimate {
         let safeEfficiency = max(baseEfficiencyKmL, 0.1)
 
@@ -100,7 +101,7 @@ enum CalculationEngine {
             city: avgCitySpeedKmh
         )
         let speedFactor = speedFactor(forSpeed: speed)
-        let acFactor = acInUse ? 1.12 : 1.0
+        let acFactor = acUsage?.acFactor ?? (acInUse ? 1.12 : 1.0)
         let roadFactor = roadType.factor
         let trafficFactor = traffic.factor
         let loadFactor = load.factor

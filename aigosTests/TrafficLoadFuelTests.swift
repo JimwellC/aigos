@@ -11,6 +11,30 @@ import XCTest
 
 final class TrafficLoadFuelTests: XCTestCase {
 
+    // MARK: - AC 3-state factor
+
+    func testACUsageFactors() {
+        XCTAssertEqual(ACUsage.always.acFactor, 1.12)
+        XCTAssertEqual(ACUsage.sometimes.acFactor, 1.06)   // halfway
+        XCTAssertEqual(ACUsage.off.acFactor, 1.0)
+    }
+
+    func testACUsageOverridesBinaryInEngine() {
+        func est(_ ac: ACUsage?) -> FuelEstimate {
+            CalculationEngine.estimate(
+                distanceKm: 100, baseEfficiencyKmL: 15, fuelPricePerLitre: 70,
+                avgHighwaySpeedKmh: 90, avgCitySpeedKmh: 40, acInUse: true,
+                roadType: .highway, acUsage: ac)
+        }
+        XCTAssertEqual(est(nil).acFactor, 1.12)          // falls back to binary
+        XCTAssertEqual(est(.always).acFactor, 1.12)
+        XCTAssertEqual(est(.sometimes).acFactor, 1.06)
+        XCTAssertEqual(est(.off).acFactor, 1.0)
+        // "Sometimes" must land strictly between Off and Always.
+        XCTAssertLessThan(est(.sometimes).estimatedCost, est(.always).estimatedCost)
+        XCTAssertGreaterThan(est(.sometimes).estimatedCost, est(.off).estimatedCost)
+    }
+
     // MARK: - Multiplier tables
 
     func testTrafficFactors() {
