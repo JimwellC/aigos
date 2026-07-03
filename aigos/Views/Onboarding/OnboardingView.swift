@@ -19,7 +19,6 @@ struct OnboardingView: View {
     @Binding var hasOnboarded: Bool
 
     @State private var step = 0
-    @State private var welcomeIn = false
 
     // Vehicle
     @State private var name = "My Car"
@@ -50,15 +49,14 @@ struct OnboardingView: View {
                 .allowsHitTesting(false)
 
             VStack(spacing: Space.lg) {
-                ProgressBar(progress: Double(step + 1) / 4)
+                ProgressBar(progress: Double(step + 1) / 3)
                     .padding(.top, Space.xl)
                     .padding(.horizontal, Space.xs)
 
                 Group {
                     switch step {
-                    case 0: welcome
-                    case 1: addVehicle
-                    case 2: drivingStyle
+                    case 0: addVehicle
+                    case 1: drivingStyle
                     default: pricesIntro
                     }
                 }
@@ -75,35 +73,12 @@ struct OnboardingView: View {
 
     private var bgSymbol: String {
         switch step {
-        case 0: "sparkles"
-        case 1: "car.fill"
-        case 2: "steeringwheel"
+        case 0: "car.fill"
+        case 1: "steeringwheel"
         default: "fuelpump.fill"
         }
     }
 
-    // MARK: - Screen 1
-
-    private var welcome: some View {
-        VStack(spacing: Space.lg) {
-            Spacer()
-            MascotView(size: 160, floating: true)
-                .offset(y: welcomeIn ? 0 : 100)
-                .opacity(welcomeIn ? 1 : 0)
-                .onAppear {
-                    withAnimation(.spring(response: 0.7, dampingFraction: 0.7)) { welcomeIn = true }
-                }
-            Text("aigos")
-                .rounded(44, weight: .bold)
-                .foregroundStyle(.white)
-            Text("Know your exact fuel cost before every trip.")
-                .rounded(18, weight: .medium)
-                .foregroundStyle(Color.aigosTextSecondary)
-                .multilineTextAlignment(.center)
-            Spacer()
-            PrimaryButton(title: "Get started") { advance() }
-        }
-    }
 
     // MARK: - Screen 2
 

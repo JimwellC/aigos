@@ -33,6 +33,8 @@ An offline, privacy-first iOS fuel-trip cost calculator for Filipino roads. Nati
 
 ## Architecture
 
+Launch flow: the static `LaunchScreen.storyboard` (a composed `LaunchImage` — gradient + mascot + wordmark) shows instantly, then `RootView` (in `aigosApp.swift`) shows the animated `SplashView` and fades into `ContentView`. Splash auto-advances (~1.8s) for returning users; first-launch shows a "Get Started" CTA → onboarding (whose own welcome screen was removed to avoid duplication).
+
 Flat `TabView` with 5 tabs (no deep `NavigationStack` hierarchies — every feature is one tap from anywhere): **Calculate** (`car.fill`, default) · **History** (`clock.fill`) · **Saved** (`star.fill`) · **Prices** (`fuelpump.fill`) · **Settings** (`gearshape.fill`).
 
 Planned structure (Section 17 of the spec): `App/` (`aigosApp.swift` @main + ModelContainer, `ContentView.swift` TabView), `Models/` (SwiftData @Model entities + `Enums.swift`), `Views/` (one folder per tab, plus `TalkToAigos/` and `Onboarding/`), `Services/` (`CalculationEngine`, `OSRMService`, `PriceService`), `Resources/` (`FuelPrices.json`, bundled PH OSRM road data), `Assets.xcassets`.

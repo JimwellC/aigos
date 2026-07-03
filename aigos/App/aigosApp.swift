@@ -38,8 +38,27 @@ struct aigosApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
         }
         .modelContainer(container)
+    }
+}
+
+/// Shows the animated splash, then fades into the main app.
+struct RootView: View {
+    @State private var showSplash = true
+
+    var body: some View {
+        ZStack {
+            if showSplash {
+                SplashView {
+                    withAnimation(.easeInOut(duration: 0.45)) { showSplash = false }
+                }
+                .transition(.opacity)
+            } else {
+                ContentView()
+                    .transition(.opacity)
+            }
+        }
     }
 }
