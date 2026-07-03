@@ -25,6 +25,18 @@ enum DebugSupport {
         ProcessInfo.processInfo.arguments.contains("-talk")
     }
 
+    /// Skip the splash and drop straight into onboarding (for screenshots/QA).
+    static var forceOnboarding: Bool {
+        ProcessInfo.processInfo.arguments.contains("-onboarding")
+    }
+
+    /// Jump onboarding to a given step (0=add vehicle, 1=driving, 2=prices).
+    static var onboardingStep: Int? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-onboardingStep"), i + 1 < args.count else { return nil }
+        return Int(args[i + 1])
+    }
+
     static var talkQuery: String? {
         let args = ProcessInfo.processInfo.arguments
         guard let i = args.firstIndex(of: "-talkQuery"), i + 1 < args.count else { return nil }

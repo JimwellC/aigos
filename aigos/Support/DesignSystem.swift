@@ -172,13 +172,21 @@ struct PrimaryButton: View {
                 if let systemImage { Image(systemName: systemImage) }
                 Text(title)
             }
-            .rounded(17, weight: .semibold)
+            .rounded(18, weight: .bold)
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
-            .background(Color.aigosAmber.opacity(enabled ? 1 : 0.4))
-            .clipShape(Capsule())
-            .shadow(color: Color.aigosAmber.opacity(enabled ? 0.4 : 0), radius: 12, x: 0, y: 6)
+            .padding(.vertical, 17)
+            .background(
+                Capsule().fill(
+                    LinearGradient(
+                        colors: enabled
+                            ? [Color.aigosAmberLight, Color.aigosAmber, Color.aigosAmberDeep]
+                            : [Color.aigosAmber.opacity(0.4), Color.aigosAmberDeep.opacity(0.4)],
+                        startPoint: .topLeading, endPoint: .bottomTrailing
+                    )
+                )
+            )
+            .shadow(color: Color.aigosAmber.opacity(enabled ? 0.5 : 0), radius: 16, x: 0, y: 8)
         }
         .buttonStyle(PressableStyle())
         .disabled(!enabled)
@@ -231,7 +239,7 @@ struct GlassField: View {
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                    .stroke(Color.white.opacity(0.35), lineWidth: 1)
             )
     }
 }

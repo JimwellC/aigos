@@ -20,6 +20,13 @@ struct OnboardingView: View {
 
     @State private var step = 0
 
+    init(hasOnboarded: Binding<Bool>) {
+        self._hasOnboarded = hasOnboarded
+        #if DEBUG
+        if let s = DebugSupport.onboardingStep { _step = State(initialValue: s) }
+        #endif
+    }
+
     // Vehicle
     @State private var name = "My Car"
     @State private var type: VehicleType = .car
@@ -41,17 +48,23 @@ struct OnboardingView: View {
         ZStack {
             AigosBackground(variant: step)
 
-            // Large low-opacity SF Symbol texture behind the content.
-            Image(systemName: bgSymbol)
-                .font(.system(size: 340, weight: .bold))
-                .foregroundStyle(.white.opacity(0.06))
-                .offset(x: 90, y: -30)
+            // Large low-opacity SF Symbol texture behind the content. Held inside a
+            // flexible Color.clear + .clipped() so its oversized glyph can never
+            // drive the ZStack wider than the screen (which shifted content off-edge).
+            Color.clear
+                .overlay(
+                    Image(systemName: bgSymbol)
+                        .font(.system(size: 340, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.06))
+                        .offset(x: 90, y: -30)
+                )
+                .clipped()
                 .allowsHitTesting(false)
 
-            VStack(spacing: Space.lg) {
+            VStack(spacing: Space.md) {
                 ProgressBar(progress: Double(step + 1) / 3)
                     .padding(.top, Space.xl)
-                    .padding(.horizontal, Space.xs)
+                    .padding(.horizontal, Space.lg)
 
                 Group {
                     switch step {
@@ -60,14 +73,32 @@ struct OnboardingView: View {
                     default: pricesIntro
                     }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .transition(.asymmetric(
-                    insertion: .move(edge: .trailing).combined(with: .opacity),
-                    removal: .move(edge: .leading).combined(with: .opacity)
-                ))
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .transition(.opacity)
             }
-            .padding(.horizontal, Space.screen)
-            .padding(.bottom, Space.xl)
+        }
+    }
+
+    /// A screen: scrollable content (inset 24) with a pinned bottom CTA.
+    private func screen<Content: View>(cta: String, ctaEnabled: Bool = true,
+                                       action: @escaping () -> Void,
+                                       @ViewBuilder content: () -> Content) -> some View {
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: Space.lg) {
+                    content()
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, Space.screen)
+                .padding(.top, Space.md)
+                .padding(.bottom, Space.lg)
+            }
+            .scrollIndicators(.hidden)
+
+            PrimaryButton(title: cta, enabled: ctaEnabled, action: action)
+                .padding(.horizontal, Space.screen)
+                .padding(.top, Space.sm)
+                .padding(.bottom, Space.lg)
         }
     }
 
@@ -80,10 +111,10 @@ struct OnboardingView: View {
     }
 
 
-    // MARK: - Screen 2
+    // MARK: - Screen 1 — Add vehicle
 
     private var addVehicle: some View {
-        VStack(alignment: .leading, spacing: Space.lg) {
+        screen(cta: "Save vehicle", ctaEnabled: canSaveVehicle, action: advance) {
             title("Add your vehicle", subtitle: "So estimates match how it drives.")
 
             VStack(alignment: .leading, spacing: Space.md) {
@@ -102,9 +133,6 @@ struct OnboardingView: View {
             }
             .padding(Space.md)
             .glassCard()
-
-            Spacer()
-            PrimaryButton(title: "Save vehicle", enabled: canSaveVehicle) { advance() }
         }
     }
 
@@ -112,65 +140,62 @@ struct OnboardingView: View {
         !name.trimmingCharacters(in: .whitespaces).isEmpty && (efficiency ?? 0) > 0
     }
 
-    // MARK: - Screen 3
+    // MARK: - Screen 2 — Driving style
 
     private var drivingStyle: some View {
-        VStack(alignment: .leading, spacing: Space.lg) {
+        screen(cta: "Looks good!", action: advance) {
             title("Your driving style", subtitle: "Let me learn how you drive for a smarter estimate.")
 
             MascotBubble(text: "Quick 3 taps and I'll nail your estimate 👇")
 
-            ScrollView {
-                VStack(spacing: Space.md) {
-                    QuestionCard(question: "How fast on the highway?",
-                                 options: ["Under 80", "80–100", "100–120", "Over 120"],
-                                 selection: $highwayChoice)
-                        .staggeredAppear(index: 0, delayStep: 0.12)
-                    QuestionCard(question: "Do you use aircon?",
-                                 options: ["Almost always", "Sometimes", "Rarely"],
-                                 selection: $acChoice)
-                        .staggeredAppear(index: 1, delayStep: 0.12)
-                    QuestionCard(question: "Usual road?",
-                                 options: RoadType.allCases.map(\.label),
-                                 selection: Binding(
-                                    get: { RoadType.allCases.firstIndex(of: roadChoice) ?? 0 },
-                                    set: { roadChoice = RoadType.allCases[$0] }
-                                 ))
-                        .staggeredAppear(index: 2, delayStep: 0.12)
-                }
-            }
-            .scrollIndicators(.hidden)
-
-            PrimaryButton(title: "Looks good!") { advance() }
+            QuestionCard(question: "How fast on the highway?",
+                         options: ["Under 80", "80–100", "100–120", "Over 120"],
+                         selection: $highwayChoice)
+            QuestionCard(question: "Do you use aircon?",
+                         options: ["Almost always", "Sometimes", "Rarely"],
+                         selection: $acChoice)
+            QuestionCard(question: "Usual road?",
+                         options: RoadType.allCases.map(\.label),
+                         selection: Binding(
+                            get: { RoadType.allCases.firstIndex(of: roadChoice) ?? 0 },
+                            set: { roadChoice = RoadType.allCases[$0] }
+                         ))
         }
     }
 
-    // MARK: - Screen 4
+    // MARK: - Screen 3 — Prices
 
     private var pricesIntro: some View {
-        VStack(alignment: .leading, spacing: Space.lg) {
+        screen(cta: "Start calculating", action: finish) {
             title("Fuel prices", subtitle: "Updated weekly. Edit any price before calculating.")
 
-            VStack(spacing: Space.sm) {
-                ForEach(sortedPrices) { price in
-                    HStack {
+            VStack(spacing: 0) {
+                ForEach(Array(sortedPrices.enumerated()), id: \.element.id) { i, price in
+                    HStack(spacing: Space.md) {
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(price.fuelType.accentColor)
+                            .frame(width: 4, height: 26)
                         Text(price.fuelType.label)
-                            .rounded(16, weight: .medium)
+                            .font(.system(size: 16, weight: .semibold, design: .rounded))
                             .foregroundStyle(.white)
                         Spacer()
-                        Text(price.pricePHP.phpString)
-                            .font(.system(size: 16, weight: .semibold, design: .monospaced))
-                            .foregroundStyle(Color.aigosAmber)
+                        Text("PHP")
+                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.85))
+                        Text(String(format: "%.2f", price.pricePHP))
+                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .monospacedDigit()
+                            .foregroundStyle(.white)
                     }
-                    .padding(.vertical, 10)
+                    .padding(.vertical, 12)
                     .padding(.horizontal, Space.md)
+                    if i < sortedPrices.count - 1 {
+                        Divider().overlay(Color.white.opacity(0.15))
+                    }
                 }
             }
-            .padding(.vertical, Space.sm)
+            .padding(.vertical, Space.xs)
             .glassCard()
-
-            Spacer()
-            PrimaryButton(title: "Start calculating") { finish() }
         }
     }
 
@@ -255,18 +280,28 @@ private struct PillRow<T: Hashable & Identifiable>: View {
                 ForEach(items) { item in
                     let selected = item == selection
                     Text(label(item))
-                        .rounded(14, weight: .semibold)
-                        .foregroundStyle(selected ? .white : .aigosTextSecondary)
+                        .rounded(14, weight: selected ? .bold : .semibold)
+                        .foregroundStyle(selected ? .white : .white.opacity(0.8))
                         .padding(.horizontal, Space.md)
                         .padding(.vertical, 10)
-                        .background(selected ? Color.aigosAmber : Color.white.opacity(0.12), in: Capsule())
+                        .background(selected ? Color.aigosAmber : Color.white.opacity(0.18), in: Capsule())
+                        .overlay(Capsule().stroke(selected ? Color.clear : Color.white.opacity(0.3), lineWidth: 1))
                         .onTapGesture {
                             Haptics.tap(.light)
                             selection = item
                         }
                 }
             }
+            .padding(.vertical, 2)   // room for the stroke
         }
+    }
+}
+
+private extension View {
+    /// Shared amber/glass pill styling for the driving-style option rows.
+    func onboardingPill(selected: Bool) -> some View {
+        self.background(selected ? Color.aigosAmber : Color.white.opacity(0.18), in: Capsule())
+            .overlay(Capsule().stroke(selected ? Color.clear : Color.white.opacity(0.3), lineWidth: 1))
     }
 }
 
@@ -302,8 +337,8 @@ private struct FlowPills: View {
                 } label: {
                     HStack {
                         Text(option)
-                            .rounded(15, weight: .medium)
-                            .foregroundStyle(selected ? .white : .aigosTextSecondary)
+                            .rounded(15, weight: selected ? .bold : .medium)
+                            .foregroundStyle(selected ? .white : .white.opacity(0.8))
                         Spacer()
                         if selected {
                             Image(systemName: "checkmark.circle.fill")
@@ -312,7 +347,7 @@ private struct FlowPills: View {
                     }
                     .padding(.vertical, 12)
                     .padding(.horizontal, Space.md)
-                    .background(selected ? Color.aigosAmber : Color.white.opacity(0.1), in: Capsule())
+                    .onboardingPill(selected: selected)
                 }
                 .buttonStyle(.plain)
             }

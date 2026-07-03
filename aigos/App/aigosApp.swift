@@ -48,6 +48,12 @@ struct aigosApp: App {
 struct RootView: View {
     @State private var showSplash = true
 
+    init() {
+        #if DEBUG
+        if DebugSupport.forceOnboarding { _showSplash = State(initialValue: false) }
+        #endif
+    }
+
     var body: some View {
         ZStack {
             if showSplash {
