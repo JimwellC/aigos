@@ -27,10 +27,16 @@ struct ResultCard: View {
                     detail: "at \(estimate.baseEfficiencyKmL.oneDecimal) km/L")
                 adjustmentRow("Speed", factor: estimate.speedFactor)
                 adjustmentRow("Aircon", factor: estimate.acFactor)
-                adjustmentRow("Road", factor: estimate.roadFactor)
+                adjustmentRow("Road type", factor: estimate.roadFactor)
+                adjustmentRow("Traffic", factor: estimate.trafficFactor)
+                adjustmentRow("Load", factor: estimate.loadFactor)
                 Divider().overlay(Color.white.opacity(0.2))
                 row("Adjusted fuel", value: "\(estimate.adjustedLitres.oneDecimal) L", emphasised: true)
                 row("Fuel price", value: "\(estimate.fuelPricePerLitre.phpString) / L")
+            }
+
+            if estimate.needsRefuel {
+                refuelWarning
             }
 
             if let confidence {
@@ -47,6 +53,27 @@ struct ResultCard: View {
         }
         .padding(Space.lg)
         .glassCard(cornerRadius: Radius.lg)
+    }
+
+    private var refuelWarning: some View {
+        HStack(spacing: Space.sm) {
+            Image(systemName: "fuelpump.exclamationmark")
+                .foregroundStyle(.white)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("You may need to refuel")
+                    .rounded(15, weight: .bold)
+                    .foregroundStyle(.white)
+                if let available = estimate.availableFuelLitres {
+                    Text("Needs ~\(estimate.adjustedLitres.oneDecimal) L · tank ~\(available.oneDecimal) L")
+                        .rounded(12, weight: .medium)
+                        .foregroundStyle(.white.opacity(0.85))
+                }
+            }
+            Spacer()
+        }
+        .padding(Space.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.aigosAmberDeep.opacity(0.85), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
     private var heroCostView: some View {
@@ -96,9 +123,10 @@ struct ResultCard: View {
         ResultCard(
             estimate: CalculationEngine.estimate(
                 distanceKm: 82.4, baseEfficiencyKmL: 14.5, fuelPricePerLitre: 62.55,
-                avgHighwaySpeedKmh: 110, avgCitySpeedKmh: 40, acInUse: true, roadType: .highway
+                avgHighwaySpeedKmh: 110, avgCitySpeedKmh: 40, acInUse: true, roadType: .city,
+                traffic: .heavy, load: .moderate, availableFuelLitres: 6
             ),
-            heroCost: 449.87,
+            heroCost: 713.80,
             confidence: "Getting to know you · 8 trips"
         )
         .padding()

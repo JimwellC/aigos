@@ -27,12 +27,19 @@ final class TripRecord {
     var fuelPriceAtTime: Double = 0     // snapshot when calculated
     var totalCostPHP: Double = 0
 
+    var trafficFactor: Double = 1.0     // e.g. 1.25 (heavy)
+    var loadFactor: Double = 1.0        // e.g. 1.05 (3–4 pax)
+
     var vehicleName: String = ""        // snapshot
     var fuelType: FuelType = FuelType.ron95
     var avgHighwaySpeed: Double = 0
     var avgCitySpeed: Double = 0
     var roadType: RoadType = RoadType.highway
     var acWasOn: Bool = false
+    var traffic: TrafficCondition = TrafficCondition.light
+    var load: VehicleLoad = VehicleLoad.light
+    var wasRushHour: Bool = false
+    var fuelLevel: FuelLevel = FuelLevel.full
 
     var calculatedAt: Date = Date()
     var isFavorite: Bool = false
@@ -46,7 +53,11 @@ final class TripRecord {
         avgHighwaySpeed: Double,
         avgCitySpeed: Double,
         roadType: RoadType,
-        acWasOn: Bool
+        acWasOn: Bool,
+        traffic: TrafficCondition = .light,
+        load: VehicleLoad = .light,
+        wasRushHour: Bool = false,
+        fuelLevel: FuelLevel = .full
     ) {
         self.id = UUID()
         self.origin = origin
@@ -57,6 +68,8 @@ final class TripRecord {
         self.speedFactor = estimate.speedFactor
         self.acFactor = estimate.acFactor
         self.roadFactor = estimate.roadFactor
+        self.trafficFactor = estimate.trafficFactor
+        self.loadFactor = estimate.loadFactor
         self.fuelPriceAtTime = estimate.fuelPricePerLitre
         self.totalCostPHP = estimate.estimatedCost
         self.vehicleName = vehicleName
@@ -65,6 +78,10 @@ final class TripRecord {
         self.avgCitySpeed = avgCitySpeed
         self.roadType = roadType
         self.acWasOn = acWasOn
+        self.traffic = traffic
+        self.load = load
+        self.wasRushHour = wasRushHour
+        self.fuelLevel = fuelLevel
         self.calculatedAt = Date()
     }
 }

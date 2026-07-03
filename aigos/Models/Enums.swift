@@ -30,6 +30,16 @@ enum VehicleType: String, Codable, CaseIterable, Identifiable {
         case .van: "van.fill"
         }
     }
+
+    /// Typical fuel-tank capacity (litres) used to estimate the low-fuel warning.
+    var typicalTankLiters: Double {
+        switch self {
+        case .car: 45
+        case .motorcycle: 6
+        case .truck: 100
+        case .van: 65
+        }
+    }
 }
 
 enum FuelType: String, Codable, CaseIterable, Identifiable {
@@ -93,6 +103,85 @@ enum ProfileConfidence: String, Codable {
         case .new: "Learning your style…"
         case .building: "Getting to know you"
         case .confident: "Based on your history"
+        }
+    }
+}
+
+/// Per-trip traffic condition. EDSA-at-rush-hour is "standstill".
+enum TrafficCondition: String, Codable, CaseIterable, Identifiable {
+    case light, moderate, heavy, standstill
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .light: "Light"
+        case .moderate: "Moderate"
+        case .heavy: "Heavy"
+        case .standstill: "Standstill"
+        }
+    }
+
+    /// Fuel multiplier — stop-and-go and idling burn more.
+    var factor: Double {
+        switch self {
+        case .light: 1.00
+        case .moderate: 1.08
+        case .heavy: 1.25
+        case .standstill: 1.35
+        }
+    }
+}
+
+/// How heavily the vehicle is loaded — more weight, more fuel.
+enum VehicleLoad: String, Codable, CaseIterable, Identifiable {
+    case light, moderate, full, cargo
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .light: "Driver only"
+        case .moderate: "3–4 pax"
+        case .full: "Full load"
+        case .cargo: "With cargo"
+        }
+    }
+
+    var factor: Double {
+        switch self {
+        case .light: 1.00
+        case .moderate: 1.05
+        case .full: 1.10
+        case .cargo: 1.15
+        }
+    }
+}
+
+/// Current fuel-tank level, used only for the low-fuel warning (not the cost).
+enum FuelLevel: String, Codable, CaseIterable, Identifiable {
+    case full, threeQuarters, half, quarter, low
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .full: "Full"
+        case .threeQuarters: "3/4"
+        case .half: "Half"
+        case .quarter: "1/4"
+        case .low: "Low"
+        }
+    }
+
+    /// Fraction of tank capacity assumed remaining.
+    var fraction: Double {
+        switch self {
+        case .full: 1.0
+        case .threeQuarters: 0.75
+        case .half: 0.5
+        case .quarter: 0.25
+        case .low: 0.10
         }
     }
 }

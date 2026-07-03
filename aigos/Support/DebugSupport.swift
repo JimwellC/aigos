@@ -46,7 +46,13 @@ enum DebugSupport {
 
     /// A prefilled draft so the Calculate screen shows a populated result.
     static var demoDraft: CalculatorDraft {
-        CalculatorDraft(origin: "Manila", destination: "Batangas", distanceKm: 99.2, vehicleId: nil)
+        CalculatorDraft(origin: "Manila", destination: "Batangas", distanceKm: 99.2,
+                        vehicleId: nil, traffic: .heavy, acOn: true, load: .moderate)
+    }
+
+    /// Force a low fuel level so the refuel warning shows in screenshots.
+    static var lowFuel: Bool {
+        ProcessInfo.processInfo.arguments.contains("-lowFuel")
     }
 
     @MainActor

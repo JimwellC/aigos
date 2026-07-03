@@ -46,7 +46,7 @@ Planned structure (Section 17 of the spec): `App/` (`aigosApp.swift` @main + Mod
 Physics-based, not simple multipliers. The result screen must show a full breakdown, not just a number — this transparency is a core product principle.
 
 ```
-adjustmentMultiplier = speedFactor * acFactor * roadFactor
+adjustmentMultiplier = speedFactor * acFactor * roadFactor * trafficFactor * loadFactor
 adjustedEfficiencyKmL = baseEfficiencyKmL / adjustmentMultiplier
 litresNeeded = distanceKm / adjustedEfficiencyKmL
 estimatedCost = litresNeeded * fuelPricePerLitre
@@ -55,6 +55,10 @@ estimatedCost = litresNeeded * fuelPricePerLitre
 - `speedFactor` — lookup table (Section 14E): <60 km/h → 1.18, 60–80 → 1.08, 80–100 → 1.00 (optimal), 100–120 → 1.13, >120 → 1.22.
 - `acFactor` — `1.12` when AC on, else `1.0`.
 - `roadFactor` — highway `1.00`, city `1.20`, mountain `1.35`.
+- `trafficFactor` (`TrafficCondition`) — light `1.00`, moderate `1.08`, heavy `1.25`, standstill `1.35`. Rush hour + city road auto-suggests heavy.
+- `loadFactor` (`VehicleLoad`) — driver-only `1.00`, 3–4 pax `1.05`, full `1.10`, cargo `1.15`.
+- `traffic`/`load` default to `.light` on `estimate(...)`, so any caller that omits them is unaffected. All factors are shown as separate rows in `ResultCard`.
+- Low-fuel warning: pass `availableFuelLitres` (= `FuelLevel.fraction × VehicleType.typicalTankLiters`); `FuelEstimate.needsRefuel` is true when `adjustedLitres` exceeds it. Doesn't affect cost.
 - Settings offers an L/100km toggle: convert `kmL = 100.0 / l100kmValue` before feeding the formula.
 
 ### Smart Driving Profile (Section 14 — the key differentiator)

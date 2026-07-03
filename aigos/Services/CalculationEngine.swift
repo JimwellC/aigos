@@ -23,6 +23,8 @@ struct FuelEstimate: Equatable {
     let speedFactor: Double
     let acFactor: Double
     let roadFactor: Double
+    let trafficFactor: Double
+    let loadFactor: Double
     let adjustmentMultiplier: Double
 
     let adjustedEfficiencyKmL: Double
@@ -31,10 +33,19 @@ struct FuelEstimate: Equatable {
     let fuelPricePerLitre: Double
     let estimatedCost: Double
 
+    /// Litres available in the tank right now, if a fuel level was supplied.
+    let availableFuelLitres: Double?
+
     /// Extra litres attributable to a single factor, holding the others at
     /// baseline — used for the "+0.8 L" annotations in the breakdown.
     func litres(forFactor factor: Double) -> Double {
         baseLitres * (factor - 1.0)
+    }
+
+    /// True when the trip likely needs more fuel than the tank currently holds.
+    var needsRefuel: Bool {
+        guard let available = availableFuelLitres else { return false }
+        return adjustedLitres > available
     }
 }
 
@@ -64,6 +75,11 @@ enum CalculationEngine {
     /// Runs the full estimate.
     /// - Parameter baseEfficiencyKmL: manufacturer km/L rating (already converted
     ///   from L/100km if the user is in that mode — see `kmL(fromL100:)`).
+    /// - Parameters:
+    ///   - traffic/load: per-trip conditions (default `.light` = no effect, so
+    ///     existing callers are unaffected).
+    ///   - availableFuelLitres: litres currently in the tank, for the low-fuel
+    ///     warning only; pass nil to skip the warning. Does not affect cost.
     static func estimate(
         distanceKm: Double,
         baseEfficiencyKmL: Double,
@@ -71,7 +87,10 @@ enum CalculationEngine {
         avgHighwaySpeedKmh: Double,
         avgCitySpeedKmh: Double,
         acInUse: Bool,
-        roadType: RoadType
+        roadType: RoadType,
+        traffic: TrafficCondition = .light,
+        load: VehicleLoad = .light,
+        availableFuelLitres: Double? = nil
     ) -> FuelEstimate {
         let safeEfficiency = max(baseEfficiencyKmL, 0.1)
 
@@ -83,8 +102,10 @@ enum CalculationEngine {
         let speedFactor = speedFactor(forSpeed: speed)
         let acFactor = acInUse ? 1.12 : 1.0
         let roadFactor = roadType.factor
+        let trafficFactor = traffic.factor
+        let loadFactor = load.factor
 
-        let multiplier = speedFactor * acFactor * roadFactor
+        let multiplier = speedFactor * acFactor * roadFactor * trafficFactor * loadFactor
         let adjustedEfficiency = safeEfficiency / multiplier
 
         let baseLitres = distanceKm / safeEfficiency
@@ -98,11 +119,14 @@ enum CalculationEngine {
             speedFactor: speedFactor,
             acFactor: acFactor,
             roadFactor: roadFactor,
+            trafficFactor: trafficFactor,
+            loadFactor: loadFactor,
             adjustmentMultiplier: multiplier,
             adjustedEfficiencyKmL: adjustedEfficiency,
             adjustedLitres: adjustedLitres,
             fuelPricePerLitre: fuelPricePerLitre,
-            estimatedCost: cost
+            estimatedCost: cost,
+            availableFuelLitres: availableFuelLitres
         )
     }
 

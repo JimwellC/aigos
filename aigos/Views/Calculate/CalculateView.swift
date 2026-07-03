@@ -29,6 +29,10 @@ struct CalculateView: View {
     @State private var roadType: RoadType = .highway
     @State private var avgHighwaySpeed: Double = 90
     @State private var avgCitySpeed: Double = 40
+    @State private var traffic: TrafficCondition = .light
+    @State private var vehicleLoad: VehicleLoad = .light
+    @State private var rushHour = false
+    @State private var fuelLevel: FuelLevel = .full
 
     @State private var showingDrivingDetails = false
     @State private var estimate: FuelEstimate?
@@ -54,32 +58,40 @@ struct CalculateView: View {
         ZStack {
             AigosBackground()
 
-            ScrollView {
-                VStack(spacing: Space.lg) {
-                    header
-                    vehicleCard
-                    routeCard
-                    drivingCard
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: Space.lg) {
+                        header
+                        vehicleCard
+                        routeCard
+                        drivingCard
 
-                    PrimaryButton(title: "Calculate", systemImage: "bolt.fill", enabled: canCalculate, action: calculate)
+                        PrimaryButton(title: "Calculate", systemImage: "bolt.fill", enabled: canCalculate, action: calculate)
 
-                    if let estimate {
-                        ResultCard(estimate: estimate, heroCost: heroCost, confidence: confidenceText)
-                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                        if let estimate {
+                            ResultCard(estimate: estimate, heroCost: heroCost, confidence: confidenceText)
+                                .id("result")
+                                .transition(.move(edge: .bottom).combined(with: .opacity))
 
-                        SecondaryButton(
-                            title: savedThisRoute ? "Saved to routes" : "Save this route",
-                            systemImage: savedThisRoute ? "star.fill" : "star",
-                            action: saveRoute
-                        )
-                        .disabled(savedThisRoute)
+                            SecondaryButton(
+                                title: savedThisRoute ? "Saved to routes" : "Save this route",
+                                systemImage: savedThisRoute ? "star.fill" : "star",
+                                action: saveRoute
+                            )
+                            .disabled(savedThisRoute)
+                        }
+                    }
+                    .padding(.horizontal, Space.screen)
+                    .padding(.top, Space.xl)
+                    .padding(.bottom, Space.xxl)
+                }
+                .scrollDismissesKeyboard(.interactively)
+                .onChange(of: estimate) { _, e in
+                    if e != nil {
+                        withAnimation(.snappy) { proxy.scrollTo("result", anchor: .top) }
                     }
                 }
-                .padding(.horizontal, Space.screen)
-                .padding(.top, Space.xl)
-                .padding(.bottom, Space.xxl)
             }
-            .scrollDismissesKeyboard(.interactively)
         }
         .sheet(isPresented: $showingVehiclePicker) {
             VehiclePicker(selectedVehicleID: $selectedVehicleID)
@@ -246,7 +258,22 @@ struct CalculateView: View {
                         .foregroundStyle(.white)
                 }
             } else {
-                roadTypePicker
+                labeled("Road type") { roadTypePicker }
+
+                labeled("Traffic") {
+                    pillRow(TrafficCondition.allCases, selection: $traffic) { $0.label }
+                }
+                Toggle(isOn: $rushHour) {
+                    Text("Rush hour (7–9 AM, 5–8 PM)")
+                        .rounded(15, weight: .medium)
+                        .foregroundStyle(.white)
+                }
+                .tint(Color.aigosAmber)
+
+                labeled("Passengers / load") {
+                    pillRow(VehicleLoad.allCases, selection: $vehicleLoad) { $0.label }
+                }
+
                 Toggle(isOn: $acInUse) {
                     Text("Aircon on")
                         .rounded(15, weight: .medium)
@@ -254,12 +281,48 @@ struct CalculateView: View {
                 }
                 .tint(Color.aigosAmber)
 
+                labeled("Fuel level") {
+                    pillRow(FuelLevel.allCases, selection: $fuelLevel) { $0.label }
+                }
+
                 speedSlider(title: "Highway speed", value: $avgHighwaySpeed, range: 40...140)
                 speedSlider(title: "City speed", value: $avgCitySpeed, range: 10...80)
             }
         }
         .padding(Space.md)
         .glassCard()
+        // Rush hour on a city road → suggest Heavy traffic (user can still change).
+        .onChange(of: rushHour) { _, on in if on, roadType == .city { traffic = .heavy } }
+        .onChange(of: roadType) { _, rt in if rushHour, rt == .city { traffic = .heavy } }
+    }
+
+    private func labeled<Content: View>(_ title: String, @ViewBuilder _ content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title.uppercased())
+                .rounded(11, weight: .semibold)
+                .kerning(0.8)
+                .foregroundStyle(Color.aigosTextTertiary)
+            content()
+        }
+    }
+
+    private func pillRow<T: Identifiable & Hashable>(
+        _ items: [T], selection: Binding<T>, label: @escaping (T) -> String
+    ) -> some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: Space.sm) {
+                ForEach(items) { item in
+                    let on = selection.wrappedValue == item
+                    Text(label(item))
+                        .rounded(13, weight: .semibold)
+                        .foregroundStyle(on ? .white : Color.aigosTextSecondary)
+                        .padding(.horizontal, Space.md)
+                        .padding(.vertical, 8)
+                        .background(on ? Color.aigosAmber : Color.white.opacity(0.12), in: Capsule())
+                        .onTapGesture { Haptics.tap(.light); selection.wrappedValue = item }
+                }
+            }
+        }
     }
 
     private var roadTypePicker: some View {
@@ -321,6 +384,7 @@ struct CalculateView: View {
         applyDraft(appState.pendingDraft)
         #if DEBUG
         if DebugSupport.autoOpenTalk { showingTalk = true }
+        if DebugSupport.lowFuel { fuelLevel = .low }
         #endif
     }
 
@@ -345,8 +409,22 @@ struct CalculateView: View {
         if let id = draft.vehicleId, vehicles.contains(where: { $0.id == id }) {
             selectedVehicleID = id
         }
+        // Conditions understood by Talk to aigos.
+        if let ac = draft.acOn { acInUse = ac }
+        if let r = draft.rushHour { rushHour = r }
+        if let l = draft.load { vehicleLoad = l }
+        if let t = draft.traffic { traffic = t }
+        if draft.traffic != nil || draft.rushHour != nil || draft.load != nil || draft.acOn != nil {
+            showingDrivingDetails = true   // reveal so the user sees what was set
+        }
         appState.pendingDraft = nil
         DispatchQueue.main.async { calculate() }
+    }
+
+    /// Litres currently in the tank, used only for the low-fuel warning.
+    private var availableFuelLitres: Double? {
+        guard let vehicle = selectedVehicle else { return nil }
+        return fuelLevel.fraction * vehicle.type.typicalTankLiters
     }
 
     private func estimateDistance() {
@@ -372,7 +450,10 @@ struct CalculateView: View {
             avgHighwaySpeedKmh: avgHighwaySpeed,
             avgCitySpeedKmh: avgCitySpeed,
             acInUse: acInUse,
-            roadType: roadType
+            roadType: roadType,
+            traffic: traffic,
+            load: vehicleLoad,
+            availableFuelLitres: availableFuelLitres
         )
 
         withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
@@ -393,7 +474,11 @@ struct CalculateView: View {
             avgHighwaySpeed: avgHighwaySpeed,
             avgCitySpeed: avgCitySpeed,
             roadType: roadType,
-            acWasOn: acInUse
+            acWasOn: acInUse,
+            traffic: traffic,
+            load: vehicleLoad,
+            wasRushHour: rushHour,
+            fuelLevel: fuelLevel
         )
         context.insert(trip)
         if let profile = vehicle.drivingProfile {

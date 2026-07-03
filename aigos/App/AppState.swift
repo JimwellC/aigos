@@ -35,12 +35,17 @@ enum Tab: Int, CaseIterable, Identifiable {
     }
 }
 
-/// A route handed from Saved → Calculate for one-tap recalculation.
+/// A route handed from Saved/Talk → Calculate for one-tap recalculation.
+/// Optional hints let Talk to aigos preset conditions it understood from a query.
 struct CalculatorDraft: Equatable {
     let origin: String
     let destination: String
     let distanceKm: Double
     let vehicleId: UUID?
+    var traffic: TrafficCondition? = nil
+    var acOn: Bool? = nil
+    var rushHour: Bool? = nil
+    var load: VehicleLoad? = nil
 }
 
 @Observable

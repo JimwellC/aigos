@@ -25,8 +25,8 @@ struct TalkToAigosView: View {
 
     private let suggestions = [
         "Manila to Batangas",
-        "How much to drive Pampanga to Manila?",
-        "Makati to Tagaytay in my car",
+        "Pampanga to Manila with heavy traffic",
+        "Makati to Tagaytay during rush hour, AC on",
     ]
 
     var body: some View {
@@ -185,6 +185,13 @@ struct TalkToAigosView: View {
         }
 
         let profile = vehicle.drivingProfile
+        let roadType = profile?.defaultRoadType ?? .highway
+        let rush = query.rushHour ?? false
+        // Rush hour on city roads implies heavy traffic (Section 2 rule).
+        let traffic = query.traffic ?? ((rush && roadType == .city) ? .heavy : .light)
+        let acOn = query.acOn ?? (profile?.usesACByDefault ?? true)
+        let load = query.load ?? .light
+
         let price = PriceService.price(for: vehicle.fuelType, in: context)
         let estimate = CalculationEngine.estimate(
             distanceKm: route.distanceKm,
@@ -192,17 +199,31 @@ struct TalkToAigosView: View {
             fuelPricePerLitre: price,
             avgHighwaySpeedKmh: profile?.avgHighwaySpeedKmh ?? 90,
             avgCitySpeedKmh: profile?.avgCitySpeedKmh ?? 40,
-            acInUse: profile?.usesACByDefault ?? true,
-            roadType: profile?.defaultRoadType ?? .highway
+            acInUse: acOn,
+            roadType: roadType,
+            traffic: traffic,
+            load: load
         )
+
+        var conditions: [String] = []
+        if traffic != .light { conditions.append("\(traffic.label.lowercased()) traffic") }
+        if load != .light { conditions.append(load.label.lowercased()) }
+        if query.acOn == true { conditions.append("AC on") }
+        if query.acOn == false { conditions.append("no AC") }
+        if rush { conditions.append("rush hour") }
+        let condText = conditions.isEmpty ? "" : " with \(conditions.joined(separator: ", "))"
 
         let draft = CalculatorDraft(
             origin: query.origin.capitalized,
             destination: query.destination.capitalized,
             distanceKm: route.distanceKm,
-            vehicleId: vehicle.id
+            vehicleId: vehicle.id,
+            traffic: query.traffic ?? ((rush && roadType == .city) ? .heavy : nil),
+            acOn: query.acOn,
+            rushHour: query.rushHour,
+            load: query.load
         )
-        let text = "\(query.origin.capitalized) → \(query.destination.capitalized) is about \(route.distanceKm.oneDecimal) km. In your \(vehicle.name), that's roughly \(estimate.estimatedCost.phpString)."
+        let text = "\(query.origin.capitalized) → \(query.destination.capitalized) is about \(route.distanceKm.oneDecimal) km\(condText). In your \(vehicle.name), that's roughly \(estimate.estimatedCost.phpString)."
         return ChatMessage(role: .aigos, text: text, result: ChatResult(draft: draft, costText: estimate.estimatedCost.phpString))
     }
 }

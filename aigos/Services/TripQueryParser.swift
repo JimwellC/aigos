@@ -15,7 +15,11 @@ import Foundation
 struct TripQuery: Equatable {
     let origin: String
     let destination: String
-    let vehicleName: String?   // the vehicle named in the query, if any
+    let vehicleName: String?          // the vehicle named in the query, if any
+    var traffic: TrafficCondition?    // detected condition, if mentioned
+    var acOn: Bool?                   // "with AC" / "no aircon"
+    var rushHour: Bool?               // "during rush hour"
+    var load: VehicleLoad?            // "with cargo" / "full load" / passengers
 }
 
 enum TripQueryParser {
@@ -25,12 +29,20 @@ enum TripQueryParser {
         "an", "me", "my", "i", "if", "what", "whats", "what's", "is", "in", "on",
         "for", "of", "between", "and", "trip", "fuel", "gas", "price", "by",
         "with", "car", "travel", "need", "about", "roughly", "spend", "up",
+        // Condition keywords — detected separately by detectHints(), so strip them
+        // here to keep place parsing clean (e.g. "manila to batangas heavy traffic").
+        "traffic", "heavy", "moderate", "light", "standstill", "gridlock", "bumper",
+        "edsa", "rush", "hour", "peak", "jam", "aircon", "ac", "air", "con",
+        "cargo", "load", "loaded", "hauling", "passenger", "passengers", "during",
+        "friday", "weekday", "family", "people", "clear", "free", "flowing",
+        "full", "some", "bad", "no", "without", "off", "not", "moving",
     ]
 
     static func parse(_ text: String, vehicles: [VehicleProfile],
                       personalPlaces: [PersonalPlace] = []) -> TripQuery? {
         // Configured personal-place names count as valid places (e.g. "home").
         let aliases = Set(PlaceResolver.aliasMap(personalPlaces).keys)
+        let hints = detectHints(text.lowercased())
         var lower = text.lowercased()
         for p in ["?", "!", ".", ",", "'"] {
             lower = lower.replacingOccurrences(of: p, with: " ")
@@ -61,7 +73,7 @@ enum TripQueryParser {
             if let origin = longestPlace(Array(tokens[..<idx]), aliases: aliases),
                let destination = longestPlace(Array(tokens[(idx + 1)...]), aliases: aliases),
                origin != destination {
-                return TripQuery(origin: origin, destination: destination, vehicleName: matched?.name)
+                return makeQuery(origin, destination, matched?.name, hints)
             }
         }
 
@@ -69,10 +81,71 @@ enum TripQueryParser {
         if let destination = placeAfter("to", in: tokens, aliases: aliases),
            let origin = placeAfter("from", in: tokens, aliases: aliases),
            origin != destination {
-            return TripQuery(origin: origin, destination: destination, vehicleName: matched?.name)
+            return makeQuery(origin, destination, matched?.name, hints)
+        }
+
+        // 4. Destination only + a configured "Home" shortcut → assume origin = Home
+        //    (e.g. "how much to drive to Makati during rush hour?").
+        if aliases.contains("home"),
+           let destination = placeAfter("to", in: tokens, aliases: aliases),
+           destination != "home" {
+            return makeQuery("home", destination, matched?.name, hints)
         }
 
         return nil
+    }
+
+    private struct Hints { var traffic: TrafficCondition?; var acOn: Bool?; var rushHour: Bool?; var load: VehicleLoad? }
+
+    private static func makeQuery(_ origin: String, _ destination: String, _ vehicle: String?, _ h: Hints) -> TripQuery {
+        TripQuery(origin: origin, destination: destination, vehicleName: vehicle,
+                  traffic: h.traffic, acOn: h.acOn, rushHour: h.rushHour, load: h.load)
+    }
+
+    /// Detect trip-condition hints from the raw query (traffic, rush hour, AC, load).
+    private static func detectHints(_ text: String) -> Hints {
+        var h = Hints()
+
+        // Traffic — check the most severe phrases first. "EDSA" implies standstill.
+        if text.contains("standstill") || text.contains("bumper") || text.contains("gridlock")
+            || text.contains("edsa") || text.contains("not moving") {
+            h.traffic = .standstill
+        } else if text.contains("heavy traffic") || text.contains("bad traffic")
+            || text.contains("traffic jam") || text.contains("heavy") {
+            h.traffic = .heavy
+        } else if text.contains("moderate traffic") || text.contains("some traffic") || text.contains("moderate") {
+            h.traffic = .moderate
+        } else if text.contains("light traffic") || text.contains("no traffic")
+            || text.contains("clear road") || text.contains("free flowing") {
+            h.traffic = .light
+        }
+
+        // Rush hour.
+        if text.contains("rush hour") || text.contains("rush-hour")
+            || text.contains("peak hour") || text.contains("rush") {
+            h.rushHour = true
+        }
+
+        // Aircon — negative phrasing wins.
+        if text.contains("no ac") || text.contains("without ac") || text.contains("ac off")
+            || text.contains("no aircon") || text.contains("without aircon") || text.contains("aircon off") {
+            h.acOn = false
+        } else if text.contains("with ac") || text.contains(" ac on") || text.contains("aircon")
+            || text.contains("air-con") || text.contains("air con") {
+            h.acOn = true
+        }
+
+        // Load.
+        if text.contains("cargo") || text.contains("loaded with") || text.contains("hauling") {
+            h.load = .cargo
+        } else if text.contains("full load") || text.contains("fully loaded") || text.contains("full of") {
+            h.load = .full
+        } else if text.contains("passenger") || text.contains("with family")
+            || text.contains("3 people") || text.contains("4 people") {
+            h.load = .moderate
+        }
+
+        return h
     }
 
     private static func isPlace(_ candidate: String, aliases: Set<String>) -> Bool {
