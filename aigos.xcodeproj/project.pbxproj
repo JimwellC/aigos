@@ -3,8 +3,18 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 70;
 	objects = {
+
+/* Begin PBXContainerItemProxy section */
+		2B0000000000000000000011 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1A000000000000000000000A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1A0000000000000000000006;
+			remoteInfo = aigos;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		1A0000000000000000000002 /* aigos.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = aigos.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -17,51 +27,91 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		1A0000000000000000000003 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
-		2B0000000000000000000003 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		1A0000000000000000000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2B0000000000000000000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		1A0000000000000000000004 = {isa = PBXGroup; children = (
+		1A0000000000000000000004 = {
+			isa = PBXGroup;
+			children = (
 				1A0000000000000000000001 /* aigos */,
 				2B0000000000000000000001 /* aigosTests */,
 				1A0000000000000000000005 /* Products */,
-			); sourceTree = "<group>"; };
-		1A0000000000000000000005 /* Products */ = {isa = PBXGroup; children = (
+			);
+			sourceTree = "<group>";
+		};
+		1A0000000000000000000005 /* Products */ = {
+			isa = PBXGroup;
+			children = (
 				1A0000000000000000000002 /* aigos.app */,
 				2B0000000000000000000002 /* aigosTests.xctest */,
-			); name = Products; sourceTree = "<group>"; };
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		1A0000000000000000000006 /* aigos */ = {isa = PBXNativeTarget; buildConfigurationList = 1A0000000000000000000007 /* Build configuration list for PBXNativeTarget "aigos" */; buildPhases = (
+		1A0000000000000000000006 /* aigos */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1A0000000000000000000007 /* Build configuration list for PBXNativeTarget "aigos" */;
+			buildPhases = (
 				1A0000000000000000000008 /* Sources */,
 				1A0000000000000000000003 /* Frameworks */,
 				1A0000000000000000000009 /* Resources */,
-			); buildRules = (); dependencies = (); fileSystemSynchronizedGroups = (
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
 				1A0000000000000000000001 /* aigos */,
-			); name = aigos; productName = aigos; productReference = 1A0000000000000000000002 /* aigos.app */; productType = "com.apple.product-type.application"; };
-		2B0000000000000000000006 /* aigosTests */ = {isa = PBXNativeTarget; buildConfigurationList = 2B0000000000000000000007 /* Build configuration list for PBXNativeTarget "aigosTests" */; buildPhases = (
+			);
+			name = aigos;
+			productName = aigos;
+			productReference = 1A0000000000000000000002 /* aigos.app */;
+			productType = "com.apple.product-type.application";
+		};
+		2B0000000000000000000006 /* aigosTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2B0000000000000000000007 /* Build configuration list for PBXNativeTarget "aigosTests" */;
+			buildPhases = (
 				2B0000000000000000000008 /* Sources */,
 				2B0000000000000000000003 /* Frameworks */,
 				2B0000000000000000000009 /* Resources */,
-			); buildRules = (); dependencies = (
+			);
+			buildRules = (
+			);
+			dependencies = (
 				2B0000000000000000000010 /* PBXTargetDependency */,
-			); fileSystemSynchronizedGroups = (
+			);
+			fileSystemSynchronizedGroups = (
 				2B0000000000000000000001 /* aigosTests */,
-			); name = aigosTests; productName = aigosTests; productReference = 2B0000000000000000000002 /* aigosTests.xctest */; productType = "com.apple.product-type.bundle.unit-test"; };
+			);
+			name = aigosTests;
+			productName = aigosTests;
+			productReference = 2B0000000000000000000002 /* aigosTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
-/* Begin PBXTargetDependency section */
-		2B0000000000000000000010 /* PBXTargetDependency */ = {isa = PBXTargetDependency; target = 1A0000000000000000000006 /* aigos */; targetProxy = 2B0000000000000000000011 /* PBXContainerItemProxy */; };
-/* End PBXTargetDependency section */
-
-/* Begin PBXContainerItemProxy section */
-		2B0000000000000000000011 /* PBXContainerItemProxy */ = {isa = PBXContainerItemProxy; containerPortal = 1A000000000000000000000A /* Project object */; proxyType = 1; remoteGlobalIDString = 1A0000000000000000000006; remoteInfo = aigos; };
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXProject section */
-		1A000000000000000000000A /* Project object */ = {isa = PBXProject; attributes = {
+		1A000000000000000000000A /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1640;
 				LastUpgradeCheck = 1640;
@@ -74,27 +124,72 @@
 						TestTargetID = 1A0000000000000000000006;
 					};
 				};
-			}; buildConfigurationList = 1A000000000000000000000B /* Build configuration list for PBXProject "aigos" */; compatibilityVersion = "Xcode 15.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (
+			};
+			buildConfigurationList = 1A000000000000000000000B /* Build configuration list for PBXProject "aigos" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
 				en,
 				Base,
-			); mainGroup = 1A0000000000000000000004; productRefGroup = 1A0000000000000000000005 /* Products */; projectDirPath = ""; projectRoot = ""; targets = (
+			);
+			mainGroup = 1A0000000000000000000004;
+			productRefGroup = 1A0000000000000000000005 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
 				1A0000000000000000000006 /* aigos */,
 				2B0000000000000000000006 /* aigosTests */,
-			); };
+			);
+		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		1A0000000000000000000009 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
-		2B0000000000000000000009 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		1A0000000000000000000009 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2B0000000000000000000009 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		1A0000000000000000000008 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
-		2B0000000000000000000008 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		1A0000000000000000000008 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2B0000000000000000000008 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		2B0000000000000000000010 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1A0000000000000000000006 /* aigos */;
+			targetProxy = 2B0000000000000000000011 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
-		1A000000000000000000000C /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {
+		1A000000000000000000000C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -137,8 +232,12 @@
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-			}; name = Debug; };
-		1A000000000000000000000D /* Release */ = {isa = XCBuildConfiguration; buildSettings = {
+			};
+			name = Debug;
+		};
+		1A000000000000000000000D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -174,21 +273,25 @@
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
-			}; name = Release; };
-		1A000000000000000000000E /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {
+			};
+			name = Release;
+		};
+		1A000000000000000000000E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = MWJJ994KSX;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "aigos uses your location to set your starting point. Never stored or shared.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "aigos uses your location to set your starting point. Never stored or shared.";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -200,21 +303,25 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
-			}; name = Debug; };
-		1A000000000000000000000F /* Release */ = {isa = XCBuildConfiguration; buildSettings = {
+			};
+			name = Debug;
+		};
+		1A000000000000000000000F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = MWJJ994KSX;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "aigos uses your location to set your starting point. Never stored or shared.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "aigos uses your location to set your starting point. Never stored or shared.";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -226,8 +333,12 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
-			}; name = Release; };
-		2B000000000000000000000E /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {
+			};
+			name = Release;
+		};
+		2B000000000000000000000E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -240,8 +351,12 @@
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/aigos.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/aigos";
-			}; name = Debug; };
-		2B000000000000000000000F /* Release */ = {isa = XCBuildConfiguration; buildSettings = {
+			};
+			name = Debug;
+		};
+		2B000000000000000000000F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -254,22 +369,39 @@
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/aigos.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/aigos";
-			}; name = Release; };
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1A0000000000000000000007 /* Build configuration list for PBXNativeTarget "aigos" */ = {isa = XCConfigurationList; buildConfigurations = (
+		1A0000000000000000000007 /* Build configuration list for PBXNativeTarget "aigos" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
 				1A000000000000000000000E /* Debug */,
 				1A000000000000000000000F /* Release */,
-			); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
-		1A000000000000000000000B /* Build configuration list for PBXProject "aigos" */ = {isa = XCConfigurationList; buildConfigurations = (
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1A000000000000000000000B /* Build configuration list for PBXProject "aigos" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
 				1A000000000000000000000C /* Debug */,
 				1A000000000000000000000D /* Release */,
-			); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
-		2B0000000000000000000007 /* Build configuration list for PBXNativeTarget "aigosTests" */ = {isa = XCConfigurationList; buildConfigurations = (
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2B0000000000000000000007 /* Build configuration list for PBXNativeTarget "aigosTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
 				2B000000000000000000000E /* Debug */,
 				2B000000000000000000000F /* Release */,
-			); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 	};
 	rootObject = 1A000000000000000000000A /* Project object */;
