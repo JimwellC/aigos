@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-**Sprints 1 & 2 built.** The `aigos.xcodeproj` app exists and builds warning-clean (Swift 6, iOS 17+); `aigos_architecture.pdf` remains the source-of-truth spec. Done: 5-tab shell with a custom amber tab bar, SwiftData models, physics `CalculationEngine`, editable prices, trip history with month-over-month comparison, saved routes with one-tap recalc, the self-learning `ProfileLearningEngine`, and the first-launch onboarding flow. The whole UI follows the glassmorphism design system (see `UI_GUIDELINES.md` / `skills/swiftui-design.md`) built in `Support/DesignSystem.swift`. Not yet built: real OSRM routing (still a gazetteer prototype behind `RouteResolver`), "Talk to aigos" / Apple Intelligence (Sprint 3), a unit-test target, and real app-icon/mascot art.
+**Sprints 1–3 built.** The `aigos.xcodeproj` app exists and builds warning-clean (Swift 6, iOS 17+); `aigos_architecture.pdf` remains the source-of-truth spec. Done: 5-tab shell with a custom amber tab bar, SwiftData models, physics `CalculationEngine`, editable prices, trip history with month-over-month comparison, saved routes with one-tap recalc, the self-learning `ProfileLearningEngine`, first-launch onboarding, and "Talk to aigos" natural-language trip queries (`TalkToAigosView`). The whole UI follows the glassmorphism design system (see `UI_GUIDELINES.md` / `skills/swiftui-design.md`) built in `Support/DesignSystem.swift`. Not yet built: real OSRM routing (still a gazetteer prototype behind `RouteResolver`), a unit-test target, and real app-icon/mascot art.
+
+**Apple Intelligence reality check:** this Xcode 16.4 / iOS 18.5 SDK does **not** ship the `FoundationModels` framework (Apple's on-device LLM API lands in a later SDK), so the spec's `LanguageModelSession.isSupported` gate can't compile here. `AIAvailability` puts the real system-model path behind `#if canImport(FoundationModels)` (excluded now, lights up when built against that SDK on an A17 Pro+ device); NL understanding today runs through `TripQueryParser`, a deterministic offline parser that works on every device. Don't add `import FoundationModels` outside that guard until the SDK provides it.
 
 Extract the PDF text if you need to re-read the spec:
 
@@ -57,9 +59,9 @@ estimatedCost = litresNeeded * fuelPricePerLitre
 
 Per-vehicle, set via the "Talk to aigos" hybrid interview (mascot chat bubble + tap-to-answer buttons, no keyboard) before each trip, and self-corrects from trip history. After each trip, `ProfileLearningEngine.updateProfile` updates a rolling average (recent 10 trips weighted most) and bumps `confidenceLevel` by trip count (0–4 new / 5–14 building / 15+ confident). Remember the last answers per vehicle and offer a one-tap "Same as last time?" confirm.
 
-### Apple Intelligence gate (Section 13)
+### Talk to aigos / Apple Intelligence gate (Section 13)
 
-"Talk to aigos" NL queries use the **Foundation Models** framework (`import FoundationModels`, on-device, free). Gate at runtime: `if #available(iOS 18.1, *) { LanguageModelSession.isSupported }` — true on A17 Pro+ (iPhone 15 Pro / 16). On unsupported devices show `AIGateView` and fall back to the standard calculator. **The core app must work 100% without AI on any iOS 17+ device** — AI is enhancement only.
+"Talk to aigos" (`Views/TalkToAigos/`) answers plain-English trip queries. Entry point is the chat button in `CalculateView`'s header. Pipeline: `TripQueryParser.parse` extracts origin/destination/vehicle (reusing the gazetteer via `GazetteerRouteResolver.lookup`/`isPlace`/`isPlaceKey`) → `CalculationEngine` estimates → the reply offers "Open in Calculator", which hands a `CalculatorDraft` to `CalculateView` for the real (saved + learning) calc. `AIAvailability` is the gate (`#if canImport(FoundationModels)` for the real system model, else offline parser) and drives the header badge + `AIGateView`. **The core app — and Talk to aigos — must work 100% without Apple Intelligence on any iOS 17+ device** (the parser is deterministic and offline); AI only enhances understanding when present.
 
 ### Routing (highest technical risk — prototype first)
 

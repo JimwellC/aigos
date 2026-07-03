@@ -1,0 +1,277 @@
+//
+//  TalkToAigosView.swift
+//  aigos
+//
+//  "Talk to aigos" natural-language trip queries (Section 7, Feature 07). Ask in
+//  plain English — "How much to drive Pampanga to Manila in my Vios?" — and aigos
+//  replies with a cost, then hands off to the calculator for the saved, learning
+//  calculation. Understanding is on-device: Apple Intelligence when available,
+//  otherwise the built-in offline parser (works on every device).
+//
+
+import SwiftUI
+import SwiftData
+
+struct TalkToAigosView: View {
+    @Environment(\.modelContext) private var context
+    @Environment(AppState.self) private var appState
+    @Environment(\.dismiss) private var dismiss
+    @Query(sort: \VehicleProfile.createdAt) private var vehicles: [VehicleProfile]
+
+    @State private var messages: [ChatMessage] = []
+    @State private var input = ""
+    @State private var showingGate = false
+
+    private let resolver = GazetteerRouteResolver()
+    private let suggestions = [
+        "Manila to Batangas",
+        "How much to drive Pampanga to Manila?",
+        "Makati to Tagaytay in my car",
+    ]
+
+    var body: some View {
+        ZStack {
+            AigosBackground()
+
+            VStack(spacing: 0) {
+                header
+                messageList
+                inputBar
+            }
+        }
+        .sheet(isPresented: $showingGate) { AIGateView() }
+        .onAppear(perform: greetIfNeeded)
+    }
+
+    // MARK: - Header
+
+    private var header: some View {
+        HStack(spacing: Space.md) {
+            MascotView(size: 44)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Talk to aigos")
+                    .rounded(20, weight: .bold)
+                    .foregroundStyle(.white)
+                Button { showingGate = true } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: AIAvailability.isAvailable ? "apple.logo" : "wifi.slash")
+                            .font(.system(size: 10))
+                        Text(AIAvailability.badgeText)
+                            .rounded(12, weight: .medium)
+                        Image(systemName: "info.circle")
+                            .font(.system(size: 10))
+                    }
+                    .foregroundStyle(Color.aigosTextSecondary)
+                }
+            }
+            Spacer()
+            Button("Done") { dismiss() }
+                .rounded(16, weight: .semibold)
+                .foregroundStyle(.white)
+        }
+        .padding(.horizontal, Space.screen)
+        .padding(.vertical, Space.md)
+    }
+
+    // MARK: - Messages
+
+    private var messageList: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: Space.md) {
+                    ForEach(messages) { message in
+                        ChatBubble(message: message) { draft in
+                            appState.recalculate(draft)
+                            dismiss()
+                        }
+                        .id(message.id)
+                    }
+
+                    if messages.count <= 1 {
+                        VStack(alignment: .leading, spacing: Space.sm) {
+                            ForEach(suggestions, id: \.self) { s in
+                                Button {
+                                    send(s)
+                                } label: {
+                                    Text(s)
+                                        .rounded(14, weight: .medium)
+                                        .foregroundStyle(.white)
+                                        .padding(.horizontal, Space.md)
+                                        .padding(.vertical, 10)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .background(Color.white.opacity(0.12), in: Capsule())
+                                        .overlay(Capsule().stroke(Color.white.opacity(0.25), lineWidth: 1))
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.top, Space.sm)
+                    }
+                }
+                .padding(.horizontal, Space.screen)
+                .padding(.vertical, Space.md)
+            }
+            .onChange(of: messages.count) { _, _ in
+                if let last = messages.last {
+                    withAnimation { proxy.scrollTo(last.id, anchor: .bottom) }
+                }
+            }
+        }
+    }
+
+    // MARK: - Input
+
+    private var inputBar: some View {
+        HStack(spacing: Space.sm) {
+            GlassField(placeholder: "Ask a trip…", text: $input)
+            Button {
+                send(input)
+            } label: {
+                Image(systemName: "arrow.up")
+                    .rounded(18, weight: .bold)
+                    .foregroundStyle(.white)
+                    .frame(width: 48, height: 48)
+                    .background(Color.aigosAmber.opacity(input.trimmingCharacters(in: .whitespaces).isEmpty ? 0.4 : 1), in: Circle())
+            }
+            .buttonStyle(.plain)
+            .disabled(input.trimmingCharacters(in: .whitespaces).isEmpty)
+        }
+        .padding(.horizontal, Space.screen)
+        .padding(.vertical, Space.md)
+        .background(.ultraThinMaterial.opacity(0.001))
+    }
+
+    // MARK: - Logic
+
+    private func greetIfNeeded() {
+        guard messages.isEmpty else { return }
+        messages.append(ChatMessage(
+            role: .aigos,
+            text: "Hi! I'm aigos 🚙 Ask me a trip in plain English — like “How much to drive Pampanga to Manila?”"
+        ))
+        #if DEBUG
+        if let q = DebugSupport.talkQuery {
+            DispatchQueue.main.async { send(q) }
+        }
+        #endif
+    }
+
+    private func send(_ text: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        Haptics.tap(.light)
+        input = ""
+        messages.append(ChatMessage(role: .user, text: trimmed))
+        messages.append(reply(to: trimmed))
+    }
+
+    private func reply(to text: String) -> ChatMessage {
+        guard let query = TripQueryParser.parse(text, vehicles: vehicles) else {
+            return ChatMessage(
+                role: .aigos,
+                text: "I couldn't spot a route in that. Try something like “Manila to Batangas”, or give me an origin and a destination."
+            )
+        }
+        guard let route = resolver.route(from: query.origin, to: query.destination) else {
+            return ChatMessage(role: .aigos, text: "I don't know one of those places yet. Try a nearby city or type the distance in the calculator.")
+        }
+
+        let vehicle = vehicles.first { $0.name == query.vehicleName }
+            ?? vehicles.first(where: \.isDefault)
+            ?? vehicles.first
+        guard let vehicle else {
+            return ChatMessage(role: .aigos, text: "Add a vehicle first and I can estimate this trip for you.")
+        }
+
+        let profile = vehicle.drivingProfile
+        let price = PriceService.price(for: vehicle.fuelType, in: context)
+        let estimate = CalculationEngine.estimate(
+            distanceKm: route.distanceKm,
+            baseEfficiencyKmL: vehicle.efficiencyKmL,
+            fuelPricePerLitre: price,
+            avgHighwaySpeedKmh: profile?.avgHighwaySpeedKmh ?? 90,
+            avgCitySpeedKmh: profile?.avgCitySpeedKmh ?? 40,
+            acInUse: profile?.usesACByDefault ?? true,
+            roadType: profile?.defaultRoadType ?? .highway
+        )
+
+        let draft = CalculatorDraft(
+            origin: query.origin.capitalized,
+            destination: query.destination.capitalized,
+            distanceKm: route.distanceKm,
+            vehicleId: vehicle.id
+        )
+        let text = "\(query.origin.capitalized) → \(query.destination.capitalized) is about \(route.distanceKm.oneDecimal) km. In your \(vehicle.name), that's roughly \(estimate.estimatedCost.phpString)."
+        return ChatMessage(role: .aigos, text: text, result: ChatResult(draft: draft, costText: estimate.estimatedCost.phpString))
+    }
+}
+
+// MARK: - Model
+
+struct ChatResult: Equatable {
+    let draft: CalculatorDraft
+    let costText: String
+}
+
+struct ChatMessage: Identifiable {
+    enum Role { case user, aigos }
+    let id = UUID()
+    let role: Role
+    let text: String
+    var result: ChatResult? = nil
+}
+
+// MARK: - Bubble
+
+private struct ChatBubble: View {
+    let message: ChatMessage
+    let onOpen: (CalculatorDraft) -> Void
+
+    var body: some View {
+        HStack {
+            if message.role == .user { Spacer(minLength: 40) }
+
+            VStack(alignment: .leading, spacing: Space.sm) {
+                Text(message.text)
+                    .rounded(15, weight: .medium)
+                    .foregroundStyle(.white)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if let result = message.result {
+                    Button {
+                        onOpen(result.draft)
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "bolt.fill")
+                            Text("Open in Calculator")
+                        }
+                        .rounded(13, weight: .semibold)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, Space.md)
+                        .padding(.vertical, 8)
+                        .background(Color.aigosAmber, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(Space.md)
+            .background(message.role == .user ? Color.aigosAmber.opacity(0.9) : Color.white.opacity(0.14))
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+            )
+
+            if message.role == .aigos { Spacer(minLength: 40) }
+        }
+    }
+}
+
+#Preview {
+    TalkToAigosView()
+        .environment(AppState())
+        .modelContainer(for: [
+            VehicleProfile.self, DrivingProfile.self, TripRecord.self,
+            SavedRoute.self, FuelPriceCache.self,
+        ], inMemory: true)
+}

@@ -20,6 +20,17 @@ enum DebugSupport {
         ProcessInfo.processInfo.arguments.contains("-seedDemo")
     }
 
+    /// Auto-present Talk to aigos (optionally with a seeded query) for screenshots.
+    static var autoOpenTalk: Bool {
+        ProcessInfo.processInfo.arguments.contains("-talk")
+    }
+
+    static var talkQuery: String? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-talkQuery"), i + 1 < args.count else { return nil }
+        return args[i + 1]
+    }
+
     static var initialTab: Tab? {
         let args = ProcessInfo.processInfo.arguments
         guard let i = args.firstIndex(of: "-tab"), i + 1 < args.count else { return nil }

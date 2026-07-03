@@ -87,22 +87,42 @@ struct GazetteerRouteResolver: RouteResolver {
         "davao": .init(lat: 7.1907, lon: 125.4553),
         "cagayan de oro": .init(lat: 8.4542, lon: 124.6319),
         "zamboanga": .init(lat: 6.9214, lon: 122.0790),
+        // Province / region aliases → their main city, so natural-language
+        // queries like "Pampanga to Manila" resolve.
+        "pampanga": .init(lat: 15.0286, lon: 120.6898),
+        "bulacan": .init(lat: 14.8433, lon: 120.8113),
+        "laguna": .init(lat: 14.2117, lon: 121.1653),
+        "pangasinan": .init(lat: 16.0431, lon: 120.3339),
+        "nueva ecija": .init(lat: 15.4869, lon: 120.9675),
+        "ilocos": .init(lat: 17.5747, lon: 120.3869),
+        "bicol": .init(lat: 13.6218, lon: 123.1948),
+        "qc": .init(lat: 14.6760, lon: 121.0437),
     ]
 
     func route(from origin: String, to destination: String) -> RouteResult? {
-        guard let a = lookup(origin), let b = lookup(destination) else { return nil }
+        guard let a = Self.lookup(origin), let b = Self.lookup(destination) else { return nil }
         let straight = Self.haversineKm(a, b)
         let road = (straight * windingFactor)
         let rounded = (road * 10).rounded() / 10
         return RouteResult(distanceKm: rounded, isEstimated: true)
     }
 
-    /// Fuzzy place lookup — exact key, then a substring match either way.
-    private func lookup(_ query: String) -> GeoPoint? {
+    /// Fuzzy place lookup — exact key, then a substring match either way. Static so
+    /// the NL query parser can reuse the same gazetteer.
+    static func lookup(_ query: String) -> GeoPoint? {
         let key = query.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         guard !key.isEmpty else { return nil }
-        if let exact = Self.places[key] { return exact }
-        return Self.places.first { key.contains($0.key) || $0.key.contains(key) }?.value
+        if let exact = places[key] { return exact }
+        return places.first { key.contains($0.key) || $0.key.contains(key) }?.value
+    }
+
+    /// Whether a free-text fragment names a known place.
+    static func isPlace(_ query: String) -> Bool { lookup(query) != nil }
+
+    /// Whether a single word is itself a gazetteer key (e.g. "makati", "pampanga").
+    /// Used by the NL parser to avoid merging two adjacent places into one phrase.
+    static func isPlaceKey(_ word: String) -> Bool {
+        places.keys.contains(word.lowercased())
     }
 
     /// Great-circle distance in kilometres.

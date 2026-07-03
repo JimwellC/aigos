@@ -33,6 +33,7 @@ struct CalculateView: View {
     @State private var heroCost: Double = 0
     @State private var savedThisRoute = false
     @State private var showingVehiclePicker = false
+    @State private var showingTalk = false
 
     private let resolver: RouteResolver = GazetteerRouteResolver()
 
@@ -82,6 +83,9 @@ struct CalculateView: View {
         .sheet(isPresented: $showingVehiclePicker) {
             VehiclePicker(selectedVehicleID: $selectedVehicleID)
         }
+        .sheet(isPresented: $showingTalk) {
+            TalkToAigosView()
+        }
         .onAppear(perform: onAppear)
         .onChange(of: selectedVehicleID) { _, _ in applyVehicleDefaults() }
         .onChange(of: appState.pendingDraft) { _, draft in applyDraft(draft) }
@@ -101,9 +105,19 @@ struct CalculateView: View {
                     .foregroundStyle(.white)
             }
             Spacer()
-            Image(systemName: "fuelpump.circle.fill")
-                .font(.system(size: 34))
-                .foregroundStyle(.white.opacity(0.9))
+            Button {
+                Haptics.tap(.light)
+                showingTalk = true
+            } label: {
+                Image(systemName: "bubble.left.and.text.bubble.right.fill")
+                    .font(.system(size: 26))
+                    .foregroundStyle(.white)
+                    .frame(width: 46, height: 46)
+                    .background(Color.white.opacity(0.14), in: Circle())
+                    .overlay(Circle().stroke(Color.white.opacity(0.3), lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Talk to aigos")
         }
     }
 
@@ -288,6 +302,9 @@ struct CalculateView: View {
         }
         applyVehicleDefaults()
         applyDraft(appState.pendingDraft)
+        #if DEBUG
+        if DebugSupport.autoOpenTalk { showingTalk = true }
+        #endif
     }
 
     private func applyVehicleDefaults() {
