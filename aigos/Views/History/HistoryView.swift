@@ -70,16 +70,7 @@ struct HistoryView: View {
         let avg = count > 0 ? this / Double(count) : 0
 
         return VStack(alignment: .leading, spacing: Space.md) {
-            // Labeled stats row (replaces the bare bar chart).
-            HStack(spacing: Space.sm) {
-                statBlock(label: "Trips", value: "\(count)")
-                statBlock(label: "Distance", value: "\(Int(km.rounded())) km")
-                statBlock(label: "Avg / trip", value: "PHP \(Int(avg.rounded()))")
-            }
-
-            Divider().overlay(Color.white.opacity(0.15))
-
-            // Hero: this month's total spend + change vs last month.
+            // Hero: this month's total spend — the first thing the eye lands on.
             VStack(alignment: .leading, spacing: 4) {
                 FieldLabel("This month")
                 Text(this.phpString)
@@ -87,15 +78,26 @@ struct HistoryView: View {
                     .foregroundStyle(.white)
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
-                if hasLast {
-                    HStack(spacing: 6) {
-                        Image(systemName: delta >= 0 ? "arrow.up.right" : "arrow.down.right")
-                            .font(.system(size: 12, weight: .bold))
-                        Text("\(abs(delta).phpString) vs last month")
-                            .rounded(14, weight: .medium)
-                    }
-                    .foregroundStyle(delta >= 0 ? Color.aigosAmber : Color(hex: "#8FE39B"))
+            }
+
+            Divider().overlay(Color.white.opacity(0.15))
+
+            // Labeled stats row (replaces the bare bar chart).
+            HStack(spacing: Space.sm) {
+                statBlock(label: "Trips", value: "\(count)")
+                statBlock(label: "Distance", value: "\(Int(km.rounded())) km")
+                statBlock(label: "Avg / trip", value: "PHP \(Int(avg.rounded()))")
+            }
+
+            // Change vs last month, at the bottom.
+            if hasLast {
+                HStack(spacing: 6) {
+                    Image(systemName: delta >= 0 ? "arrow.up.right" : "arrow.down.right")
+                        .font(.system(size: 12, weight: .bold))
+                    Text("\(abs(delta).phpString) vs last month")
+                        .rounded(14, weight: .medium)
                 }
+                .foregroundStyle(delta >= 0 ? Color.aigosAmber : Color(hex: "#8FE39B"))
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
