@@ -16,11 +16,13 @@ struct PlaceField: View {
     let personalPlaces: [PersonalPlace]
     var showError: Bool = false
     var startOpen: Bool = false   // DEBUG: force the dropdown open for screenshots
+    var startMapOpen: Bool = false   // DEBUG: auto-open the map picker for screenshots
 
     @FocusState private var focused: Bool
     @State private var suggestions: [PlaceSuggestion] = []
     @State private var justSelected = false
     @State private var forceOpen = false
+    @State private var showingMap = false
 
     private var isValid: Bool { selectedKey != nil }
     private var showDropdown: Bool { (focused || forceOpen) && selectedKey == nil && !suggestions.isEmpty }
@@ -34,6 +36,7 @@ struct PlaceField: View {
             }
         }
         .animation(.easeOut(duration: 0.2), value: showDropdown)
+        .onAppear { if startMapOpen { showingMap = true } }
         .onChange(of: startOpen) { _, open in
             if open, !text.isEmpty {
                 suggestions = PlaceSearch.suggestions(for: text, personalPlaces: personalPlaces)
@@ -55,6 +58,14 @@ struct PlaceField: View {
                 .focused($focused)
                 .onChange(of: text) { _, newValue in handleTextChange(newValue) }
 
+            Button { showingMap = true } label: {
+                Image(systemName: "map.fill")
+                    .font(.system(size: 15))
+                    .foregroundStyle(Color.aigosAmber)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Pick on map")
+
             if isValid {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundStyle(.white)
@@ -63,6 +74,11 @@ struct PlaceField: View {
                     Image(systemName: "xmark.circle.fill").foregroundStyle(Color.white.opacity(0.6))
                 }
                 .buttonStyle(.plain)
+            }
+        }
+        .sheet(isPresented: $showingMap) {
+            LocationPickerView(title: placeholder, personalPlaces: personalPlaces) { picked in
+                applyPicked(picked)
             }
         }
         .padding(.horizontal, Space.md)
@@ -130,6 +146,16 @@ struct PlaceField: View {
             if selectedKey != nil { selectedKey = nil }
             suggestions = PlaceSearch.suggestions(for: newValue, personalPlaces: personalPlaces)
         }
+    }
+
+    /// Apply a map-picked location: mark valid via a synthetic `@pin:` key. The
+    /// `justSelected` flag stops the text-change handler from clearing it.
+    private func applyPicked(_ picked: PickedPlace) {
+        justSelected = true
+        text = picked.name
+        selectedKey = picked.keyString
+        suggestions = []
+        focused = false
     }
 
     private func select(_ s: PlaceSuggestion) {

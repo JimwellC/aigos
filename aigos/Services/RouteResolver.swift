@@ -20,6 +20,16 @@ struct GeoPoint: Sendable, Equatable {
     let lon: Double
 }
 
+/// A location chosen from the map picker (arbitrary coordinate, not a gazetteer
+/// key). Encoded into a `@pin:lat,lon` selection key so it flows through the same
+/// distance path as gazetteer places (see `PlaceResolver.point`).
+struct PickedPlace: Equatable {
+    let name: String
+    let lat: Double
+    let lon: Double
+    var keyString: String { "@pin:\(lat),\(lon)" }
+}
+
 struct RouteResult: Sendable, Equatable {
     let distanceKm: Double
     /// True when the distance is an approximation (gazetteer/haversine) rather

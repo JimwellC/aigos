@@ -11,6 +11,7 @@
 
 import SwiftUI
 import SwiftData
+import MapKit
 
 struct CalculateView: View {
     @Environment(\.modelContext) private var context
@@ -51,21 +52,39 @@ struct CalculateView: View {
     @State private var resultRouteTitle = ""
     @State private var resultVehicleName = ""
 
+    // Precise road distance (MKDirections, online only)
+    @State private var preciseDistanceKm: Double?
+    @State private var routeIsPrecise = false
+
     private var selectedVehicle: VehicleProfile? {
         vehicles.first { $0.id == selectedVehicleID } ?? vehicles.first
     }
 
-    /// Distance derived from the two selected places (nil until both are picked).
+    private var originPoint: GeoPoint? {
+        originKey.flatMap { PlaceResolver.point(for: $0, personalPlaces: personalPlaces) }
+    }
+    private var destinationPoint: GeoPoint? {
+        destinationKey.flatMap { PlaceResolver.point(for: $0, personalPlaces: personalPlaces) }
+    }
+
+    /// Distance between the two selected places. Uses the precise MKDirections road
+    /// distance when available (online), else the gazetteer haversine estimate.
     private var distanceKm: Double? {
-        guard let originKey, let destinationKey,
-              let a = PlaceResolver.point(for: originKey, personalPlaces: personalPlaces),
-              let b = PlaceResolver.point(for: destinationKey, personalPlaces: personalPlaces)
-        else { return nil }
+        if let preciseDistanceKm { return preciseDistanceKm }
+        guard let a = originPoint, let b = destinationPoint else { return nil }
         return GazetteerRouteResolver.estimate(from: a, to: b).distanceKm
     }
 
     private var canCalculate: Bool {
         selectedVehicle != nil && distanceKm != nil
+    }
+
+    private var mapPickerDebug: Bool {
+        #if DEBUG
+        return DebugSupport.mapPicker
+        #else
+        return false
+        #endif
     }
 
     var body: some View {
@@ -141,6 +160,25 @@ struct CalculateView: View {
         // Editing/clearing a place resets the submit-error state.
         .onChange(of: origin) { _, _ in submitAttempted = false }
         .onChange(of: destination) { _, _ in submitAttempted = false }
+        .onChange(of: originKey) { _, _ in updatePreciseDistance() }
+        .onChange(of: destinationKey) { _, _ in updatePreciseDistance() }
+    }
+
+    /// Ask Apple Maps for the real road distance (online). Falls back silently to
+    /// the gazetteer estimate when offline or when no route is found.
+    private func updatePreciseDistance() {
+        preciseDistanceKm = nil
+        routeIsPrecise = false
+        guard let a = originPoint, let b = destinationPoint else { return }
+        let request = MKDirections.Request()
+        request.source = MKMapItem(placemark: MKPlacemark(coordinate: a.clCoordinate))
+        request.destination = MKMapItem(placemark: MKPlacemark(coordinate: b.clCoordinate))
+        request.transportType = .automobile
+        MKDirections(request: request).calculate { response, _ in
+            guard let metres = response?.routes.first?.distance else { return }
+            preciseDistanceKm = metres / 1000.0
+            routeIsPrecise = true
+        }
     }
 
     private var calculateButton: some View {
@@ -266,7 +304,8 @@ struct CalculateView: View {
 
             PlaceField(placeholder: "From (e.g. Manila)", text: $origin,
                        selectedKey: $originKey, personalPlaces: personalPlaces,
-                       showError: submitAttempted, startOpen: demoSearchOpen)
+                       showError: submitAttempted, startOpen: demoSearchOpen,
+                       startMapOpen: mapPickerDebug)
                 .zIndex(2)   // its dropdown overlays the destination field
             routeConnector
             PlaceField(placeholder: "To (e.g. Batangas)", text: $destination,
@@ -274,8 +313,22 @@ struct CalculateView: View {
                        showError: submitAttempted)
                 .zIndex(1)
 
-            if let distanceKm {
-                Label("≈ \(distanceKm.oneDecimal) km (estimated)", systemImage: "map")
+            if let distanceKm, let a = originPoint, let b = destinationPoint {
+                RoutePreview(origin: a, destination: b, precise: routeIsPrecise)
+                    .frame(height: 150)
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(.white.opacity(0.2), lineWidth: 1))
+
+                HStack(spacing: 6) {
+                    Image(systemName: routeIsPrecise ? "map.fill" : "map")
+                    Text(routeIsPrecise
+                         ? "\(distanceKm.oneDecimal) km · via Apple Maps"
+                         : "≈ \(distanceKm.oneDecimal) km · estimated")
+                }
+                .rounded(14, weight: .semibold)
+                .foregroundStyle(.white.opacity(0.9))
+            } else if distanceKm != nil {
+                Label("≈ \(distanceKm!.oneDecimal) km (estimated)", systemImage: "map")
                     .rounded(14, weight: .semibold)
                     .foregroundStyle(.white.opacity(0.9))
             } else {
@@ -371,6 +424,11 @@ struct CalculateView: View {
         #if DEBUG
         if DebugSupport.autoOpenTalk { showingTalk = true }
         if DebugSupport.autoOpenDriving { showingDrivingSheet = true }
+        if DebugSupport.routePreview {
+            origin = "Manila"; originKey = exactKey(for: "Manila")
+            destination = "Batangas"; destinationKey = exactKey(for: "Batangas")
+            updatePreciseDistance()
+        }
         if DebugSupport.lowFuel { fuelLevel = .low }
         if let q = DebugSupport.searchDemo {
             origin = q

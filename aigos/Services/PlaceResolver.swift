@@ -22,6 +22,12 @@ enum PlaceResolver {
 
     /// Resolve one place name to a point — personal alias first, then gazetteer.
     static func point(for query: String, personalPlaces: [PersonalPlace]) -> GeoPoint? {
+        // A map-picked location encodes its coordinate directly.
+        if query.hasPrefix("@pin:") {
+            let parts = query.dropFirst(5).split(separator: ",")
+            guard parts.count == 2, let lat = Double(parts[0]), let lon = Double(parts[1]) else { return nil }
+            return GeoPoint(lat: lat, lon: lon)
+        }
         let key = query.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         guard !key.isEmpty else { return nil }
         if let gazetteerKey = aliasMap(personalPlaces)[key] {

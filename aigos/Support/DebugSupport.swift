@@ -35,6 +35,16 @@ enum DebugSupport {
         ProcessInfo.processInfo.arguments.contains("-driving")
     }
 
+    /// Auto-open the map location picker on the origin field (screenshots/QA).
+    static var mapPicker: Bool {
+        ProcessInfo.processInfo.arguments.contains("-mapPicker")
+    }
+
+    /// Prefill Manila → Batangas (no auto-calc) so the route mini-map shows.
+    static var routePreview: Bool {
+        ProcessInfo.processInfo.arguments.contains("-routePreview")
+    }
+
     /// Jump onboarding to a given step (0=add vehicle, 1=driving, 2=prices).
     static var onboardingStep: Int? {
         let args = ProcessInfo.processInfo.arguments

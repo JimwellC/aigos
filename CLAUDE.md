@@ -23,7 +23,7 @@ An offline, privacy-first iOS fuel-trip cost calculator for Filipino roads. Nati
 
 ## Non-negotiable constraints (locked by the spec — do not re-litigate)
 
-- **Offline-first, zero backend.** Every core feature must work with no internet. No cloud, no servers, no iCloud sync, no analytics/tracking SDKs. The *only* permitted network call is an optional v1.1 remote-JSON fuel-price fetch, which must fall back to cached values offline.
+- **Offline-first, zero backend.** Every *core* feature must work with no internet. No cloud, no servers, no iCloud sync, no analytics/tracking SDKs. Two network exceptions are now allowed: (1) an optional v1.1 remote-JSON fuel-price fetch that falls back to cached values; (2) the **optional MapKit location picker** (`LocationPickerView`) — `MKLocalSearch`, `MKDirections` road distance, tiles, reverse geocoding, and one-shot `CLLocation`. This is an *enhancement*: the app still fully works offline via the gazetteer autocomplete + haversine estimate. When adding features, keep the offline path intact and gate anything networked behind graceful fallback. Note this deviates from the original "only fuel-price" rule — it was an explicit product decision.
 - **iOS only.** SwiftUI + Swift 6, minimum iOS 17. No React Native, no cross-platform, no Android. (The developer knows React Native but is new to SwiftUI — write complete, copy-pasteable SwiftUI, not snippets or pseudocode.)
 - **SwiftData for all persistence.** No CoreData. No `UserDefaults` for complex objects. Use the default `ModelContainer`.
 - **The spec is final.** Every decision in `aigos_architecture.pdf` (Section 6 decision log) is locked. Don't re-ask answered questions or propose alternatives unless the developer explicitly reopens a decision.
