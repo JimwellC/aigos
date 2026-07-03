@@ -71,7 +71,7 @@ final class ProfileLearningEngineTests: XCTestCase {
             avgHighwaySpeedKmh: highway, avgCitySpeedKmh: city, acInUse: acOn, roadType: .highway
         )
         return TripRecord(
-            origin: "A", destination: "B", vehicleName: "Test", fuelType: .ron95,
+            origin: "A", destination: "B", vehicleName: "Test", fuelType: .premium95,
             estimate: estimate, avgHighwaySpeed: highway, avgCitySpeed: city,
             roadType: .highway, acWasOn: acOn
         )

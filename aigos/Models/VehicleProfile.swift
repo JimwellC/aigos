@@ -14,7 +14,7 @@ final class VehicleProfile {
     var id: UUID = UUID()
     var name: String = ""            // e.g. "My Vios", "Delivery Bike"
     var type: VehicleType = VehicleType.car
-    var fuelType: FuelType = FuelType.ron95
+    var fuelType: FuelType = FuelType.premium95
     var efficiencyKmL: Double = 12.0 // manufacturer km/L rating
     var isDefault: Bool = false
     var createdAt: Date = Date()

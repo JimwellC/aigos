@@ -49,7 +49,7 @@ final class HistoryGroupingTests: XCTestCase {
             avgHighwaySpeedKmh: 90, avgCitySpeedKmh: 40, acInUse: false, roadType: .highway
         )
         let t = TripRecord(
-            origin: "A", destination: "B", vehicleName: "T", fuelType: .ron95,
+            origin: "A", destination: "B", vehicleName: "T", fuelType: .premium95,
             estimate: e, avgHighwaySpeed: 90, avgCitySpeed: 40, roadType: .highway, acWasOn: false
         )
         t.totalCostPHP = cost

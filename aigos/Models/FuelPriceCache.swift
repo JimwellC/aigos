@@ -13,7 +13,7 @@ import SwiftData
 @Model
 final class FuelPriceCache {
     var id: UUID = UUID()
-    var fuelType: FuelType = FuelType.ron95
+    var fuelType: FuelType = FuelType.premium95
     var pricePHP: Double = 0            // e.g. 62.55
     var lastUpdated: Date = Date()
     var updatedBy: String = "developer" // "developer" | "user"

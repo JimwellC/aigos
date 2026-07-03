@@ -12,7 +12,7 @@ import XCTest
 final class TripQueryParserTests: XCTestCase {
 
     private func vehicle(_ name: String) -> VehicleProfile {
-        VehicleProfile(name: name, type: .car, fuelType: .ron95, efficiencyKmL: 14.5)
+        VehicleProfile(name: name, type: .car, fuelType: .premium95, efficiencyKmL: 14.5)
     }
 
     func testSpecExampleWithVehicle() {

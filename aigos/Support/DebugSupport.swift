@@ -95,7 +95,7 @@ enum DebugSupport {
         AppSeeder.seedPricesIfNeeded(context)
 
         let vehicle = VehicleProfile(
-            name: "My Vios", type: .car, fuelType: .ron95, efficiencyKmL: 14.5, isDefault: true
+            name: "My Vios", type: .car, fuelType: .premium95, efficiencyKmL: 14.5, isDefault: true
         )
         let profile = DrivingProfile(vehicleId: vehicle.id)
         profile.avgHighwaySpeedKmh = 110
@@ -124,7 +124,7 @@ enum DebugSupport {
                 avgHighwaySpeedKmh: 110, avgCitySpeedKmh: 40, acInUse: true, roadType: .highway
             )
             let trip = TripRecord(
-                origin: o, destination: d, vehicleName: vehicle.name, fuelType: .ron95,
+                origin: o, destination: d, vehicleName: vehicle.name, fuelType: .premium95,
                 estimate: est, avgHighwaySpeed: 110, avgCitySpeed: 40, roadType: .highway, acWasOn: true
             )
             trip.totalCostPHP = cost

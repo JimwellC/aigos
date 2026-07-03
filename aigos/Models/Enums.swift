@@ -43,17 +43,21 @@ enum VehicleType: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+/// Pump grades as Philippine stations actually label them (per gaswatchph.com /
+/// fuelprice.ph). Raw values double as the FuelPrices.json keys.
 enum FuelType: String, Codable, CaseIterable, Identifiable {
-    case ron91, ron95, ron97, diesel
+    case unleaded91, premium95, premium97, diesel, premiumDiesel, eGasoline
 
     var id: String { rawValue }
 
     var label: String {
         switch self {
-        case .ron91: "RON 91"
-        case .ron95: "Premium 95"
-        case .ron97: "RON 97"
+        case .unleaded91: "Unleaded 91"
+        case .premium95: "Premium 95"
+        case .premium97: "Premium 97"
         case .diesel: "Diesel"
+        case .premiumDiesel: "Premium Diesel"
+        case .eGasoline: "E-Gasoline"
         }
     }
 
@@ -62,21 +66,45 @@ enum FuelType: String, Codable, CaseIterable, Identifiable {
     /// users can override any price in the Prices tab (Section 9).
     var seedPrice: Double {
         switch self {
-        case .ron91: 72.00
-        case .ron95: 73.00
-        case .ron97: 76.00
+        case .unleaded91: 72.00
+        case .premium95: 73.00
+        case .premium97: 76.00
         case .diesel: 69.10
+        case .premiumDiesel: 72.40
+        case .eGasoline: 73.50
         }
     }
 
     /// Per-grade accent colour for the Prices screen left border.
     var accentColor: Color {
         switch self {
-        case .ron91: Color(hex: "#7ED957")   // green
-        case .ron95: Color(hex: "#5AA9E6")   // blue
-        case .ron97: Color(hex: "#B57EDC")   // purple
-        case .diesel: Color(hex: "#F2994A")  // orange
+        case .unleaded91: Color(hex: "#7ED957")     // green
+        case .premium95: Color(hex: "#5AA9E6")      // blue
+        case .premium97: Color(hex: "#B57EDC")      // purple
+        case .diesel: Color(hex: "#F2994A")         // orange
+        case .premiumDiesel: Color(hex: "#C7681E")  // dark orange
+        case .eGasoline: Color(hex: "#2EC4B6")      // teal
         }
+    }
+
+    /// Recognise a fuel grade from free text — accepts both the new pump names
+    /// and the older RON labels (for the Talk to aigos parser). Returns the first
+    /// grade whose synonyms appear in `text`.
+    static func detect(in text: String) -> FuelType? {
+        let t = text.lowercased()
+        // Order matters: check the most specific phrases first.
+        let table: [(FuelType, [String])] = [
+            (.premiumDiesel, ["premium diesel", "diesel plus", "dieselplus", "diesel+"]),
+            (.eGasoline,     ["e-gasoline", "e gasoline", "egasoline", "ethanol", "e-gas"]),
+            (.premium97,     ["premium 97", "ron 97", "ron97", "97"]),
+            (.premium95,     ["premium 95", "premium", "ron 95", "ron95", "95"]),
+            (.unleaded91,    ["unleaded 91", "unleaded", "regular", "ron 91", "ron91", "91"]),
+            (.diesel,        ["diesel"]),
+        ]
+        for (type, synonyms) in table where synonyms.contains(where: { t.contains($0) }) {
+            return type
+        }
+        return nil
     }
 }
 

@@ -31,7 +31,7 @@ final class TripRecord {
     var loadFactor: Double = 1.0        // e.g. 1.05 (3–4 pax)
 
     var vehicleName: String = ""        // snapshot
-    var fuelType: FuelType = FuelType.ron95
+    var fuelType: FuelType = FuelType.premium95
     var avgHighwaySpeed: Double = 0
     var avgCitySpeed: Double = 0
     var roadType: RoadType = RoadType.highway

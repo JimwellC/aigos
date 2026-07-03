@@ -1,10 +1,12 @@
 {
   "lastUpdated": "2026-07-03",
-  "note": "DOE pump prices via fuelprice.ph, week of Jun 30 – Jul 6, 2026 (updated weekly, Tuesdays). Seeded rows are stamped updatedBy=developer; users can override any price in the Prices tab.",
+  "note": "DOE pump prices via fuelprice.ph / gaswatchph.com, week of Jun 30 – Jul 6, 2026 (updated weekly, Tuesdays). Keys match FuelType.rawValue. Seeded rows are stamped updatedBy=developer; users can override any price in the Prices tab.",
   "prices": {
-    "ron91": 72.00,
-    "ron95": 73.00,
-    "ron97": 76.00,
-    "diesel": 69.10
+    "unleaded91": 72.00,
+    "premium95": 73.00,
+    "premium97": 76.00,
+    "diesel": 69.10,
+    "premiumDiesel": 72.40,
+    "eGasoline": 73.50
   }
 }

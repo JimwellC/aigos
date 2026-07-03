@@ -30,7 +30,7 @@ struct OnboardingView: View {
     // Vehicle
     @State private var name = "My Car"
     @State private var type: VehicleType = .car
-    @State private var fuelType: FuelType = .ron95
+    @State private var fuelType: FuelType = .premium95
     @State private var efficiencyText = ""
 
     // Driving style
