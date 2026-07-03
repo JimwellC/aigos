@@ -41,10 +41,10 @@ struct AddVehicleView: View {
                         GlassField(placeholder: "My Car", text: $name, autocap: .words)
 
                         FieldLabel("Type")
-                        pillRow(VehicleType.allCases, selected: type) { type = $0 } label: { $0.label }
+                        SelectablePillFlow(items: VehicleType.allCases, selection: $type) { $0.label }
 
                         FieldLabel("Fuel type")
-                        pillRow(FuelType.allCases, selected: fuelType) { fuelType = $0 } label: { $0.label }
+                        SelectablePillFlow(items: FuelType.allCases, selection: $fuelType) { $0.label }
 
                         FieldLabel("Efficiency (\(fuelUnit.label))")
                         GlassField(placeholder: fuelUnit.defaultInput, text: $efficiencyText, keyboard: .decimalPad)
@@ -63,28 +63,6 @@ struct AddVehicleView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save", action: save).disabled(!canSave).tint(Color.aigosAmberDeep)
-                }
-            }
-        }
-    }
-
-    private func pillRow<T: Hashable & Identifiable>(
-        _ items: [T],
-        selected: T,
-        onSelect: @escaping (T) -> Void,
-        label: @escaping (T) -> String
-    ) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Space.sm) {
-                ForEach(items) { item in
-                    let isOn = item == selected
-                    Text(label(item))
-                        .rounded(14, weight: .semibold)
-                        .foregroundStyle(isOn ? .white : Color.aigosTextSecondary)
-                        .padding(.horizontal, Space.md)
-                        .padding(.vertical, 10)
-                        .background(isOn ? Color.aigosAmber : Color.white.opacity(0.12), in: Capsule())
-                        .onTapGesture { Haptics.tap(.light); onSelect(item) }
                 }
             }
         }

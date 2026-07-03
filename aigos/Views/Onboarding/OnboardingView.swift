@@ -122,10 +122,10 @@ struct OnboardingView: View {
                 GlassField(placeholder: "My Car", text: $name, autocap: .words)
 
                 FieldLabel("Type")
-                PillRow(items: VehicleType.allCases, selection: $type) { $0.label }
+                SelectablePillFlow(items: VehicleType.allCases, selection: $type) { $0.label }
 
                 FieldLabel("Fuel type")
-                PillRow(items: FuelType.allCases, selection: $fuelType) { $0.label }
+                SelectablePillFlow(items: FuelType.allCases, selection: $fuelType) { $0.label }
 
                 FieldLabel("Efficiency (\(fuelUnit.label))")
                 GlassField(placeholder: fuelUnit.defaultInput, text: $efficiencyText, keyboard: .decimalPad)
@@ -265,35 +265,6 @@ private struct ProgressBar: View {
         }
         .frame(height: 6)
         .animation(.spring(response: 0.5, dampingFraction: 0.8), value: progress)
-    }
-}
-
-/// A row of selectable pills bound to an index-less value.
-private struct PillRow<T: Hashable & Identifiable>: View {
-    let items: [T]
-    @Binding var selection: T
-    let label: (T) -> String
-
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Space.sm) {
-                ForEach(items) { item in
-                    let selected = item == selection
-                    Text(label(item))
-                        .rounded(14, weight: selected ? .bold : .semibold)
-                        .foregroundStyle(selected ? .white : .white.opacity(0.8))
-                        .padding(.horizontal, Space.md)
-                        .padding(.vertical, 10)
-                        .background(selected ? Color.aigosAmber : Color.white.opacity(0.18), in: Capsule())
-                        .overlay(Capsule().stroke(selected ? Color.clear : Color.white.opacity(0.3), lineWidth: 1))
-                        .onTapGesture {
-                            Haptics.tap(.light)
-                            selection = item
-                        }
-                }
-            }
-            .padding(.vertical, 2)   // room for the stroke
-        }
     }
 }
 

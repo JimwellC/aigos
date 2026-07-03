@@ -244,6 +244,72 @@ struct GlassField: View {
     }
 }
 
+// MARK: - Pill selectors
+
+/// A wrapping flow layout — places subviews left-to-right and wraps to a new line
+/// when the next one won't fit. Lets all pill options stay visible (no h-scroll).
+struct FlowLayout: Layout {
+    var spacing: CGFloat = Space.sm
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let maxWidth = proposal.width ?? .infinity
+        var x: CGFloat = 0, y: CGFloat = 0, lineHeight: CGFloat = 0
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if x + size.width > maxWidth && x > 0 {
+                x = 0
+                y += lineHeight + spacing
+                lineHeight = 0
+            }
+            x += size.width + spacing
+            lineHeight = max(lineHeight, size.height)
+        }
+        return CGSize(width: maxWidth == .infinity ? max(0, x - spacing) : maxWidth, height: y + lineHeight)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var x = bounds.minX, y = bounds.minY, lineHeight: CGFloat = 0
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if x + size.width > bounds.maxX && x > bounds.minX {
+                x = bounds.minX
+                y += lineHeight + spacing
+                lineHeight = 0
+            }
+            subview.place(at: CGPoint(x: x, y: y), anchor: .topLeading, proposal: ProposedViewSize(size))
+            x += size.width + spacing
+            lineHeight = max(lineHeight, size.height)
+        }
+    }
+}
+
+/// A wrapping row of selectable pills — amber when selected, glass otherwise.
+struct SelectablePillFlow<T: Hashable & Identifiable>: View {
+    let items: [T]
+    @Binding var selection: T
+    let label: (T) -> String
+
+    var body: some View {
+        FlowLayout(spacing: Space.sm) {
+            ForEach(items) { item in
+                let selected = item == selection
+                Text(label(item))
+                    .rounded(14, weight: selected ? .bold : .semibold)
+                    .foregroundStyle(selected ? .white : .white.opacity(0.8))
+                    .padding(.horizontal, Space.md)
+                    .padding(.vertical, 10)
+                    .background(selected ? Color.aigosAmber : Color.white.opacity(0.18), in: Capsule())
+                    .overlay(Capsule().stroke(selected ? Color.clear : Color.white.opacity(0.3), lineWidth: 1))
+                    .onTapGesture {
+                        Haptics.tap(.light)
+                        selection = item
+                    }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
 // MARK: - Small building blocks
 
 /// Uppercased, tracked section header (size 13, semibold, white 0.6, kern 2.0).
