@@ -17,12 +17,12 @@ struct TalkToAigosView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \VehicleProfile.createdAt) private var vehicles: [VehicleProfile]
+    @Query private var personalPlaces: [PersonalPlace]
 
     @State private var messages: [ChatMessage] = []
     @State private var input = ""
     @State private var showingGate = false
 
-    private let resolver = GazetteerRouteResolver()
     private let suggestions = [
         "Manila to Batangas",
         "How much to drive Pampanga to Manila?",
@@ -166,13 +166,14 @@ struct TalkToAigosView: View {
     }
 
     private func reply(to text: String) -> ChatMessage {
-        guard let query = TripQueryParser.parse(text, vehicles: vehicles) else {
+        guard let query = TripQueryParser.parse(text, vehicles: vehicles, personalPlaces: personalPlaces) else {
             return ChatMessage(
                 role: .aigos,
-                text: "I couldn't spot a route in that. Try something like “Manila to Batangas”, or give me an origin and a destination."
+                text: "I couldn't spot a route in that. Try something like “Manila to Batangas”, or set your Home and Office in Settings and ask “home to office”."
             )
         }
-        guard let route = resolver.route(from: query.origin, to: query.destination) else {
+        // Personal shortcuts (Home/Office/…) resolve before the gazetteer.
+        guard let route = PlaceResolver.route(from: query.origin, to: query.destination, personalPlaces: personalPlaces) else {
             return ChatMessage(role: .aigos, text: "I don't know one of those places yet. Try a nearby city or type the distance in the calculator.")
         }
 
@@ -273,5 +274,6 @@ private struct ChatBubble: View {
         .modelContainer(for: [
             VehicleProfile.self, DrivingProfile.self, TripRecord.self,
             SavedRoute.self, FuelPriceCache.self,
+            PersonalPlace.self,
         ], inMemory: true)
 }

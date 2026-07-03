@@ -153,5 +153,6 @@ struct MonthGroup: Identifiable {
         .modelContainer(for: [
             VehicleProfile.self, DrivingProfile.self, TripRecord.self,
             SavedRoute.self, FuelPriceCache.self,
+            PersonalPlace.self,
         ], inMemory: true)
 }

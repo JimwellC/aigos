@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Talk to aigos (v1.0 = offline parser only):** NL understanding runs through `TripQueryParser`, a deterministic offline parser that works on every device. Per the v1.0 product decision, the UI is **provider-neutral** — no "Apple Intelligence" or device-requirement wording anywhere (badge reads "On-device · works offline"). A seam for a real on-device system model is kept behind `#if canImport(FoundationModels)` in `AIAvailability` for v1.1 (this Xcode 16.4 / iOS 18.5 SDK doesn't ship the framework, so it's excluded now). Don't reintroduce Apple Intelligence framing in the UI or add `import FoundationModels` outside that guard.
 
-**Routing (v1.0 = estimated + manual):** distance comes from `GazetteerRouteResolver` — a 250-entry nationwide gazetteer (all provinces + major cities) giving haversine×1.3 estimates, always labelled "estimated" in the UI, with **manual distance entry as the prominent primary input**. Precise OSRM routing is deferred to v1.1 behind the `RouteResolver` seam. The gazetteer is built with `Dictionary(uniquingKeysWith:)` so a duplicate key can't crash launch; `lookup` is deterministic (longest contained key).
+**Routing (v1.0 = estimated + manual):** `PlaceResolver` resolves a place name — trying the user's `PersonalPlace` shortcuts first (case-insensitive), then `GazetteerRouteResolver`, a 250-entry nationwide gazetteer (all provinces + major cities) giving haversine×1.3 estimates, always labelled "estimated" in the UI, with **manual distance entry as the prominent primary input**. `TripQueryParser` also takes `personalPlaces` so "home to office" parses. Both `CalculateView` and `TalkToAigosView` go through `PlaceResolver` (never `GazetteerRouteResolver` directly). Precise OSRM routing is deferred to v1.1 behind the `RouteResolver` seam. The gazetteer is built with `Dictionary(uniquingKeysWith:)` so a duplicate key can't crash launch; `lookup` is deterministic (longest contained key).
 
 Extract the PDF text if you need to re-read the spec:
 
@@ -39,7 +39,7 @@ Planned structure (Section 17 of the spec): `App/` (`aigosApp.swift` @main + Mod
 
 ### SwiftData models (Section 9)
 
-`VehicleProfile` (has a `@Relationship` to a per-vehicle `DrivingProfile`), `TripRecord` (auto-saved on every calculation as a full breakdown snapshot), `DrivingProfile` (per-vehicle, self-learning), `SavedRoute`, `FuelPriceCache` (one row per fuel type). Enums: `VehicleType`, `FuelType {ron91, ron95, ron97, diesel}`, `RoadType {highway, city, mountain}`, `ProfileConfidence {new, building, confident}`. Seed `FuelPriceCache` on first launch from `FuelPrices.json`.
+`VehicleProfile` (has a `@Relationship` to a per-vehicle `DrivingProfile`), `TripRecord` (auto-saved on every calculation as a full breakdown snapshot), `DrivingProfile` (per-vehicle, self-learning), `SavedRoute`, `FuelPriceCache` (one row per fuel type), `PersonalPlace` (named shortcut `name`→`gazetteerKey`, e.g. "Home"→"makati"). Enums: `VehicleType`, `FuelType {ron91, ron95, ron97, diesel}`, `RoadType {highway, city, mountain}`, `ProfileConfidence {new, building, confident}`. Seed `FuelPriceCache` (from `FuelPrices.json`) and empty `PersonalPlace` shortcuts (Home/Office/School) on first launch via `AppSeeder`. **Any new @Model must be added to the schema in `aigosApp` AND every view's `#Preview` `.modelContainer(for:)` list.**
 
 ### Core calculation (Section 8 — implement exactly)
 

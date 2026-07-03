@@ -57,6 +57,7 @@ enum DebugSupport {
         try? context.delete(model: VehicleProfile.self)
         try? context.delete(model: DrivingProfile.self)
         try? context.delete(model: FuelPriceCache.self)
+        try? context.delete(model: PersonalPlace.self)
         try? context.save()
 
         AppSeeder.seedPricesIfNeeded(context)
@@ -103,6 +104,10 @@ enum DebugSupport {
             name: "Home → Office", origin: "Home", destination: "Office",
             distanceKm: 24.5, defaultVehicleId: vehicle.id
         ))
+
+        context.insert(PersonalPlace(name: "Home", gazetteerKey: "makati"))
+        context.insert(PersonalPlace(name: "Office", gazetteerKey: "pasig"))
+        context.insert(PersonalPlace(name: "School", gazetteerKey: ""))
 
         try? context.save()
         UserDefaults.standard.set(true, forKey: "hasOnboarded")

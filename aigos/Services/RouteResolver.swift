@@ -43,7 +43,7 @@ protocol RouteResolver {
 struct GazetteerRouteResolver: RouteResolver {
 
     /// Empirical multiplier: PH road distance runs ~30% longer than straight line.
-    private let windingFactor = 1.30
+    static let windingFactor = 1.30
 
     /// Nationwide gazetteer — every Philippine province (keyed by name → its
     /// capital) plus major/independent cities and common destinations, so most
@@ -341,10 +341,13 @@ struct GazetteerRouteResolver: RouteResolver {
 
     func route(from origin: String, to destination: String) -> RouteResult? {
         guard let a = Self.lookup(origin), let b = Self.lookup(destination) else { return nil }
-        let straight = Self.haversineKm(a, b)
-        let road = (straight * windingFactor)
-        let rounded = (road * 10).rounded() / 10
-        return RouteResult(distanceKm: rounded, isEstimated: true)
+        return Self.estimate(from: a, to: b)
+    }
+
+    /// Estimated road distance between two points (haversine × winding factor).
+    static func estimate(from a: GeoPoint, to b: GeoPoint) -> RouteResult {
+        let road = haversineKm(a, b) * windingFactor
+        return RouteResult(distanceKm: (road * 10).rounded() / 10, isEstimated: true)
     }
 
     /// Fuzzy place lookup — exact key, then a substring match either way. Static so

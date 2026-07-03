@@ -22,7 +22,10 @@ struct ContentView: View {
                 AigosTabBar(selected: $appState.selectedTab)
             }
             .environment(appState)
-            .task { AppSeeder.seedPricesIfNeeded(context) }
+            .task {
+                AppSeeder.seedPricesIfNeeded(context)
+                AppSeeder.seedPersonalPlacesIfNeeded(context)
+            }
             .fullScreenCover(isPresented: Binding(
                 get: { !hasOnboarded },
                 set: { _ in }
@@ -85,5 +88,6 @@ struct AigosTabBar: View {
         .modelContainer(for: [
             VehicleProfile.self, DrivingProfile.self, TripRecord.self,
             SavedRoute.self, FuelPriceCache.self,
+            PersonalPlace.self,
         ], inMemory: true)
 }

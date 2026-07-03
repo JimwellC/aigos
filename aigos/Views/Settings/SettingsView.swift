@@ -12,10 +12,12 @@ import SwiftData
 struct SettingsView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \VehicleProfile.createdAt) private var vehicles: [VehicleProfile]
+    @Query(sort: \PersonalPlace.createdAt) private var personalPlaces: [PersonalPlace]
     @AppStorage("fuelUnit") private var fuelUnit: FuelUnit = .kmPerL
 
     @State private var showingClearConfirm = false
     @State private var showingResetConfirm = false
+    @State private var editingPlace: PersonalPlace?
 
     var body: some View {
         ZStack {
@@ -30,6 +32,7 @@ struct SettingsView: View {
 
                     unitsSection
                     if !vehicles.isEmpty { defaultVehicleSection }
+                    myPlacesSection
                     dataSection
                     disclaimerSection
 
@@ -42,6 +45,9 @@ struct SettingsView: View {
                 .padding(.top, Space.xl)
                 .padding(.bottom, Space.xxl)
             }
+        }
+        .sheet(item: $editingPlace) { place in
+            PersonalPlaceEditor(place: place)
         }
         .confirmationDialog("Clear all trip history?", isPresented: $showingClearConfirm, titleVisibility: .visible) {
             Button("Clear history", role: .destructive, action: clearHistory)
@@ -103,6 +109,56 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+
+    private var myPlacesSection: some View {
+        VStack(alignment: .leading, spacing: Space.sm) {
+            HStack {
+                FieldLabel("My places")
+                Spacer()
+                Button {
+                    Haptics.tap(.light)
+                    addPlace()
+                } label: {
+                    Label("Add", systemImage: "plus")
+                        .rounded(13, weight: .semibold)
+                        .foregroundStyle(Color.aigosAmber)
+                }
+            }
+
+            VStack(spacing: Space.sm) {
+                ForEach(personalPlaces) { place in
+                    Button {
+                        Haptics.tap(.light)
+                        editingPlace = place
+                    } label: {
+                        HStack(spacing: Space.md) {
+                            Image(systemName: "mappin.circle.fill")
+                                .foregroundStyle(Color.aigosAmber)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(place.name.isEmpty ? "Unnamed" : place.name)
+                                    .rounded(16, weight: .medium)
+                                    .foregroundStyle(.white)
+                                Text(place.isConfigured ? place.gazetteerKey.capitalized : "Tap to set a location")
+                                    .rounded(13)
+                                    .foregroundStyle(place.isConfigured ? Color.aigosTextSecondary : Color.aigosTextTertiary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right").foregroundStyle(Color.aigosTextTertiary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .contextMenu {
+                        Button(role: .destructive) { delete(place) } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(Space.md)
+        .glassCard()
     }
 
     private var dataSection: some View {
@@ -175,6 +231,105 @@ struct SettingsView: View {
         try? context.delete(model: TripRecord.self)
         try? context.save()
     }
+
+    private func addPlace() {
+        let place = PersonalPlace(name: "New place")
+        context.insert(place)
+        try? context.save()
+        editingPlace = place
+    }
+
+    private func delete(_ place: PersonalPlace) {
+        context.delete(place)
+        try? context.save()
+    }
+}
+
+/// Editor sheet: rename a personal place and map it to a gazetteer location.
+struct PersonalPlaceEditor: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var context
+    @Bindable var place: PersonalPlace
+
+    @State private var search = ""
+
+    private var keys: [String] {
+        let all = GazetteerRouteResolver.places.keys.sorted()
+        let q = search.lowercased().trimmingCharacters(in: .whitespaces)
+        return q.isEmpty ? all : all.filter { $0.contains(q) }
+    }
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                AigosBackground()
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: Space.md) {
+                        FieldLabel("Shortcut name")
+                        GlassField(placeholder: "Home", text: $place.name, autocap: .words)
+
+                        HStack {
+                            FieldLabel("Mapped to")
+                            Spacer()
+                            if place.isConfigured {
+                                Button("Clear") {
+                                    place.gazetteerKey = ""
+                                    save()
+                                }
+                                .rounded(13, weight: .semibold)
+                                .foregroundStyle(Color.aigosAmber)
+                            }
+                        }
+                        Text(place.isConfigured ? place.gazetteerKey.capitalized : "Not set")
+                            .rounded(17, weight: .semibold)
+                            .foregroundStyle(place.isConfigured ? .white : Color.aigosTextTertiary)
+
+                        GlassField(placeholder: "Search city or province…", text: $search)
+
+                        LazyVStack(spacing: 0) {
+                            ForEach(keys, id: \.self) { key in
+                                Button {
+                                    Haptics.tap(.light)
+                                    place.gazetteerKey = key
+                                    save()
+                                    dismiss()
+                                } label: {
+                                    HStack {
+                                        Text(key.capitalized)
+                                            .rounded(16, weight: .medium)
+                                            .foregroundStyle(.white)
+                                        Spacer()
+                                        if place.gazetteerKey == key {
+                                            Image(systemName: "checkmark.circle.fill")
+                                                .foregroundStyle(Color.aigosAmber)
+                                        }
+                                    }
+                                    .padding(.horizontal, Space.md)
+                                    .padding(.vertical, 12)
+                                }
+                                .buttonStyle(.plain)
+                                Divider().overlay(Color.white.opacity(0.12))
+                            }
+                        }
+                        .glassCard()
+                    }
+                    .padding(.horizontal, Space.screen)
+                    .padding(.vertical, Space.lg)
+                }
+            }
+            .navigationTitle("Edit Place")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color.aigosBGTop, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { save(); dismiss() }.tint(Color.aigosAmberDeep)
+                }
+            }
+        }
+    }
+
+    private func save() { try? context.save() }
 }
 
 #Preview {
@@ -182,5 +337,6 @@ struct SettingsView: View {
         .modelContainer(for: [
             VehicleProfile.self, DrivingProfile.self, TripRecord.self,
             SavedRoute.self, FuelPriceCache.self,
+            PersonalPlace.self,
         ], inMemory: true)
 }

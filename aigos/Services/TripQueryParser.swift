@@ -27,7 +27,10 @@ enum TripQueryParser {
         "with", "car", "travel", "need", "about", "roughly", "spend", "up",
     ]
 
-    static func parse(_ text: String, vehicles: [VehicleProfile]) -> TripQuery? {
+    static func parse(_ text: String, vehicles: [VehicleProfile],
+                      personalPlaces: [PersonalPlace] = []) -> TripQuery? {
+        // Configured personal-place names count as valid places (e.g. "home").
+        let aliases = Set(PlaceResolver.aliasMap(personalPlaces).keys)
         var lower = text.lowercased()
         for p in ["?", "!", ".", ",", "'"] {
             lower = lower.replacingOccurrences(of: p, with: " ")
@@ -55,16 +58,16 @@ enum TripQueryParser {
         // 2. Primary: split around each "to" and take the first split whose sides
         //    both resolve to known places.
         for idx in tokens.indices where tokens[idx] == "to" {
-            if let origin = longestPlace(Array(tokens[..<idx])),
-               let destination = longestPlace(Array(tokens[(idx + 1)...])),
+            if let origin = longestPlace(Array(tokens[..<idx]), aliases: aliases),
+               let destination = longestPlace(Array(tokens[(idx + 1)...]), aliases: aliases),
                origin != destination {
                 return TripQuery(origin: origin, destination: destination, vehicleName: matched?.name)
             }
         }
 
         // 3. Fallback: keyword scan handles reversed phrasing ("to Y from X").
-        if let destination = placeAfter("to", in: tokens),
-           let origin = placeAfter("from", in: tokens),
+        if let destination = placeAfter("to", in: tokens, aliases: aliases),
+           let origin = placeAfter("from", in: tokens, aliases: aliases),
            origin != destination {
             return TripQuery(origin: origin, destination: destination, vehicleName: matched?.name)
         }
@@ -72,9 +75,18 @@ enum TripQueryParser {
         return nil
     }
 
+    private static func isPlace(_ candidate: String, aliases: Set<String>) -> Bool {
+        aliases.contains(candidate) || GazetteerRouteResolver.isPlace(candidate)
+    }
+
+    private static func isPlaceKey(_ word: String, aliases: Set<String>) -> Bool {
+        aliases.contains(word) || GazetteerRouteResolver.isPlaceKey(word)
+    }
+
     /// Longest leading run of (stopword-stripped) tokens that names a place — so
-    /// multi-word names like "cagayan de oro" resolve fully.
-    private static func longestPlace(_ tokens: [String]) -> String? {
+    /// multi-word names like "cagayan de oro" resolve fully. Personal aliases
+    /// (e.g. "home") count as places too.
+    private static func longestPlace(_ tokens: [String], aliases: Set<String>) -> String? {
         let content = tokens.filter { !stopwords.contains($0) }
         guard !content.isEmpty else { return nil }
         var best: String?
@@ -82,10 +94,10 @@ enum TripQueryParser {
         for w in content {
             // Don't merge two adjacent distinct places (e.g. "tagaytay makati"):
             // once we already have a match, stop before a word that is itself a place.
-            if best != nil, GazetteerRouteResolver.isPlaceKey(w) { break }
+            if best != nil, isPlaceKey(w, aliases: aliases) { break }
             phrase.append(w)
             let candidate = phrase.joined(separator: " ")
-            if GazetteerRouteResolver.isPlace(candidate) {
+            if isPlace(candidate, aliases: aliases) {
                 best = candidate
             } else if best != nil {
                 break   // stop once a matched phrase stops extending
@@ -94,8 +106,8 @@ enum TripQueryParser {
         return best
     }
 
-    private static func placeAfter(_ keyword: String, in tokens: [String]) -> String? {
+    private static func placeAfter(_ keyword: String, in tokens: [String], aliases: Set<String>) -> String? {
         guard let i = tokens.firstIndex(of: keyword) else { return nil }
-        return longestPlace(Array(tokens[(i + 1)...]))
+        return longestPlace(Array(tokens[(i + 1)...]), aliases: aliases)
     }
 }

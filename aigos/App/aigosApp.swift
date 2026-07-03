@@ -20,6 +20,7 @@ struct aigosApp: App {
             TripRecord.self,
             SavedRoute.self,
             FuelPriceCache.self,
+            PersonalPlace.self,
         ])
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {

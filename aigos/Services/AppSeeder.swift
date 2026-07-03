@@ -54,4 +54,17 @@ enum AppSeeder {
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter.date(from: string)
     }
+
+    // MARK: - Personal places
+
+    /// Seed the common shortcut labels on first launch — empty until the user
+    /// maps each one to a real location in Settings.
+    static func seedPersonalPlacesIfNeeded(_ context: ModelContext) {
+        let existing = (try? context.fetch(FetchDescriptor<PersonalPlace>())) ?? []
+        guard existing.isEmpty else { return }
+        for name in ["Home", "Office", "School"] {
+            context.insert(PersonalPlace(name: name))
+        }
+        try? context.save()
+    }
 }

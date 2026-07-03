@@ -16,6 +16,7 @@ struct CalculateView: View {
     @Environment(\.modelContext) private var context
     @Environment(AppState.self) private var appState
     @Query(sort: \VehicleProfile.createdAt) private var vehicles: [VehicleProfile]
+    @Query private var personalPlaces: [PersonalPlace]
     @AppStorage("fuelUnit") private var fuelUnit: FuelUnit = .kmPerL
 
     @State private var selectedVehicleID: UUID?
@@ -36,8 +37,6 @@ struct CalculateView: View {
     @State private var showingVehiclePicker = false
     @State private var showingTalk = false
     @FocusState private var distanceFocused: Bool
-
-    private let resolver: RouteResolver = GazetteerRouteResolver()
 
     private var selectedVehicle: VehicleProfile? {
         vehicles.first { $0.id == selectedVehicleID } ?? vehicles.first
@@ -352,7 +351,8 @@ struct CalculateView: View {
 
     private func estimateDistance() {
         Haptics.tap(.light)
-        guard let result = resolver.route(from: origin, to: destination) else {
+        // Personal shortcuts (Home/Office/…) resolve before the gazetteer.
+        guard let result = PlaceResolver.route(from: origin, to: destination, personalPlaces: personalPlaces) else {
             distanceIsEstimated = false
             return
         }
@@ -423,5 +423,6 @@ struct CalculateView: View {
         .modelContainer(for: [
             VehicleProfile.self, DrivingProfile.self, TripRecord.self,
             SavedRoute.self, FuelPriceCache.self,
+            PersonalPlace.self,
         ], inMemory: true)
 }
