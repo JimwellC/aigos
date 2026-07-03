@@ -4,8 +4,8 @@
 //
 //  The "How you'll drive" editor, presented as a bottom sheet. All driving-profile
 //  options as amber-selected glass pills; edits apply live via bindings, so the
-//  Calculate summary row updates the moment the sheet is dismissed (drag down or
-//  the Done button).
+//  Calculate summary row updates the moment the sheet is dismissed (drag down, the
+//  X, or the Done button).
 //
 
 import SwiftUI
@@ -27,12 +27,12 @@ struct DrivingSheet: View {
             header
 
             ScrollView {
-                VStack(alignment: .leading, spacing: Space.lg) {
+                VStack(alignment: .leading, spacing: 0) {
                     section("Speed") {
                         subLabel("Highway")
                         bucketPills([("Under 80", 70), ("80–100", 90), ("100–120", 110), ("120+", 130)],
                                     value: $highwaySpeed)
-                        subLabel("City").padding(.top, 6)
+                        subLabel("City").padding(.top, 12)
                         bucketPills([("Slow", 25), ("Normal", 40), ("Fast", 60)], value: $citySpeed)
                     }
 
@@ -46,17 +46,11 @@ struct DrivingSheet: View {
 
                     section("Traffic") {
                         SelectablePillFlow(items: TrafficCondition.allCases, selection: $traffic) { $0.label }
-                        Toggle(isOn: $rushHour) {
-                            Text("Rush hour (7–9 AM, 5–8 PM)")
-                                .rounded(15, weight: .medium)
-                                .foregroundStyle(.white)
-                        }
-                        .tint(Color.aigosAmber)
-                        .padding(.top, 4)
+                        rushHourToggle
                     }
 
                     section("Passengers & load") {
-                        SelectablePillFlow(items: VehicleLoad.allCases, selection: $load) { $0.label }
+                        SelectablePillFlow(items: VehicleLoad.allCases, selection: $load) { loadLabel($0) }
                     }
 
                     section("Fuel level") {
@@ -64,17 +58,11 @@ struct DrivingSheet: View {
                     }
                 }
                 .padding(.horizontal, Space.screen)
-                .padding(.top, Space.md)
                 .padding(.bottom, Space.lg)
             }
             .scrollIndicators(.hidden)
 
-            PrimaryButton(title: "Done") {
-                Haptics.tap(.medium)
-                dismiss()
-            }
-            .padding(.horizontal, Space.screen)
-            .padding(.bottom, Space.lg)
+            doneButton
         }
         // Rush hour on a city road → suggest Heavy traffic (user can still change).
         .onChange(of: rushHour) { _, on in if on, roadType == .city { traffic = .heavy } }
@@ -84,47 +72,93 @@ struct DrivingSheet: View {
     // MARK: - Header
 
     private var header: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("HOW YOU'LL DRIVE")
-                    .font(.system(size: 20, weight: .black, design: .rounded))
-                    .kerning(1.0)
-                    .foregroundStyle(.white)
-                Text("Adjustments affect your fuel estimate")
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.75))
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("HOW YOU'LL DRIVE")
+                        .font(.system(size: 28, weight: .black, design: .rounded))
+                        .kerning(1.0)
+                        .foregroundStyle(.white)
+                    Text("Adjustments affect your fuel estimate")
+                        .font(.system(size: 14, weight: .regular, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.65))
+                }
+                Spacer()
+                Button {
+                    Haptics.tap(.light)
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 28))
+                        .foregroundStyle(.white.opacity(0.85))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Close")
             }
-            Spacer()
-            Button {
-                Haptics.tap(.light)
-                dismiss()
-            } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 28))
-                    .foregroundStyle(.white.opacity(0.85))
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Close")
+
+            Divider()
+                .overlay(Color.white.opacity(0.2))
+                .padding(.top, Space.md)
         }
         .padding(.horizontal, Space.screen)
         .padding(.top, Space.md)
-        .padding(.bottom, Space.sm)
+    }
+
+    private var rushHourToggle: some View {
+        Toggle(isOn: $rushHour) {
+            Text("Rush hour (7–9 AM, 5–8 PM)")
+                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .foregroundStyle(.white)
+        }
+        .tint(Color.aigosAmber)
+        .padding(.vertical, 12)
+        .padding(.top, 8)
+    }
+
+    private var doneButton: some View {
+        Button {
+            Haptics.tap(.medium)
+            dismiss()
+        } label: {
+            Text("Done")
+                .font(.system(size: 17, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 17)
+                .background(
+                    Capsule().fill(
+                        LinearGradient(colors: [Color.aigosBGTop, Color.aigosBGBottom],
+                                       startPoint: .topLeading, endPoint: .bottomTrailing)
+                    )
+                )
+                .shadow(color: Color.aigosAmber.opacity(0.45), radius: 16, x: 0, y: 6)
+        }
+        .buttonStyle(PressableStyle())
+        .padding(.horizontal, Space.screen)
+        .padding(.top, 20)
+        .padding(.bottom, Space.lg)
     }
 
     // MARK: - Building blocks
 
     private func section<Content: View>(_ title: String, @ViewBuilder _ content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: Space.sm) {
-            FieldLabel(title)
+        VStack(alignment: .leading, spacing: 0) {
+            Text(title.uppercased())
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .kerning(2.0)
+                .foregroundStyle(.white.opacity(0.7))
+                .padding(.bottom, 10)
             content()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, 20)
     }
 
     private func subLabel(_ text: String) -> some View {
         Text(text)
             .font(.system(size: 14, weight: .semibold, design: .rounded))
-            .foregroundStyle(.white.opacity(0.8))
+            .foregroundStyle(.white.opacity(0.75))
+            .padding(.bottom, 8)
     }
 
     /// Pills that map to a representative speed; the nearest bucket is selected.
@@ -156,6 +190,15 @@ struct DrivingSheet: View {
         case .city: "City roads"
         case .mountain: "Mountain"
         case .mixed: "Mixed"
+        }
+    }
+
+    private func loadLabel(_ l: VehicleLoad) -> String {
+        switch l {
+        case .light: "Driver only"
+        case .moderate: "2–3 passengers"
+        case .full: "Full load"
+        case .cargo: "With cargo"
         }
     }
 }

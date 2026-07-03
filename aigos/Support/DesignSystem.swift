@@ -302,7 +302,7 @@ extension View {
     /// with white (opacity 1.0) text — `.bold` when selected, else `.semibold`.
     func pillStyle(selected: Bool) -> some View {
         self
-            .background(Capsule().fill(selected ? Color.aigosAmber : Color.white.opacity(0.25)))
+            .background(Capsule().fill(selected ? Color.aigosAmber : Color.white.opacity(0.15)))
             .overlay {
                 if selected {
                     // Soft inner shadow along the top edge for depth.
@@ -312,7 +312,7 @@ extension View {
                         .offset(y: 1.5)
                         .mask(Capsule())
                 } else {
-                    Capsule().strokeBorder(Color.white.opacity(0.6), lineWidth: 1.5)
+                    Capsule().strokeBorder(Color.white.opacity(0.7), lineWidth: 2.0)
                 }
             }
     }
