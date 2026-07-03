@@ -2,7 +2,9 @@
 //  PriceRowView.swift
 //  aigos
 //
-//  One editable fuel-price row on glass. Committing an edit stamps it user-updated.
+//  One editable fuel-price row: amber accent bar + grade name on the left, a
+//  large bold WHITE value on the right (never amber-on-amber). Committing an edit
+//  stamps it user-updated and pulses the row.
 //
 
 import SwiftUI
@@ -15,31 +17,43 @@ struct PriceRowView: View {
     @State private var pulse = false
 
     var body: some View {
-        HStack {
+        HStack(spacing: Space.md) {
+            RoundedRectangle(cornerRadius: 2)
+                .fill(Color.aigosAmber)
+                .frame(width: 3, height: 30)
+
             Text(price.fuelType.label)
-                .rounded(16, weight: .medium)
+                .font(.system(size: 17, weight: .semibold, design: .rounded))
                 .foregroundStyle(.white)
+
             if price.updatedBy == "user" {
                 Image(systemName: "pencil")
-                    .font(.caption2)
-                    .foregroundStyle(Color.aigosTextTertiary)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.45))
             }
+
             Spacer()
+
             Text("PHP")
-                .rounded(14)
-                .foregroundStyle(Color.aigosTextSecondary)
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white.opacity(0.9))
             TextField("0.00", text: $text)
-                .font(.system(size: 17, weight: .semibold, design: .monospaced))
-                .foregroundStyle(Color.aigosAmber)
-                .tint(Color.aigosAmber)
+                .font(.system(size: 20, weight: .bold, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(.white)
+                .tint(.white)
                 .keyboardType(.decimalPad)
                 .multilineTextAlignment(.trailing)
-                .frame(maxWidth: 84)
+                .frame(maxWidth: 92)
                 .onChange(of: text) { _, _ in commit() }
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.35))
         }
         .padding(.horizontal, Space.md)
         .padding(.vertical, 14)
-        .background(Color.aigosAmber.opacity(pulse ? 0.3 : 0))
+        .background(pulse ? Color.aigosAmber.opacity(0.28) : Color.clear)
         // Two-decimal seed formatting so merely displaying a price (e.g. 62.55)
         // never round-trips through a lossy string and marks it "user"-edited.
         .onAppear { text = String(format: "%.2f", price.pricePHP) }

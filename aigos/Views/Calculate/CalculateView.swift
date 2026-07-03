@@ -145,10 +145,7 @@ struct CalculateView: View {
                 Text("aigos")
                     .rounded(15, weight: .semibold)
                     .foregroundStyle(Color.aigosTextSecondary)
-                Text("CALCULATE")
-                    .rounded(30, weight: .bold)
-                    .kerning(1.5)
-                    .foregroundStyle(.white)
+                Text("CALCULATE").screenTitle()
             }
             Spacer()
             Button {

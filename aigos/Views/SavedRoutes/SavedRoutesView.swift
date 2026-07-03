@@ -17,17 +17,14 @@ struct SavedRoutesView: View {
 
     var body: some View {
         ZStack {
-            AigosBackground(deep: true)
+            AigosBackground()
 
             if routes.isEmpty {
                 emptyState
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: Space.md) {
-                        Text("SAVED")
-                            .rounded(30, weight: .bold)
-                            .kerning(1.5)
-                            .foregroundStyle(.white)
+                        Text("SAVED").screenTitle()
                             .padding(.bottom, Space.sm)
 
                         ForEach(Array(routes.enumerated()), id: \.element.id) { i, route in

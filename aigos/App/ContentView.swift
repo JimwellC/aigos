@@ -63,7 +63,7 @@ struct AigosTabBar: View {
                         Text(tab.title)
                             .rounded(11, weight: .medium)
                     }
-                    .foregroundStyle(selected == tab ? Color.aigosAmber : Color.white.opacity(0.45))
+                    .foregroundStyle(selected == tab ? Color.white : Color.white.opacity(0.35))
                     .scaleEffect(selected == tab ? 1.12 : 1.0)
                     .frame(maxWidth: .infinity)
                     .contentShape(Rectangle())
@@ -71,16 +71,16 @@ struct AigosTabBar: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(.top, 10)
+        .padding(.top, 12)
         .padding(.bottom, 6)
-        .background(
-            LinearGradient(
-                colors: [Color.aigosTabTop.opacity(0.96), Color.aigosTabBottom.opacity(0.98)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+        .background(alignment: .top) {
+            ZStack(alignment: .top) {
+                Rectangle().fill(.ultraThinMaterial)            // blur behind
+                Color.aigosTabBrown.opacity(0.95)               // dark brown
+                Rectangle().fill(Color.white.opacity(0.15)).frame(height: 1)  // top border
+            }
             .ignoresSafeArea(edges: .bottom)
-        )
+        }
     }
 }
 

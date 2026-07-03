@@ -28,7 +28,7 @@ struct TripRowView: View {
             Spacer()
             Text(trip.totalCostPHP.phpString)
                 .font(.system(size: 17, weight: .bold, design: .rounded))
-                .foregroundStyle(Color.aigosAmber)
+                .foregroundStyle(.white)
         }
         .padding(Space.md)
         .glassCard()

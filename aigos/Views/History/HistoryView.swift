@@ -18,17 +18,14 @@ struct HistoryView: View {
 
     var body: some View {
         ZStack {
-            AigosBackground(deep: true)
+            AigosBackground()
 
             if trips.isEmpty {
                 emptyState
             } else {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: Space.lg) {
-                        Text("HISTORY")
-                            .rounded(30, weight: .bold)
-                            .kerning(1.5)
-                            .foregroundStyle(.white)
+                        Text("HISTORY").screenTitle()
 
                         summaryCard
 

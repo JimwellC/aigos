@@ -27,10 +27,7 @@ struct PricesView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: Space.lg) {
-                    Text("PRICES")
-                        .rounded(30, weight: .bold)
-                        .kerning(1.5)
-                        .foregroundStyle(.white)
+                    Text("PRICES").screenTitle()
 
                     FieldLabel("Price per litre (PHP)")
 
@@ -47,8 +44,8 @@ struct PricesView: View {
 
                     if let lastUpdated {
                         Text("Last updated \(lastUpdated.formatted(date: .abbreviated, time: .omitted)). Tap any price to edit it before calculating.")
-                            .rounded(13)
-                            .foregroundStyle(Color.aigosTextTertiary)
+                            .font(.system(size: 12, weight: .regular, design: .rounded))
+                            .foregroundStyle(Color.white.opacity(0.55))
                     }
                 }
                 .padding(.horizontal, Space.screen)

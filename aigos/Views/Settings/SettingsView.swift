@@ -21,14 +21,11 @@ struct SettingsView: View {
 
     var body: some View {
         ZStack {
-            AigosBackground(deep: true)
+            AigosBackground()
 
             ScrollView {
                 VStack(alignment: .leading, spacing: Space.lg) {
-                    Text("SETTINGS")
-                        .rounded(30, weight: .bold)
-                        .kerning(1.5)
-                        .foregroundStyle(.white)
+                    Text("SETTINGS").screenTitle()
 
                     unitsSection
                     if !vehicles.isEmpty { defaultVehicleSection }

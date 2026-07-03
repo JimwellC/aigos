@@ -121,7 +121,7 @@ struct ResultCard: View {
             }
             Text(value)
                 .font(.system(size: 15, weight: emphasised ? .bold : .medium, design: .monospaced))
-                .foregroundStyle(emphasised ? Color.aigosAmber : .white)
+                .foregroundStyle(.white)
         }
     }
 }

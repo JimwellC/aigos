@@ -34,9 +34,9 @@ let bgGradientTop: Color = Color(hex: "#F5C97A")   // Gradient start (top)
 let bgGradientBottom: Color = Color(hex: "#C4793A") // Gradient end (bottom)
 
 // Glass / Card
-let glassWhite: Color = Color.white.opacity(0.18)  // Card fill
-let glassBorder: Color = Color.white.opacity(0.35) // Card stroke
-let glassShadow: Color = Color.black.opacity(0.12) // Card shadow
+let glassWhite: Color = Color.white.opacity(0.20)  // Card fill (higher contrast)
+let glassBorder: Color = Color.white.opacity(0.45) // Card stroke, lineWidth 1.5
+let glassShadow: Color = Color.black.opacity(0.18) // Card shadow, radius 16
 
 // Text
 let textPrimary: Color = Color.white               // On gradient backgrounds
@@ -290,7 +290,9 @@ struct AigosBackground: View {
 
 ### Tab Bar
 - Deep amber/brown gradient background
-- Selected tab: amber icon + label
+- Background: dark brown #6B3A1F opacity 0.95 + blur (.ultraThinMaterial), top border white 0.15
+- Selected tab: white icon + label
+- Unselected tab: white opacity 0.35
 - Unselected: white at 40% opacity
 - No default iOS tab bar — custom styled
 

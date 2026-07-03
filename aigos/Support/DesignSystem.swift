@@ -25,8 +25,11 @@ extension Color {
     static let aigosTabBottom = Color(hex: "#8B4A1A")
 
     // Glass
-    static let aigosGlassFill = Color.white.opacity(0.18)
-    static let aigosGlassStroke = Color.white.opacity(0.35)
+    static let aigosGlassFill = Color.white.opacity(0.20)
+    static let aigosGlassStroke = Color.white.opacity(0.45)
+
+    // Tab bar
+    static let aigosTabBrown = Color(hex: "#6B3A1F")
 
     // Text (on gradient)
     static let aigosText = Color.white
@@ -122,9 +125,9 @@ private struct GlassCardModifier: ViewModifier {
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(Color.aigosGlassStroke, lineWidth: 1)
+                    .stroke(Color.aigosGlassStroke, lineWidth: 1.5)
             )
-            .shadow(color: .black.opacity(0.12), radius: 12, x: 0, y: 6)
+            .shadow(color: .black.opacity(0.18), radius: 16, x: 0, y: 8)
     }
 }
 
@@ -221,16 +224,25 @@ struct GlassField: View {
 
 // MARK: - Small building blocks
 
-/// Uppercased tracked label used above inputs and as section headers.
+/// Uppercased, tracked section label (size 11, semibold, white 0.6).
 struct FieldLabel: View {
     let text: String
     init(_ text: String) { self.text = text }
     var body: some View {
         Text(text.uppercased())
-            .rounded(13, weight: .semibold)
-            .kerning(1.2)
-            .foregroundStyle(Color.aigosTextTertiary)
+            .font(.system(size: 11, weight: .semibold, design: .rounded))
+            .kerning(1.5)
+            .foregroundStyle(Color.white.opacity(0.6))
             .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+extension Text {
+    /// Large premium screen title (size 34, black, tracked, pure white).
+    func screenTitle() -> some View {
+        self.font(.system(size: 34, weight: .black, design: .rounded))
+            .kerning(2.0)
+            .foregroundStyle(.white)
     }
 }
 
