@@ -1,0 +1,545 @@
+{
+  "note": "Typical real-world PH fuel economy (km/L). Bundled + offline. fuel/type match FuelType/VehicleType raw values.",
+  "vehicles": [
+    {
+      "make": "Toyota",
+      "model": "Vios",
+      "kmL": 14.7,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "sedan_small",
+      "variant": "1.3L"
+    },
+    {
+      "make": "Toyota",
+      "model": "Vios",
+      "kmL": 13.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "sedan_small",
+      "variant": "1.5L"
+    },
+    {
+      "make": "Toyota",
+      "model": "Innova",
+      "kmL": 11.5,
+      "fuel": "diesel",
+      "type": "car",
+      "category": "suv_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Toyota",
+      "model": "Innova",
+      "kmL": 10.2,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas",
+      "variant": "gas"
+    },
+    {
+      "make": "Toyota",
+      "model": "Fortuner",
+      "kmL": 10.8,
+      "fuel": "diesel",
+      "type": "car",
+      "category": "suv_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Toyota",
+      "model": "Rush",
+      "kmL": 14.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Toyota",
+      "model": "Wigo",
+      "kmL": 20.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "hatchback"
+    },
+    {
+      "make": "Toyota",
+      "model": "Avanza",
+      "kmL": 14.2,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "mpv"
+    },
+    {
+      "make": "Toyota",
+      "model": "Camry",
+      "kmL": 14.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "sedan_large"
+    },
+    {
+      "make": "Toyota",
+      "model": "Hilux",
+      "kmL": 11.2,
+      "fuel": "diesel",
+      "type": "truck",
+      "category": "pickup_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Honda",
+      "model": "City",
+      "kmL": 16.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "sedan_small"
+    },
+    {
+      "make": "Honda",
+      "model": "Civic",
+      "kmL": 14.8,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "sedan_large"
+    },
+    {
+      "make": "Honda",
+      "model": "BR-V",
+      "kmL": 14.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "mpv"
+    },
+    {
+      "make": "Honda",
+      "model": "HR-V",
+      "kmL": 14.3,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Honda",
+      "model": "Brio",
+      "kmL": 20.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "hatchback"
+    },
+    {
+      "make": "Honda",
+      "model": "Jazz",
+      "kmL": 16.8,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "hatchback"
+    },
+    {
+      "make": "Mitsubishi",
+      "model": "Mirage",
+      "kmL": 22.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "hatchback"
+    },
+    {
+      "make": "Mitsubishi",
+      "model": "Xpander",
+      "kmL": 13.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "mpv"
+    },
+    {
+      "make": "Mitsubishi",
+      "model": "Montero",
+      "kmL": 10.5,
+      "fuel": "diesel",
+      "type": "car",
+      "category": "suv_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Mitsubishi",
+      "model": "L300",
+      "kmL": 10.0,
+      "fuel": "diesel",
+      "type": "van",
+      "category": "van_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Nissan",
+      "model": "Almera",
+      "kmL": 16.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "sedan_small"
+    },
+    {
+      "make": "Nissan",
+      "model": "Terra",
+      "kmL": 10.5,
+      "fuel": "diesel",
+      "type": "car",
+      "category": "suv_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Nissan",
+      "model": "Navara",
+      "kmL": 11.0,
+      "fuel": "diesel",
+      "type": "truck",
+      "category": "pickup_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Ford",
+      "model": "Ranger",
+      "kmL": 11.5,
+      "fuel": "diesel",
+      "type": "truck",
+      "category": "pickup_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Ford",
+      "model": "EcoSport",
+      "kmL": 14.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Ford",
+      "model": "Everest",
+      "kmL": 11.0,
+      "fuel": "diesel",
+      "type": "car",
+      "category": "suv_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Suzuki",
+      "model": "Ertiga",
+      "kmL": 16.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "mpv"
+    },
+    {
+      "make": "Suzuki",
+      "model": "Dzire",
+      "kmL": 19.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "sedan_small"
+    },
+    {
+      "make": "Suzuki",
+      "model": "Jimny",
+      "kmL": 14.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Suzuki",
+      "model": "Celerio",
+      "kmL": 21.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "hatchback"
+    },
+    {
+      "make": "Suzuki",
+      "model": "S-Presso",
+      "kmL": 21.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "hatchback"
+    },
+    {
+      "make": "Isuzu",
+      "model": "D-Max",
+      "kmL": 12.0,
+      "fuel": "diesel",
+      "type": "truck",
+      "category": "pickup_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Isuzu",
+      "model": "mu-X",
+      "kmL": 11.5,
+      "fuel": "diesel",
+      "type": "car",
+      "category": "suv_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Hyundai",
+      "model": "Reina",
+      "kmL": 16.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "sedan_small"
+    },
+    {
+      "make": "Hyundai",
+      "model": "Accent",
+      "kmL": 15.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "sedan_small"
+    },
+    {
+      "make": "Hyundai",
+      "model": "Tucson",
+      "kmL": 12.0,
+      "fuel": "diesel",
+      "type": "car",
+      "category": "suv_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Hyundai",
+      "model": "Santa Fe",
+      "kmL": 11.0,
+      "fuel": "diesel",
+      "type": "car",
+      "category": "suv_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Kia",
+      "model": "Picanto",
+      "kmL": 18.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "hatchback"
+    },
+    {
+      "make": "Kia",
+      "model": "Soluto",
+      "kmL": 16.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "sedan_small"
+    },
+    {
+      "make": "Kia",
+      "model": "Sportage",
+      "kmL": 12.5,
+      "fuel": "diesel",
+      "type": "car",
+      "category": "suv_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Geely",
+      "model": "Coolray",
+      "kmL": 14.0,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Geely",
+      "model": "Azkarra",
+      "kmL": 13.5,
+      "fuel": "diesel",
+      "type": "car",
+      "category": "suv_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "MG",
+      "model": "ZS",
+      "kmL": 14.0,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "MG",
+      "model": "MG 5",
+      "kmL": 15.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "sedan_small"
+    },
+    {
+      "make": "Mazda",
+      "model": "Mazda2",
+      "kmL": 16.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "sedan_small"
+    },
+    {
+      "make": "Mazda",
+      "model": "Mazda3",
+      "kmL": 14.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "sedan_large"
+    },
+    {
+      "make": "Mazda",
+      "model": "CX-3",
+      "kmL": 14.0,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Mazda",
+      "model": "CX-5",
+      "kmL": 13.0,
+      "fuel": "diesel",
+      "type": "car",
+      "category": "suv_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Subaru",
+      "model": "XV",
+      "kmL": 13.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Subaru",
+      "model": "Forester",
+      "kmL": 12.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Chevrolet",
+      "model": "Spark",
+      "kmL": 18.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "hatchback"
+    },
+    {
+      "make": "Chevrolet",
+      "model": "Trailblazer",
+      "kmL": 11.0,
+      "fuel": "diesel",
+      "type": "car",
+      "category": "suv_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Honda",
+      "model": "Beat",
+      "kmL": 55,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_125"
+    },
+    {
+      "make": "Honda",
+      "model": "Click 125",
+      "kmL": 45,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_125"
+    },
+    {
+      "make": "Honda",
+      "model": "PCX 160",
+      "kmL": 40,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_150"
+    },
+    {
+      "make": "Honda",
+      "model": "XRM 125",
+      "kmL": 55,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_125"
+    },
+    {
+      "make": "Honda",
+      "model": "ADV 160",
+      "kmL": 38,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_150"
+    },
+    {
+      "make": "Yamaha",
+      "model": "Mio i 125",
+      "kmL": 50,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_125"
+    },
+    {
+      "make": "Yamaha",
+      "model": "NMAX 155",
+      "kmL": 40,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_150"
+    },
+    {
+      "make": "Yamaha",
+      "model": "Sniper 150",
+      "kmL": 50,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_150"
+    },
+    {
+      "make": "Yamaha",
+      "model": "Aerox 155",
+      "kmL": 40,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_150"
+    },
+    {
+      "make": "Suzuki",
+      "model": "Raider R150",
+      "kmL": 50,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_150"
+    },
+    {
+      "make": "Suzuki",
+      "model": "Skydrive",
+      "kmL": 48,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_125"
+    },
+    {
+      "make": "Kawasaki",
+      "model": "Barako",
+      "kmL": 45,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_125"
+    },
+    {
+      "make": "Kawasaki",
+      "model": "Rouser 135",
+      "kmL": 50,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_125"
+    }
+  ]
+}

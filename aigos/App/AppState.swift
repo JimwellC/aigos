@@ -48,12 +48,24 @@ struct CalculatorDraft: Equatable {
     var load: VehicleLoad? = nil
 }
 
+/// A vehicle handed from Talk to aigos → Calculate to open the Add Vehicle sheet
+/// prefilled. `efficiencyKmL == nil` means "let the user type it" (manual entry).
+struct VehicleDraft: Equatable {
+    var name: String
+    var efficiencyKmL: Double?
+    var fuelType: FuelType
+    var vehicleType: VehicleType
+}
+
 @Observable
 final class AppState {
     var selectedTab: Tab = .calculate
 
     /// Set by SavedRoutesView; consumed by CalculateView which prefills + recalcs.
     var pendingDraft: CalculatorDraft?
+
+    /// Set by Talk to aigos; consumed by CalculateView which opens Add Vehicle.
+    var pendingVehicleDraft: VehicleDraft?
 
     init() {
         #if DEBUG
@@ -70,6 +82,12 @@ final class AppState {
     /// Route the app to Calculate with a prefilled draft.
     func recalculate(_ draft: CalculatorDraft) {
         pendingDraft = draft
+        selectedTab = .calculate
+    }
+
+    /// Route the app to Calculate and open Add Vehicle with these values.
+    func addVehicle(_ draft: VehicleDraft) {
+        pendingVehicleDraft = draft
         selectedTab = .calculate
     }
 }

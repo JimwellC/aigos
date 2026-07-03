@@ -40,6 +40,8 @@ struct CalculateView: View {
     @State private var savedThisRoute = false
     @State private var showingVehiclePicker = false
     @State private var showingTalk = false
+    @State private var showingAddVehicle = false
+    @State private var addVehiclePrefill: VehicleDraft?
     @State private var demoSearchOpen = false
     @State private var glowPulse = false
 
@@ -90,6 +92,9 @@ struct CalculateView: View {
         .sheet(isPresented: $showingTalk) {
             TalkToAigosView()
         }
+        .sheet(isPresented: $showingAddVehicle) {
+            AddVehicleView(selectedVehicleID: $selectedVehicleID, prefill: addVehiclePrefill)
+        }
         .sheet(isPresented: $showingDrivingSheet) {
             DrivingSheet(
                 highwaySpeed: $avgHighwaySpeed,
@@ -126,6 +131,13 @@ struct CalculateView: View {
         .onAppear(perform: onAppear)
         .onChange(of: selectedVehicleID) { _, _ in applyVehicleDefaults() }
         .onChange(of: appState.pendingDraft) { _, draft in applyDraft(draft) }
+        .onChange(of: appState.pendingVehicleDraft) { _, draft in
+            guard let draft else { return }
+            addVehiclePrefill = draft
+            appState.pendingVehicleDraft = nil
+            // Let the Talk sheet finish dismissing before presenting Add Vehicle.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { showingAddVehicle = true }
+        }
         // Editing/clearing a place resets the submit-error state.
         .onChange(of: origin) { _, _ in submitAttempted = false }
         .onChange(of: destination) { _, _ in submitAttempted = false }

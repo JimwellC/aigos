@@ -27,7 +27,8 @@ struct TalkToAigosView: View {
     private let suggestions = [
         "Manila to Batangas",
         "Pampanga to Manila with heavy traffic",
-        "Makati to Tagaytay during rush hour, AC on",
+        "What's the km/L of a Vios?",
+        "My car is a Honda City",
     ]
 
     var body: some View {
@@ -81,10 +82,13 @@ struct TalkToAigosView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: Space.md) {
                     ForEach(messages) { message in
-                        ChatBubble(message: message) { draft in
+                        ChatBubble(message: message, onOpen: { draft in
                             appState.recalculate(draft)
                             dismiss()
-                        }
+                        }, onUseVehicle: { vehicle in
+                            appState.addVehicle(vehicle)
+                            dismiss()
+                        })
                         .id(message.id)
                         .transition(.asymmetric(
                             insertion: .move(edge: message.role == .user ? .trailing : .leading)
@@ -193,6 +197,11 @@ struct TalkToAigosView: View {
                 return estimate(for: merged)
             }
         }
+        // Vehicle knowledge base — "what's the km/L of Vios?", "my car is Honda City".
+        if let answer = VehicleDatabase.answer(for: text) {
+            let suggestion = (answer.efficiencyKmL != nil || answer.offersAddVehicle) ? answer : nil
+            return ChatMessage(role: .aigos, text: answer.text, vehicleSuggestion: suggestion)
+        }
         return ChatMessage(
             role: .aigos,
             text: "I don't know that location yet. Try typing it in the calculator and pick from the suggestions."
@@ -277,6 +286,7 @@ struct ChatMessage: Identifiable {
     let role: Role
     let text: String
     var result: ChatResult? = nil
+    var vehicleSuggestion: VehicleAnswer? = nil
 }
 
 // MARK: - Bubble
@@ -284,6 +294,7 @@ struct ChatMessage: Identifiable {
 private struct ChatBubble: View {
     let message: ChatMessage
     let onOpen: (CalculatorDraft) -> Void
+    let onUseVehicle: (VehicleDraft) -> Void
 
     var body: some View {
         HStack {
@@ -311,6 +322,10 @@ private struct ChatBubble: View {
                     }
                     .buttonStyle(.plain)
                 }
+
+                if let s = message.vehicleSuggestion {
+                    vehicleButtons(for: s)
+                }
             }
             .padding(Space.md)
             .background(message.role == .user ? Color.aigosAmber.opacity(0.9) : Color.white.opacity(0.14))
@@ -322,6 +337,40 @@ private struct ChatBubble: View {
 
             if message.role == .aigos { Spacer(minLength: 40) }
         }
+    }
+
+    @ViewBuilder
+    private func vehicleButtons(for s: VehicleAnswer) -> some View {
+        if s.efficiencyKmL != nil {
+            HStack(spacing: Space.sm) {
+                pillButton("Use this efficiency", filled: true) { onUseVehicle(draft(from: s, useEfficiency: true)) }
+                pillButton("Enter manually", filled: false) { onUseVehicle(draft(from: s, useEfficiency: false)) }
+            }
+        } else if s.offersAddVehicle {
+            pillButton("Add a vehicle", filled: true) { onUseVehicle(draft(from: s, useEfficiency: false)) }
+        }
+    }
+
+    private func pillButton(_ title: String, filled: Bool, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .rounded(13, weight: .semibold)
+                .foregroundStyle(.white)
+                .padding(.horizontal, Space.md)
+                .padding(.vertical, 8)
+                .background(filled ? Color.aigosAmber : Color.white.opacity(0.15), in: Capsule())
+                .overlay(filled ? nil : Capsule().strokeBorder(Color.white.opacity(0.6), lineWidth: 1.5))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func draft(from s: VehicleAnswer, useEfficiency: Bool) -> VehicleDraft {
+        VehicleDraft(
+            name: s.suggestedName ?? "My Car",
+            efficiencyKmL: useEfficiency ? s.efficiencyKmL : nil,
+            fuelType: s.fuelType ?? .unleaded91,
+            vehicleType: s.vehicleType ?? .car
+        )
     }
 }
 

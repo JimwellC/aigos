@@ -16,6 +16,7 @@ struct AddVehicleView: View {
     @AppStorage("fuelUnit") private var fuelUnit: FuelUnit = .kmPerL
 
     @Binding var selectedVehicleID: UUID?
+    var prefill: VehicleDraft? = nil
 
     @State private var name = "My Car"
     @State private var type: VehicleType = .car
@@ -53,7 +54,7 @@ struct AddVehicleView: View {
                     .padding(.vertical, Space.lg)
                 }
             }
-            .onAppear { if efficiencyText.isEmpty { efficiencyText = fuelUnit.defaultInput } }
+            .onAppear(perform: applyPrefill)
             .navigationTitle("Add Vehicle")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Color.aigosAmberDeep, for: .navigationBar)
@@ -67,6 +68,19 @@ struct AddVehicleView: View {
                 }
             }
         }
+    }
+
+    /// Seed fields from a Talk to aigos suggestion (once, on first appear).
+    private func applyPrefill() {
+        if let p = prefill {
+            name = p.name
+            type = p.vehicleType
+            fuelType = p.fuelType
+            if let kmL = p.efficiencyKmL, efficiencyText.isEmpty {
+                efficiencyText = fuelUnit.displayValue(fromKmL: kmL).oneDecimal
+            }
+        }
+        if efficiencyText.isEmpty { efficiencyText = fuelUnit.defaultInput }
     }
 
     private func save() {
