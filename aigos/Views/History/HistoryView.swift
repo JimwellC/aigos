@@ -28,7 +28,6 @@ struct HistoryView: View {
                         Text("HISTORY").screenTitle()
 
                         summaryCard
-                        if trips.count >= 2 { spendChart }
 
                         ForEach(months) { group in
                             VStack(alignment: .leading, spacing: Space.sm) {
@@ -65,21 +64,37 @@ struct HistoryView: View {
         let delta = this - last
         let hasLast = last > 0
 
-        let count = trips.filter { Calendar.current.isDate($0.calculatedAt, equalTo: Date(), toGranularity: .month) }.count
+        let monthTrips = trips.filter { Calendar.current.isDate($0.calculatedAt, equalTo: Date(), toGranularity: .month) }
+        let count = monthTrips.count
+        let km = monthTrips.reduce(0) { $0 + $1.distanceKm }
+        let avg = count > 0 ? this / Double(count) : 0
 
-        return VStack(alignment: .leading, spacing: Space.sm) {
-            FieldLabel("This month")
-            Text(this.phpString)
-                .font(.system(size: 44, weight: .black, design: .rounded))
-                .foregroundStyle(.white)
-                .minimumScaleFactor(0.6)
-                .lineLimit(1)
+        return VStack(alignment: .leading, spacing: Space.md) {
+            // Labeled stats row (replaces the bare bar chart).
             HStack(spacing: Space.sm) {
-                statPill(icon: "car.fill", text: "\(count) trip\(count == 1 ? "" : "s")", tint: .white.opacity(0.85))
+                statBlock(label: "Trips", value: "\(count)")
+                statBlock(label: "Distance", value: "\(Int(km.rounded())) km")
+                statBlock(label: "Avg / trip", value: "PHP \(Int(avg.rounded()))")
+            }
+
+            Divider().overlay(Color.white.opacity(0.15))
+
+            // Hero: this month's total spend + change vs last month.
+            VStack(alignment: .leading, spacing: 4) {
+                FieldLabel("This month")
+                Text(this.phpString)
+                    .font(.system(size: 44, weight: .black, design: .rounded))
+                    .foregroundStyle(.white)
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
                 if hasLast {
-                    statPill(icon: delta >= 0 ? "arrow.up.right" : "arrow.down.right",
-                             text: "\(abs(delta).phpString) vs last month",
-                             tint: delta >= 0 ? Color.aigosAmber : Color(hex: "#8FE39B"))
+                    HStack(spacing: 6) {
+                        Image(systemName: delta >= 0 ? "arrow.up.right" : "arrow.down.right")
+                            .font(.system(size: 12, weight: .bold))
+                        Text("\(abs(delta).phpString) vs last month")
+                            .rounded(14, weight: .medium)
+                    }
+                    .foregroundStyle(delta >= 0 ? Color.aigosAmber : Color(hex: "#8FE39B"))
                 }
             }
         }
@@ -88,36 +103,23 @@ struct HistoryView: View {
         .glassCard(cornerRadius: Radius.lg)
     }
 
-    private func statPill(icon: String, text: String, tint: Color) -> some View {
-        HStack(spacing: 5) {
-            Image(systemName: icon).font(.system(size: 11, weight: .bold))
-            Text(text).font(.system(size: 13, weight: .semibold, design: .rounded))
+    /// One labeled stat "pill": small caps label on top, bold value below.
+    private func statBlock(label: String, value: String) -> some View {
+        VStack(spacing: 4) {
+            Text(label.uppercased())
+                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                .kerning(1.0)
+                .foregroundStyle(.white.opacity(0.6))
+                .lineLimit(1)
+            Text(value)
+                .font(.system(size: 17, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+                .minimumScaleFactor(0.7)
+                .lineLimit(1)
         }
-        .foregroundStyle(tint)
-        .padding(.horizontal, 10).padding(.vertical, 6)
-        .background(Capsule().fill(Color.white.opacity(0.14)))
-    }
-
-    /// Amber bar chart of the most recent trips' spend.
-    private var spendChart: some View {
-        let recent = Array(trips.prefix(8).reversed())
-        let maxCost = recent.map(\.totalCostPHP).max() ?? 1
-        return VStack(alignment: .leading, spacing: Space.sm) {
-            FieldLabel("Recent spend")
-            HStack(alignment: .bottom, spacing: 8) {
-                ForEach(recent) { trip in
-                    RoundedRectangle(cornerRadius: 4, style: .continuous)
-                        .fill(LinearGradient(colors: [Color.aigosAmberLight, Color.aigosAmberDeep],
-                                             startPoint: .top, endPoint: .bottom))
-                        .frame(height: max(10, CGFloat(trip.totalCostPHP / maxCost) * 92))
-                        .frame(maxWidth: .infinity)
-                }
-            }
-            .frame(height: 100)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(Space.md)
-        .glassCard()
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .background(Color.white.opacity(0.10), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
     private var emptyState: some View {

@@ -65,14 +65,15 @@ struct SettingsView: View {
                     .rounded(16, weight: .medium)
                     .foregroundStyle(.white)
                 Spacer()
-                HStack(spacing: Space.xs) {
+                HStack(spacing: Space.sm) {
                     ForEach(FuelUnit.allCases) { unit in
                         let selected = fuelUnit == unit
                         Text(unit.label)
-                            .rounded(13, weight: selected ? .bold : .semibold)
+                            .font(.system(size: 13, weight: selected ? .bold : .semibold, design: .rounded))
                             .foregroundStyle(.white)
-                            .padding(.horizontal, Space.md)
-                            .padding(.vertical, 8)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                            .frame(width: 80, height: 36)   // both pills exactly the same size
                             .pillStyle(selected: selected)
                             .onTapGesture { Haptics.tap(.light); fuelUnit = unit }
                     }
