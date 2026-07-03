@@ -30,6 +30,11 @@ enum DebugSupport {
         ProcessInfo.processInfo.arguments.contains("-onboarding")
     }
 
+    /// Auto-open the "How you'll drive" sheet (for screenshots/QA).
+    static var autoOpenDriving: Bool {
+        ProcessInfo.processInfo.arguments.contains("-driving")
+    }
+
     /// Jump onboarding to a given step (0=add vehicle, 1=driving, 2=prices).
     static var onboardingStep: Int? {
         let args = ProcessInfo.processInfo.arguments

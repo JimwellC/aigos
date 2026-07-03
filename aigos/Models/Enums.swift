@@ -109,7 +109,7 @@ enum FuelType: String, Codable, CaseIterable, Identifiable {
 }
 
 enum RoadType: String, Codable, CaseIterable, Identifiable {
-    case highway, city, mountain
+    case highway, city, mountain, mixed
 
     var id: String { rawValue }
 
@@ -118,6 +118,7 @@ enum RoadType: String, Codable, CaseIterable, Identifiable {
         case .highway: "Highway"
         case .city: "City"
         case .mountain: "Mountain"
+        case .mixed: "Mixed"
         }
     }
 
@@ -127,8 +128,27 @@ enum RoadType: String, Codable, CaseIterable, Identifiable {
         case .highway: 1.00   // baseline
         case .city: 1.20      // stop-and-go +20%
         case .mountain: 1.35  // elevation changes +35%
+        case .mixed: 1.10     // blend of highway + city
         }
     }
+}
+
+/// How much the aircon runs — a 3-way UI choice. For the (binary) estimate,
+/// anything but `.off` counts as AC on.
+enum ACUsage: String, Codable, CaseIterable, Identifiable {
+    case always, sometimes, off
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .always: "Always on"
+        case .sometimes: "Sometimes"
+        case .off: "Off"
+        }
+    }
+
+    var isOn: Bool { self != .off }
 }
 
 enum ProfileConfidence: String, Codable {

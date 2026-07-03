@@ -26,7 +26,7 @@ struct CalculateView: View {
     @State private var destinationKey: String?
     @State private var submitAttempted = false
 
-    @State private var acInUse = true
+    @State private var acUsage: ACUsage = .always
     @State private var roadType: RoadType = .highway
     @State private var avgHighwaySpeed: Double = 90
     @State private var avgCitySpeed: Double = 40
@@ -35,7 +35,7 @@ struct CalculateView: View {
     @State private var rushHour = false
     @State private var fuelLevel: FuelLevel = .full
 
-    @State private var showingDrivingDetails = false
+    @State private var showingDrivingSheet = false
     @State private var estimate: FuelEstimate?
     @State private var savedThisRoute = false
     @State private var showingVehiclePicker = false
@@ -89,6 +89,21 @@ struct CalculateView: View {
         }
         .sheet(isPresented: $showingTalk) {
             TalkToAigosView()
+        }
+        .sheet(isPresented: $showingDrivingSheet) {
+            DrivingSheet(
+                highwaySpeed: $avgHighwaySpeed,
+                citySpeed: $avgCitySpeed,
+                acUsage: $acUsage,
+                roadType: $roadType,
+                traffic: $traffic,
+                load: $vehicleLoad,
+                rushHour: $rushHour,
+                fuelLevel: $fuelLevel
+            )
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+            .presentationBackground { AigosBackground() }
         }
         .sheet(isPresented: $showingResult) {
             if let estimate {
@@ -264,95 +279,37 @@ struct CalculateView: View {
     // MARK: - Driving
 
     private var drivingCard: some View {
-        VStack(alignment: .leading, spacing: Space.md) {
-            HStack {
-                FieldLabel("How you'll drive")
-                Spacer()
-                if hasProfile && !showingDrivingDetails {
-                    Button("Adjust") {
-                        withAnimation(.snappy) { showingDrivingDetails = true }
-                    }
-                    .rounded(13, weight: .semibold)
-                    .foregroundStyle(.white)
+        Button {
+            Haptics.tap(.light)
+            showingDrivingSheet = true
+        } label: {
+            VStack(alignment: .leading, spacing: Space.sm) {
+                HStack {
+                    FieldLabel("How you'll drive")
+                    Spacer()
+                    Text("Adjust")
+                        .rounded(13, weight: .semibold)
+                        .foregroundStyle(.white)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.6))
                 }
-            }
 
-            if hasProfile && !showingDrivingDetails {
-                // "Same as last time?" compact confirm (Section 14B)
                 HStack(spacing: Space.sm) {
                     Image(systemName: "checkmark.seal.fill")
                         .foregroundStyle(.white)
-                    Text(sameAsLastSummary)
+                    Text(drivingSummary)
                         .rounded(15, weight: .medium)
                         .foregroundStyle(.white)
-                }
-            } else {
-                labeled("Road type") { roadTypePicker }
-
-                labeled("Traffic") {
-                    pillRow(TrafficCondition.allCases, selection: $traffic) { $0.label }
-                }
-                Toggle(isOn: $rushHour) {
-                    Text("Rush hour (7–9 AM, 5–8 PM)")
-                        .rounded(15, weight: .medium)
-                        .foregroundStyle(.white)
-                }
-                .tint(Color.aigosAmber)
-
-                labeled("Passengers / load") {
-                    pillRow(VehicleLoad.allCases, selection: $vehicleLoad) { $0.label }
-                }
-
-                Toggle(isOn: $acInUse) {
-                    Text("Aircon on")
-                        .rounded(15, weight: .medium)
-                        .foregroundStyle(.white)
-                }
-                .tint(Color.aigosAmber)
-
-                labeled("Fuel level") {
-                    pillRow(FuelLevel.allCases, selection: $fuelLevel) { $0.label }
-                }
-
-                speedSlider(title: "Highway speed", value: $avgHighwaySpeed, range: 40...140)
-                speedSlider(title: "City speed", value: $avgCitySpeed, range: 10...80)
-            }
-        }
-        .padding(Space.md)
-        .glassCard()
-        // Rush hour on a city road → suggest Heavy traffic (user can still change).
-        .onChange(of: rushHour) { _, on in if on, roadType == .city { traffic = .heavy } }
-        .onChange(of: roadType) { _, rt in if rushHour, rt == .city { traffic = .heavy } }
-    }
-
-    private func labeled<Content: View>(_ title: String, @ViewBuilder _ content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title.uppercased())
-                .rounded(11, weight: .semibold)
-                .kerning(0.8)
-                .foregroundStyle(Color.aigosTextTertiary)
-            content()
-        }
-    }
-
-    private func pillRow<T: Identifiable & Hashable>(
-        _ items: [T], selection: Binding<T>, label: @escaping (T) -> String
-    ) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Space.sm) {
-                ForEach(items) { item in
-                    let on = selection.wrappedValue == item
-                    Text(label(item))
-                        .rounded(13, weight: on ? .bold : .semibold)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, Space.md)
-                        .padding(.vertical, 8)
-                        .background(on ? Color.aigosAmber : Color.white.opacity(0.25), in: Capsule())
-                        .overlay(Capsule().stroke(on ? Color.clear : Color.white.opacity(0.5), lineWidth: 1))
-                        .onTapGesture { Haptics.tap(.light); selection.wrappedValue = item }
+                        .lineLimit(1)
+                        .truncationMode(.tail)
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(Space.md)
+            .glassCard()
         }
+        .buttonStyle(.plain)
     }
 
     /// Amber origin→destination route connector (dot · dashed · pin).
@@ -374,49 +331,16 @@ struct CalculateView: View {
         .frame(height: 14)
     }
 
-    private var roadTypePicker: some View {
-        HStack(spacing: Space.sm) {
-            ForEach(RoadType.allCases) { type in
-                let selected = roadType == type
-                Button {
-                    Haptics.tap(.light)
-                    roadType = type
-                } label: {
-                    Text(type.label)
-                        .rounded(14, weight: selected ? .bold : .semibold)
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(selected ? Color.aigosAmber : Color.white.opacity(0.25), in: Capsule())
-                        .overlay(Capsule().stroke(selected ? Color.clear : Color.white.opacity(0.5), lineWidth: 1))
-                }
-                .buttonStyle(.plain)
-            }
-        }
-    }
-
-    private func speedSlider(title: String, value: Binding<Double>, range: ClosedRange<Double>) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text(title)
-                    .rounded(15, weight: .medium)
-                    .foregroundStyle(.white)
-                Spacer()
-                Text("\(Int(value.wrappedValue)) km/h")
-                    .rounded(15, weight: .semibold)
-                    .foregroundStyle(.white)
-            }
-            Slider(value: value, in: range, step: 5)
-                .tint(Color.aigosAmber)
-        }
-    }
-
     // MARK: - Derived
 
-    private var hasProfile: Bool { selectedVehicle?.drivingProfile != nil }
+    private var acOn: Bool { acUsage.isOn }
 
-    private var sameAsLastSummary: String {
-        "\(roadType.label) · \(Int(avgHighwaySpeed)) km/h · AC \(acInUse ? "on" : "off")"
+    /// Compact one-line summary shown on the driving card (truncates with "…").
+    private var drivingSummary: String {
+        var parts = ["\(roadType.label) · \(Int(avgHighwaySpeed)) km/h", "AC \(acOn ? "on" : "off")"]
+        if traffic != .light { parts.append("\(traffic.label) traffic") }
+        if vehicleLoad != .light { parts.append(vehicleLoad.label) }
+        return parts.joined(separator: " · ")
     }
 
     private var confidenceText: String? {
@@ -434,6 +358,7 @@ struct CalculateView: View {
         applyDraft(appState.pendingDraft)
         #if DEBUG
         if DebugSupport.autoOpenTalk { showingTalk = true }
+        if DebugSupport.autoOpenDriving { showingDrivingSheet = true }
         if DebugSupport.lowFuel { fuelLevel = .low }
         if let q = DebugSupport.searchDemo {
             origin = q
@@ -443,15 +368,11 @@ struct CalculateView: View {
     }
 
     private func applyVehicleDefaults() {
-        guard let profile = selectedVehicle?.drivingProfile else {
-            showingDrivingDetails = true
-            return
-        }
+        guard let profile = selectedVehicle?.drivingProfile else { return }
         avgHighwaySpeed = profile.avgHighwaySpeedKmh
         avgCitySpeed = profile.avgCitySpeedKmh
-        acInUse = profile.usesACByDefault
+        acUsage = profile.usesACByDefault ? .always : .off
         roadType = profile.defaultRoadType
-        showingDrivingDetails = false
     }
 
     private func applyDraft(_ draft: CalculatorDraft?) {
@@ -464,13 +385,10 @@ struct CalculateView: View {
             selectedVehicleID = id
         }
         // Conditions understood by Talk to aigos.
-        if let ac = draft.acOn { acInUse = ac }
+        if let ac = draft.acOn { acUsage = ac ? .always : .off }
         if let r = draft.rushHour { rushHour = r }
         if let l = draft.load { vehicleLoad = l }
         if let t = draft.traffic { traffic = t }
-        if draft.traffic != nil || draft.rushHour != nil || draft.load != nil || draft.acOn != nil {
-            showingDrivingDetails = true   // reveal so the user sees what was set
-        }
         appState.pendingDraft = nil
         DispatchQueue.main.async { startCalculate() }
     }
@@ -519,7 +437,7 @@ struct CalculateView: View {
             fuelPricePerLitre: price,
             avgHighwaySpeedKmh: avgHighwaySpeed,
             avgCitySpeedKmh: avgCitySpeed,
-            acInUse: acInUse,
+            acInUse: acOn,
             roadType: roadType,
             traffic: traffic,
             load: vehicleLoad,
@@ -539,7 +457,7 @@ struct CalculateView: View {
             avgHighwaySpeed: avgHighwaySpeed,
             avgCitySpeed: avgCitySpeed,
             roadType: roadType,
-            acWasOn: acInUse,
+            acWasOn: acOn,
             traffic: traffic,
             load: vehicleLoad,
             wasRushHour: rushHour,
