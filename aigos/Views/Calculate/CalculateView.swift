@@ -192,10 +192,10 @@ struct CalculateView: View {
             HStack(spacing: Space.md) {
                 Image(systemName: selectedVehicle?.type.systemImage ?? "car.fill")
                     .font(.system(size: 28, weight: .semibold))
-                    .foregroundStyle(Color.aigosAmber)
+                    .foregroundStyle(.white)
                     .frame(width: 56, height: 56)
-                    .background(Color.white.opacity(0.14), in: Circle())
-                    .overlay(Circle().stroke(Color.aigosAmber.opacity(0.35), lineWidth: 1.5))
+                    .background(Color.aigosAmber.opacity(0.9), in: Circle())
+                    .overlay(Circle().stroke(Color.white.opacity(0.25), lineWidth: 1.5))
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(selectedVehicle?.name ?? "Add a vehicle")
@@ -236,7 +236,7 @@ struct CalculateView: View {
             if let distanceKm {
                 Label("≈ \(distanceKm.oneDecimal) km (estimated)", systemImage: "map")
                     .rounded(14, weight: .semibold)
-                    .foregroundStyle(Color.aigosAmber)
+                    .foregroundStyle(.white.opacity(0.9))
             } else {
                 Text("Pick both places from the suggestions to estimate the distance.")
                     .rounded(12)
@@ -259,7 +259,7 @@ struct CalculateView: View {
                         withAnimation(.snappy) { showingDrivingDetails = true }
                     }
                     .rounded(13, weight: .semibold)
-                    .foregroundStyle(Color.aigosAmber)
+                    .foregroundStyle(.white.opacity(0.9))
                 }
             }
 
@@ -267,7 +267,7 @@ struct CalculateView: View {
                 // "Same as last time?" compact confirm (Section 14B)
                 HStack(spacing: Space.sm) {
                     Image(systemName: "checkmark.seal.fill")
-                        .foregroundStyle(Color.aigosAmber)
+                        .foregroundStyle(.white)
                     Text(sameAsLastSummary)
                         .rounded(15, weight: .medium)
                         .foregroundStyle(.white)
@@ -329,11 +329,12 @@ struct CalculateView: View {
                 ForEach(items) { item in
                     let on = selection.wrappedValue == item
                     Text(label(item))
-                        .rounded(13, weight: .semibold)
-                        .foregroundStyle(on ? .white : Color.aigosTextSecondary)
+                        .rounded(13, weight: on ? .bold : .semibold)
+                        .foregroundStyle(on ? .white : .white.opacity(0.8))
                         .padding(.horizontal, Space.md)
                         .padding(.vertical, 8)
-                        .background(on ? Color.aigosAmber : Color.white.opacity(0.12), in: Capsule())
+                        .background(on ? Color.aigosAmber : Color.white.opacity(0.18), in: Capsule())
+                        .overlay(Capsule().stroke(on ? Color.clear : Color.white.opacity(0.3), lineWidth: 1))
                         .onTapGesture { Haptics.tap(.light); selection.wrappedValue = item }
                 }
             }
@@ -344,14 +345,14 @@ struct CalculateView: View {
     private var routeConnector: some View {
         HStack(spacing: Space.sm) {
             HStack(spacing: 5) {
-                Circle().fill(Color.aigosAmber).frame(width: 7, height: 7)
+                Circle().fill(Color.white).frame(width: 7, height: 7)
                 ForEach(0..<6, id: \.self) { _ in
-                    Circle().fill(Color.aigosAmber.opacity(0.55)).frame(width: 3, height: 3)
+                    Circle().fill(Color.white.opacity(0.5)).frame(width: 3, height: 3)
                 }
                 Image(systemName: "location.north.fill")
                     .rotationEffect(.degrees(135))
                     .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(Color.aigosAmber)
+                    .foregroundStyle(.white.opacity(0.9))
             }
             Spacer()
         }
@@ -368,11 +369,12 @@ struct CalculateView: View {
                     roadType = type
                 } label: {
                     Text(type.label)
-                        .rounded(14, weight: .semibold)
-                        .foregroundStyle(selected ? .white : .aigosTextSecondary)
+                        .rounded(14, weight: selected ? .bold : .semibold)
+                        .foregroundStyle(selected ? .white : .white.opacity(0.8))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
-                        .background(selected ? Color.aigosAmber : Color.white.opacity(0.12), in: Capsule())
+                        .background(selected ? Color.aigosAmber : Color.white.opacity(0.18), in: Capsule())
+                        .overlay(Capsule().stroke(selected ? Color.clear : Color.white.opacity(0.3), lineWidth: 1))
                 }
                 .buttonStyle(.plain)
             }
@@ -388,7 +390,7 @@ struct CalculateView: View {
                 Spacer()
                 Text("\(Int(value.wrappedValue)) km/h")
                     .rounded(15, weight: .semibold)
-                    .foregroundStyle(Color.aigosAmber)
+                    .foregroundStyle(.white)
             }
             Slider(value: value, in: range, step: 5)
                 .tint(Color.aigosAmber)

@@ -40,7 +40,7 @@ struct TripRowView: View {
     private var efficiencyBadge: some View {
         HStack(spacing: 3) {
             Image(systemName: "leaf.fill").font(.system(size: 9, weight: .bold))
-                .foregroundStyle(Color.aigosAmber)
+                .foregroundStyle(.white.opacity(0.9))
             Text("\(efficiency.oneDecimal) km/L")
                 .font(.system(size: 11, weight: .semibold, design: .rounded))
                 .foregroundStyle(.white)

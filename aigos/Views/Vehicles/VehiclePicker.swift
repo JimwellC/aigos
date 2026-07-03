@@ -32,9 +32,9 @@ struct VehiclePicker: View {
                             } label: {
                                 HStack(spacing: Space.md) {
                                     Image(systemName: vehicle.type.systemImage)
-                                        .foregroundStyle(Color.aigosAmber)
+                                        .foregroundStyle(.white)
                                         .frame(width: 40, height: 40)
-                                        .background(Color.white.opacity(0.12), in: Circle())
+                                        .background(Color.aigosAmber.opacity(0.9), in: Circle())
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(vehicle.name)
                                             .rounded(16, weight: .semibold)
@@ -46,7 +46,7 @@ struct VehiclePicker: View {
                                     Spacer()
                                     if vehicle.id == selectedVehicleID {
                                         Image(systemName: "checkmark.circle.fill")
-                                            .foregroundStyle(Color.aigosAmber)
+                                            .foregroundStyle(.white)
                                     }
                                 }
                                 .padding(Space.md)

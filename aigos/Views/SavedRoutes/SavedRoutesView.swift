@@ -46,9 +46,9 @@ struct SavedRoutesView: View {
         } label: {
             HStack(spacing: Space.md) {
                 Image(systemName: "star.fill")
-                    .foregroundStyle(Color.aigosAmber)
+                    .foregroundStyle(.white)
                     .frame(width: 40, height: 40)
-                    .background(Color.white.opacity(0.12), in: Circle())
+                    .background(Color.aigosAmber.opacity(0.9), in: Circle())
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(route.name)

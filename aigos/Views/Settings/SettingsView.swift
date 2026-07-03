@@ -69,11 +69,12 @@ struct SettingsView: View {
                     ForEach(FuelUnit.allCases) { unit in
                         let selected = fuelUnit == unit
                         Text(unit.label)
-                            .rounded(13, weight: .semibold)
-                            .foregroundStyle(selected ? .white : Color.aigosTextSecondary)
+                            .rounded(13, weight: selected ? .bold : .semibold)
+                            .foregroundStyle(selected ? .white : .white.opacity(0.8))
                             .padding(.horizontal, Space.md)
                             .padding(.vertical, 8)
-                            .background(selected ? Color.aigosAmber : Color.white.opacity(0.12), in: Capsule())
+                            .background(selected ? Color.aigosAmber : Color.white.opacity(0.18), in: Capsule())
+                            .overlay(Capsule().stroke(selected ? Color.clear : Color.white.opacity(0.3), lineWidth: 1))
                             .onTapGesture { Haptics.tap(.light); fuelUnit = unit }
                     }
                 }
@@ -89,16 +90,15 @@ struct SettingsView: View {
                         Haptics.tap(.light)
                         setDefault(vehicle)
                     } label: {
-                        HStack {
-                            Image(systemName: vehicle.type.systemImage)
-                                .foregroundStyle(Color.aigosAmber)
+                        HStack(spacing: Space.md) {
+                            SettingsIcon(systemName: vehicle.type.systemImage)
                             Text(vehicle.name)
                                 .rounded(16, weight: .medium)
                                 .foregroundStyle(.white)
                             Spacer()
                             if vehicle.isDefault {
                                 Image(systemName: "checkmark.circle.fill")
-                                    .foregroundStyle(Color.aigosAmber)
+                                    .foregroundStyle(.white)
                             }
                         }
                     }
@@ -119,7 +119,7 @@ struct SettingsView: View {
                 } label: {
                     Label("Add", systemImage: "plus")
                         .rounded(13, weight: .semibold)
-                        .foregroundStyle(Color.aigosAmber)
+                        .foregroundStyle(.white.opacity(0.9))
                 }
             }
 
@@ -130,18 +130,17 @@ struct SettingsView: View {
                         editingPlace = place
                     } label: {
                         HStack(spacing: Space.md) {
-                            Image(systemName: "mappin.circle.fill")
-                                .foregroundStyle(Color.aigosAmber)
+                            SettingsIcon(systemName: "mappin")
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(place.name.isEmpty ? "Unnamed" : place.name)
-                                    .rounded(16, weight: .medium)
+                                    .rounded(16, weight: .semibold)
                                     .foregroundStyle(.white)
                                 Text(place.isConfigured ? place.gazetteerKey.capitalized : "Tap to set a location")
                                     .rounded(13)
-                                    .foregroundStyle(place.isConfigured ? Color.aigosTextSecondary : Color.aigosTextTertiary)
+                                    .foregroundStyle(place.isConfigured ? Color.white.opacity(0.75) : Color.white.opacity(0.55))
                             }
                             Spacer()
-                            Image(systemName: "chevron.right").foregroundStyle(Color.aigosTextTertiary)
+                            Image(systemName: "chevron.right").foregroundStyle(Color.white.opacity(0.4))
                         }
                     }
                     .buttonStyle(.plain)
@@ -161,18 +160,18 @@ struct SettingsView: View {
 
     private var dataSection: some View {
         section("Data") {
-            VStack(spacing: Space.md) {
+            VStack(spacing: Space.sm) {
                 Button {
                     showingResetConfirm = true
                 } label: {
-                    rowLabel("Reset driving profile", systemImage: "brain.head.profile", tint: .white)
+                    dataRow("Reset driving profile", systemImage: "brain.head.profile", destructive: false)
                 }
                 .disabled(vehicles.isEmpty)
                 Divider().overlay(Color.white.opacity(0.15))
                 Button {
                     showingClearConfirm = true
                 } label: {
-                    rowLabel("Clear trip history", systemImage: "trash", tint: Color(hex: "#FFB4A2"))
+                    dataRow("Clear trip history", systemImage: "trash", destructive: true)
                 }
             }
         }
@@ -198,13 +197,20 @@ struct SettingsView: View {
         }
     }
 
-    private func rowLabel(_ title: String, systemImage: String, tint: Color) -> some View {
-        HStack {
-            Image(systemName: systemImage)
-            Text(title).rounded(16, weight: .medium)
+    /// A Data-section row: white text + Settings icon tile. Destructive rows use a
+    /// red tile and a subtle red row-background tint (white stays readable on amber).
+    private func dataRow(_ title: String, systemImage: String, destructive: Bool) -> some View {
+        HStack(spacing: Space.md) {
+            SettingsIcon(systemName: systemImage, tile: destructive ? Color(hex: "#A83A2A") : Color(hex: "#8B4A1A"))
+            Text(title).rounded(16, weight: .medium).foregroundStyle(.white)
             Spacer()
         }
-        .foregroundStyle(tint)
+        .padding(.vertical, 4)
+        .padding(.horizontal, Space.sm)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(destructive ? Color(hex: "#C0392B").opacity(0.28) : Color.clear)
+        )
     }
 
     // MARK: - Actions
@@ -276,12 +282,12 @@ struct PersonalPlaceEditor: View {
                                     save()
                                 }
                                 .rounded(13, weight: .semibold)
-                                .foregroundStyle(Color.aigosAmber)
+                                .foregroundStyle(.white.opacity(0.9))
                             }
                         }
                         Text(place.isConfigured ? place.gazetteerKey.capitalized : "Not set")
                             .rounded(17, weight: .semibold)
-                            .foregroundStyle(place.isConfigured ? .white : Color.aigosTextTertiary)
+                            .foregroundStyle(place.isConfigured ? .white : Color.white.opacity(0.55))
 
                         GlassField(placeholder: "Search city or province…", text: $search)
 
@@ -300,7 +306,7 @@ struct PersonalPlaceEditor: View {
                                         Spacer()
                                         if place.gazetteerKey == key {
                                             Image(systemName: "checkmark.circle.fill")
-                                                .foregroundStyle(Color.aigosAmber)
+                                                .foregroundStyle(.white)
                                         }
                                     }
                                     .padding(.horizontal, Space.md)

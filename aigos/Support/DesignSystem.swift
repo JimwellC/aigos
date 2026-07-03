@@ -312,7 +312,7 @@ struct SelectablePillFlow<T: Hashable & Identifiable>: View {
 
 // MARK: - Small building blocks
 
-/// Uppercased, tracked section header (size 13, semibold, white 0.6, kern 2.0).
+/// Uppercased, tracked section header (size 13, semibold, white 0.75, kern 2.0).
 struct FieldLabel: View {
     let text: String
     init(_ text: String) { self.text = text }
@@ -320,8 +320,23 @@ struct FieldLabel: View {
         Text(text.uppercased())
             .font(.system(size: 13, weight: .semibold, design: .rounded))
             .kerning(2.0)
-            .foregroundStyle(Color.white.opacity(0.6))
+            .foregroundStyle(Color.white.opacity(0.75))
             .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// A white SF Symbol inside a small dark-amber rounded square — the Settings/list
+/// row icon style. White always reads on the amber background; the tile carries
+/// the colour instead of the glyph.
+struct SettingsIcon: View {
+    let systemName: String
+    var tile: Color = Color(hex: "#8B4A1A")
+    var body: some View {
+        Image(systemName: systemName)
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(.white)
+            .frame(width: 30, height: 30)
+            .background(tile, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 }
 

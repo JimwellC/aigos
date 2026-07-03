@@ -94,7 +94,7 @@ struct ResultCard: View {
         HStack(spacing: Space.sm) {
             Image(systemName: icon)
                 .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(emphasised ? Color.aigosAmber : Color.white.opacity(0.75))
+                .foregroundStyle(emphasised ? .white : Color.white.opacity(0.75))
                 .frame(width: 22)
             Text(name)
                 .font(.system(size: 16, weight: emphasised ? .bold : .medium, design: .rounded))

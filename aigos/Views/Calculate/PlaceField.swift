@@ -57,7 +57,7 @@ struct PlaceField: View {
 
             if isValid {
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(Color.aigosAmber)
+                    .foregroundStyle(.white)
             } else if !text.isEmpty {
                 Button { clear() } label: {
                     Image(systemName: "xmark.circle.fill").foregroundStyle(Color.aigosTextTertiary)
@@ -99,7 +99,7 @@ struct PlaceField: View {
         HStack(spacing: Space.sm) {
             Image(systemName: s.isPersonal ? "star.fill" : "mappin.circle.fill")
                 .font(.system(size: 15))
-                .foregroundStyle(Color.aigosAmber)
+                .foregroundStyle(.white.opacity(0.9))
             VStack(alignment: .leading, spacing: 1) {
                 Text(s.title)
                     .rounded(16, weight: .semibold)

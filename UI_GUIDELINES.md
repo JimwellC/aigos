@@ -287,7 +287,14 @@ struct AigosBackground: View {
 ### Settings (Tab 5)
 - Grouped glass sections (like iOS Settings but warmer)
 - Toggle switches: amber accent color
-- Destructive actions (Clear History): white text, no amber
+- Destructive actions (Clear History): white icon + white text + subtle red row-background tint, NOT red text (red is unreadable on amber)
+- Settings/list row icons: white SF Symbol inside a small dark-amber rounded square (`SettingsIcon`) — the tile carries the colour, the glyph stays white
+
+### Icon & contrast rules (global)
+- **All SF Symbol icons are white** (0.85–0.9 inside glass). Never colour a glyph amber — amber-on-amber (and amber on the pale glass cards) is unreadable.
+- **Amber is only for FILLS**, never glyphs: pill/button fills (white text on top), toggle/slider tint tracks, the amber progress bar, accent bars, circle/tile backgrounds behind a white icon.
+- Section headers (`FieldLabel`): white 0.75, semibold, tracked, caps.
+- Per-grade price bars keep their own colours (green/blue/purple/orange) — those are on glass, not amber glyphs.
 
 ### Tab Bar
 - Deep amber/brown gradient background
