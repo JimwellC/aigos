@@ -46,41 +46,51 @@ struct ContentView: View {
     }
 }
 
-/// Custom bottom tab bar with the deep amber/brown gradient.
+/// Floating pill tab bar — icon-only, with an amber indicator circle that springs
+/// between tabs. Attached via `.safeAreaInset(.bottom)` so content never hides
+/// behind it.
 struct AigosTabBar: View {
     @Binding var selected: Tab
+    @Namespace private var ns
 
     var body: some View {
         HStack(spacing: 0) {
             ForEach(Tab.allCases) { tab in
                 Button {
                     Haptics.tap(.light)
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) { selected = tab }
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { selected = tab }
                 } label: {
-                    VStack(spacing: 4) {
+                    ZStack {
+                        if selected == tab {
+                            Circle()
+                                .fill(Color.aigosAmber)
+                                .frame(width: 44, height: 44)
+                                .matchedGeometryEffect(id: "tabIndicator", in: ns)
+                        }
                         Image(systemName: tab.icon)
-                            .font(.system(size: 20))
-                        Text(tab.title)
-                            .rounded(11, weight: .medium)
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundStyle(selected == tab ? .white : .white.opacity(0.45))
+                            .symbolEffect(.bounce, value: selected == tab)
                     }
-                    .foregroundStyle(selected == tab ? Color.white : Color.white.opacity(0.35))
-                    .scaleEffect(selected == tab ? 1.12 : 1.0)
                     .frame(maxWidth: .infinity)
+                    .frame(height: 64)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
         }
-        .padding(.top, 12)
-        .padding(.bottom, 6)
-        .background(alignment: .top) {
-            ZStack(alignment: .top) {
-                Rectangle().fill(.ultraThinMaterial)            // blur behind
-                Color.aigosTabBrown.opacity(0.95)               // dark brown
-                Rectangle().fill(Color.white.opacity(0.15)).frame(height: 1)  // top border
+        .padding(.horizontal, 6)
+        .frame(height: 64)
+        .background {
+            ZStack {
+                Capsule().fill(.ultraThinMaterial)
+                Capsule().fill(Color(hex: "#2C1A0E").opacity(0.92))
             }
-            .ignoresSafeArea(edges: .bottom)
         }
+        .overlay(Capsule().strokeBorder(Color.white.opacity(0.15), lineWidth: 1))
+        .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 8)
+        .padding(.horizontal, 24)
+        .padding(.bottom, 12)
     }
 }
 

@@ -296,13 +296,11 @@ struct AigosBackground: View {
 - Section headers (`FieldLabel`): white 0.75, semibold, tracked, caps.
 - Per-grade price bars keep their own colours (green/blue/purple/orange) — those are on glass, not amber glyphs.
 
-### Tab Bar
-- Deep amber/brown gradient background
-- Background: dark brown #6B3A1F opacity 0.95 + blur (.ultraThinMaterial), top border white 0.15
-- Selected tab: white icon + label
-- Unselected tab: white opacity 0.35
-- Unselected: white at 40% opacity
-- No default iOS tab bar — custom styled
+### Tab Bar — floating pill (icon-only)
+- Floating capsule, **not** full width: 24pt margin each side, height 64, floats 12pt above the home indicator (via `.safeAreaInset(.bottom)` so content never hides)
+- Background: dark brown #2C1A0E opacity 0.92 over `.ultraThinMaterial`, border white 0.15 @ 1pt, shadow black 0.3 / r20 / y8
+- Icon-only (SF Symbols, 20pt). Selected: white icon inside a 44pt amber `#E9A84C` circle that springs between tabs (`matchedGeometryEffect`, `.spring(response:0.3, dampingFraction:0.7)`) + `.symbolEffect(.bounce)`; unselected: white opacity 0.45
+- Light haptic on switch. No default iOS tab bar — custom `AigosTabBar`
 
 ### Onboarding
 - Full screen gradient per screen
