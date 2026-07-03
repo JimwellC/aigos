@@ -295,6 +295,29 @@ struct FlowLayout: Layout {
     }
 }
 
+extension View {
+    /// The one true selectable-pill chrome. Selected = vivid amber solid fill with
+    /// a soft top inner-shadow for depth. Unselected = high-contrast glass: white
+    /// 0.25 fill + a **white 0.6 border @ 1.5** so it always reads on amber. Pair
+    /// with white (opacity 1.0) text — `.bold` when selected, else `.semibold`.
+    func pillStyle(selected: Bool) -> some View {
+        self
+            .background(Capsule().fill(selected ? Color.aigosAmber : Color.white.opacity(0.25)))
+            .overlay {
+                if selected {
+                    // Soft inner shadow along the top edge for depth.
+                    Capsule()
+                        .stroke(Color.black.opacity(0.22), lineWidth: 3)
+                        .blur(radius: 2.5)
+                        .offset(y: 1.5)
+                        .mask(Capsule())
+                } else {
+                    Capsule().strokeBorder(Color.white.opacity(0.6), lineWidth: 1.5)
+                }
+            }
+    }
+}
+
 /// A wrapping row of selectable pills — amber when selected, glass otherwise.
 struct SelectablePillFlow<T: Hashable & Identifiable>: View {
     let items: [T]
@@ -310,8 +333,7 @@ struct SelectablePillFlow<T: Hashable & Identifiable>: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, Space.md)
                     .padding(.vertical, 10)
-                    .background(selected ? Color.aigosAmber : Color.white.opacity(0.25), in: Capsule())
-                    .overlay(Capsule().stroke(selected ? Color.clear : Color.white.opacity(0.5), lineWidth: 1))
+                    .pillStyle(selected: selected)
                     .onTapGesture {
                         Haptics.tap(.light)
                         selection = item

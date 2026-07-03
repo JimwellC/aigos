@@ -271,8 +271,7 @@ private struct ProgressBar: View {
 private extension View {
     /// Shared amber/glass pill styling for the driving-style option rows.
     func onboardingPill(selected: Bool) -> some View {
-        self.background(selected ? Color.aigosAmber : Color.white.opacity(0.25), in: Capsule())
-            .overlay(Capsule().stroke(selected ? Color.clear : Color.white.opacity(0.5), lineWidth: 1))
+        self.pillStyle(selected: selected)
     }
 }
 

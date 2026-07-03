@@ -123,7 +123,7 @@ struct DrivingSheet: View {
 
     private func subLabel(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 13, weight: .semibold, design: .rounded))
+            .font(.system(size: 14, weight: .semibold, design: .rounded))
             .foregroundStyle(.white.opacity(0.8))
     }
 
@@ -146,8 +146,7 @@ struct DrivingSheet: View {
             .foregroundStyle(.white)
             .padding(.horizontal, Space.md)
             .padding(.vertical, 10)
-            .background(selected ? Color.aigosAmber : Color.white.opacity(0.25), in: Capsule())
-            .overlay(Capsule().stroke(selected ? Color.clear : Color.white.opacity(0.5), lineWidth: 1))
+            .pillStyle(selected: selected)
             .onTapGesture(perform: action)
     }
 
