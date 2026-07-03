@@ -12,3 +12,6 @@ xcuserdata/
 
 # macOS
 .AppleDouble
+
+# Claude Code local settings
+.claude/
