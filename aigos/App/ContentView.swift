@@ -2,8 +2,9 @@
 //  ContentView.swift
 //  aigos
 //
-//  Root TabView — 5 flat tabs, no deep navigation stacks. Every feature is one
-//  tap from anywhere (Section 11 of the architecture spec).
+//  Root shell. A custom amber/brown tab bar (no default iOS tab bar, per the
+//  design guidelines) drives five flat screens via AppState. Onboarding is
+//  presented full-screen on first launch.
 //
 
 import SwiftUI
@@ -11,30 +12,71 @@ import SwiftData
 
 struct ContentView: View {
     @Environment(\.modelContext) private var context
+    @State private var appState = AppState()
+    @AppStorage("hasOnboarded") private var hasOnboarded = false
 
     var body: some View {
-        TabView {
-            CalculateView()
-                .tabItem { Label("Calculate", systemImage: "car.fill") }
+        currentScreen
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                AigosTabBar(selected: $appState.selectedTab)
+            }
+            .environment(appState)
+            .task { AppSeeder.seedPricesIfNeeded(context) }
+            .fullScreenCover(isPresented: Binding(
+                get: { !hasOnboarded },
+                set: { _ in }
+            )) {
+                OnboardingView(hasOnboarded: $hasOnboarded)
+            }
+    }
 
-            HistoryView()
-                .tabItem { Label("History", systemImage: "clock.fill") }
-
-            SavedRoutesView()
-                .tabItem { Label("Saved", systemImage: "star.fill") }
-
-            PricesView()
-                .tabItem { Label("Prices", systemImage: "fuelpump.fill") }
-
-            SettingsView()
-                .tabItem { Label("Settings", systemImage: "gearshape.fill") }
+    @ViewBuilder
+    private var currentScreen: some View {
+        switch appState.selectedTab {
+        case .calculate: CalculateView()
+        case .history: HistoryView()
+        case .saved: SavedRoutesView()
+        case .prices: PricesView()
+        case .settings: SettingsView()
         }
-        .tint(.aigosAmber)
-        .task {
-            // Seed fuel prices + a sample vehicle on first launch so the
-            // calculator works immediately (onboarding replaces this in Sprint 2).
-            AppSeeder.seedIfNeeded(context)
+    }
+}
+
+/// Custom bottom tab bar with the deep amber/brown gradient.
+struct AigosTabBar: View {
+    @Binding var selected: Tab
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(Tab.allCases) { tab in
+                Button {
+                    Haptics.tap(.light)
+                    selected = tab
+                } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: tab.icon)
+                            .font(.system(size: 20))
+                        Text(tab.title)
+                            .rounded(11, weight: .medium)
+                    }
+                    .foregroundStyle(selected == tab ? Color.aigosAmber : Color.white.opacity(0.45))
+                    .frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
         }
+        .padding(.top, 10)
+        .padding(.bottom, 6)
+        .background(
+            LinearGradient(
+                colors: [Color.aigosTabTop.opacity(0.96), Color.aigosTabBottom.opacity(0.98)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea(edges: .bottom)
+        )
     }
 }
 

@@ -2,9 +2,8 @@
 //  AddVehicleView.swift
 //  aigos
 //
-//  Create a vehicle and its linked DrivingProfile (Section 6, "per-vehicle
-//  DrivingProfile"). Pre-filled with the spec's example so a first vehicle is one
-//  tap away.
+//  Create a vehicle and its linked DrivingProfile (Feature 04). Pre-filled with
+//  the spec's example so a first vehicle is one tap away.
 //
 
 import SwiftUI
@@ -32,33 +31,58 @@ struct AddVehicleView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Details") {
-                    TextField("Name", text: $name)
-                    Picker("Type", selection: $type) {
-                        ForEach(VehicleType.allCases) { Text($0.label).tag($0) }
+            ZStack {
+                AigosBackground()
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: Space.md) {
+                        FieldLabel("Name")
+                        GlassField(placeholder: "My Car", text: $name, autocap: .words)
+
+                        FieldLabel("Type")
+                        pillRow(VehicleType.allCases, selected: type) { type = $0 } label: { $0.label }
+
+                        FieldLabel("Fuel type")
+                        pillRow(FuelType.allCases, selected: fuelType) { fuelType = $0 } label: { $0.label }
+
+                        FieldLabel("Efficiency (km/L)")
+                        GlassField(placeholder: "12", text: $efficiencyText, keyboard: .decimalPad)
                     }
-                    Picker("Fuel type", selection: $fuelType) {
-                        ForEach(FuelType.allCases) { Text($0.label).tag($0) }
-                    }
-                }
-                Section("Efficiency") {
-                    HStack {
-                        TextField("km/L", text: $efficiencyText)
-                            .keyboardType(.decimalPad)
-                        Text("km/L")
-                            .foregroundStyle(.secondary)
-                    }
+                    .padding(.horizontal, Space.screen)
+                    .padding(.vertical, Space.lg)
                 }
             }
             .navigationTitle("Add Vehicle")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color.aigosBGTop, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel") { dismiss() }.tint(Color.aigosAmberDeep)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: save).disabled(!canSave)
+                    Button("Save", action: save).disabled(!canSave).tint(Color.aigosAmberDeep)
+                }
+            }
+        }
+    }
+
+    private func pillRow<T: Hashable & Identifiable>(
+        _ items: [T],
+        selected: T,
+        onSelect: @escaping (T) -> Void,
+        label: @escaping (T) -> String
+    ) -> some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: Space.sm) {
+                ForEach(items) { item in
+                    let isOn = item == selected
+                    Text(label(item))
+                        .rounded(14, weight: .semibold)
+                        .foregroundStyle(isOn ? .white : Color.aigosTextSecondary)
+                        .padding(.horizontal, Space.md)
+                        .padding(.vertical, 10)
+                        .background(isOn ? Color.aigosAmber : Color.white.opacity(0.12), in: Capsule())
+                        .onTapGesture { Haptics.tap(.light); onSelect(item) }
                 }
             }
         }

@@ -2,7 +2,7 @@
 //  TripRowView.swift
 //  aigos
 //
-//  One row in the trip history — route, cost, and a compact factor summary.
+//  One glass row in the trip history — route, cost, and a compact summary.
 //
 
 import SwiftUI
@@ -11,30 +11,26 @@ struct TripRowView: View {
     let trip: TripRecord
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
+        HStack(spacing: Space.md) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text("\(trip.origin) → \(trip.destination)")
-                    .font(.headline)
+                    .rounded(16, weight: .semibold)
+                    .foregroundStyle(.white)
                     .lineLimit(1)
-                Spacer()
-                Text(trip.totalCostPHP.phpString)
-                    .font(.headline)
-                    .foregroundStyle(Color.aigosAmber)
+                Text("\(trip.distanceKm.oneDecimal) km · \(trip.vehicleName) · \(trip.adjustedLitres.oneDecimal) L")
+                    .rounded(13)
+                    .foregroundStyle(Color.aigosTextSecondary)
+                    .lineLimit(1)
+                Text(trip.calculatedAt.formatted(date: .abbreviated, time: .shortened))
+                    .rounded(11)
+                    .foregroundStyle(Color.aigosTextTertiary)
             }
-            HStack(spacing: 8) {
-                Text("\(trip.distanceKm.oneDecimal) km")
-                Text("·")
-                Text(trip.vehicleName)
-                Text("·")
-                Text("\(trip.adjustedLitres.oneDecimal) L")
-            }
-            .font(.caption)
-            .foregroundStyle(.secondary)
-
-            Text(trip.calculatedAt.formatted(date: .abbreviated, time: .shortened))
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
+            Spacer()
+            Text(trip.totalCostPHP.phpString)
+                .font(.system(size: 17, weight: .bold, design: .rounded))
+                .foregroundStyle(Color.aigosAmber)
         }
-        .padding(.vertical, 2)
+        .padding(Space.md)
+        .glassCard()
     }
 }

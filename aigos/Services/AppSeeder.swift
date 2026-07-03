@@ -19,14 +19,11 @@ enum AppSeeder {
         let prices: [String: Double]       // keyed by FuelType.rawValue
     }
 
-    static func seedIfNeeded(_ context: ModelContext) {
-        seedPricesIfNeeded(context)
-        seedSampleVehicleIfNeeded(context)
-    }
-
     // MARK: - Prices
 
-    private static func seedPricesIfNeeded(_ context: ModelContext) {
+    /// Seed fuel prices on first launch. The first vehicle is created by
+    /// onboarding (OnboardingView), not here.
+    static func seedPricesIfNeeded(_ context: ModelContext) {
         let existing = (try? context.fetch(FetchDescriptor<FuelPriceCache>())) ?? []
         guard existing.isEmpty else { return }
 
@@ -56,26 +53,5 @@ enum AppSeeder {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter.date(from: string)
-    }
-
-    // MARK: - Sample vehicle
-
-    private static func seedSampleVehicleIfNeeded(_ context: ModelContext) {
-        let existing = (try? context.fetch(FetchDescriptor<VehicleProfile>())) ?? []
-        guard existing.isEmpty else { return }
-
-        let vehicle = VehicleProfile(
-            name: "My Car",
-            type: .car,
-            fuelType: .ron95,
-            efficiencyKmL: 12.0,
-            isDefault: true
-        )
-        let profile = DrivingProfile(vehicleId: vehicle.id)
-        vehicle.drivingProfile = profile
-
-        context.insert(vehicle)
-        context.insert(profile)
-        try? context.save()
     }
 }

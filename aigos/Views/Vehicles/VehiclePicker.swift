@@ -2,8 +2,7 @@
 //  VehiclePicker.swift
 //  aigos
 //
-//  Sheet for selecting the active vehicle and adding new ones (Section 6, Feature
-//  04). Full add/edit/delete management lives here in Sprint 1.
+//  Sheet for selecting the active vehicle and managing the garage (Feature 04).
 //
 
 import SwiftUI
@@ -19,62 +18,80 @@ struct VehiclePicker: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                ForEach(vehicles) { vehicle in
-                    Button {
-                        selectedVehicleID = vehicle.id
-                        dismiss()
-                    } label: {
-                        HStack {
-                            Label(vehicle.name, systemImage: vehicle.type.systemImage)
-                                .foregroundStyle(.primary)
-                            Spacer()
-                            Text("\(vehicle.fuelType.label) · \(vehicle.efficiencyKmL.oneDecimal) km/L")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            if vehicle.id == selectedVehicleID {
-                                Image(systemName: "checkmark")
-                                    .foregroundStyle(Color.aigosAmber)
+            ZStack {
+                AigosBackground()
+
+                ScrollView {
+                    VStack(spacing: Space.md) {
+                        ForEach(vehicles) { vehicle in
+                            Button {
+                                Haptics.tap(.light)
+                                selectedVehicleID = vehicle.id
+                                dismiss()
+                            } label: {
+                                HStack(spacing: Space.md) {
+                                    Image(systemName: vehicle.type.systemImage)
+                                        .foregroundStyle(Color.aigosAmber)
+                                        .frame(width: 40, height: 40)
+                                        .background(Color.white.opacity(0.12), in: Circle())
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(vehicle.name)
+                                            .rounded(16, weight: .semibold)
+                                            .foregroundStyle(.white)
+                                        Text("\(vehicle.fuelType.label) · \(vehicle.efficiencyKmL.oneDecimal) km/L")
+                                            .rounded(13)
+                                            .foregroundStyle(Color.aigosTextSecondary)
+                                    }
+                                    Spacer()
+                                    if vehicle.id == selectedVehicleID {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .foregroundStyle(Color.aigosAmber)
+                                    }
+                                }
+                                .padding(Space.md)
+                                .glassCard()
+                            }
+                            .buttonStyle(.plain)
+                            .contextMenu {
+                                Button(role: .destructive) { delete(vehicle) } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
                             }
                         }
+
+                        if vehicles.isEmpty {
+                            Text("No vehicles yet. Add your first to start calculating.")
+                                .rounded(15)
+                                .foregroundStyle(Color.aigosTextSecondary)
+                                .multilineTextAlignment(.center)
+                                .padding(.top, Space.xl)
+                        }
                     }
+                    .padding(.horizontal, Space.screen)
+                    .padding(.vertical, Space.lg)
                 }
-                .onDelete(perform: delete)
             }
             .navigationTitle("Vehicles")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color.aigosBGTop, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Done") { dismiss() }
+                    Button("Done") { dismiss() }.tint(Color.aigosAmberDeep)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showingAddVehicle = true
-                    } label: {
-                        Image(systemName: "plus")
-                    }
+                    Button { showingAddVehicle = true } label: { Image(systemName: "plus") }
+                        .tint(Color.aigosAmberDeep)
                 }
             }
             .sheet(isPresented: $showingAddVehicle) {
                 AddVehicleView(selectedVehicleID: $selectedVehicleID)
             }
-            .overlay {
-                if vehicles.isEmpty {
-                    ContentUnavailableView(
-                        "No vehicles yet",
-                        systemImage: "car",
-                        description: Text("Add your first vehicle to start calculating.")
-                    )
-                }
-            }
         }
     }
 
-    private func delete(at offsets: IndexSet) {
-        for index in offsets {
-            let vehicle = vehicles[index]
-            if vehicle.id == selectedVehicleID { selectedVehicleID = nil }
-            context.delete(vehicle)
-        }
+    private func delete(_ vehicle: VehicleProfile) {
+        if vehicle.id == selectedVehicleID { selectedVehicleID = nil }
+        context.delete(vehicle)
         try? context.save()
     }
 }

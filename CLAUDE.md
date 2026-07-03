@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-**Pre-build.** The only file here is `aigos_architecture.pdf` — the complete, finalized product spec. There is no Xcode project, no source, and no git repo yet. The first real task is scaffolding the app (see Sprint 1). Extract the PDF text if you need to re-read the spec:
+**Sprints 1 & 2 built.** The `aigos.xcodeproj` app exists and builds warning-clean (Swift 6, iOS 17+); `aigos_architecture.pdf` remains the source-of-truth spec. Done: 5-tab shell with a custom amber tab bar, SwiftData models, physics `CalculationEngine`, editable prices, trip history with month-over-month comparison, saved routes with one-tap recalc, the self-learning `ProfileLearningEngine`, and the first-launch onboarding flow. The whole UI follows the glassmorphism design system (see `UI_GUIDELINES.md` / `skills/swiftui-design.md`) built in `Support/DesignSystem.swift`. Not yet built: real OSRM routing (still a gazetteer prototype behind `RouteResolver`), "Talk to aigos" / Apple Intelligence (Sprint 3), a unit-test target, and real app-icon/mascot art.
+
+Extract the PDF text if you need to re-read the spec:
 
 ```bash
 pip3 install --break-system-packages pypdf
@@ -65,14 +67,26 @@ OSRM + a bundled Philippine OpenStreetMap dataset, fully offline, zero per-call 
 
 ## Build & run
 
-No project exists yet, so there is nothing to build until Sprint 1 scaffolds it. Once `aigos.xcodeproj` exists, build/run via **Xcode 16+** (required for SwiftUI + Foundation Models), or:
+Build/run via **Xcode 16+** (required for SwiftUI + Foundation Models), or headlessly:
 
 ```bash
-xcodebuild -scheme aigos -destination 'platform=iOS Simulator,name=iPhone 16 Pro' build
-xcodebuild -scheme aigos -destination 'platform=iOS Simulator,name=iPhone 16 Pro' test          # all tests
-xcodebuild -scheme aigos -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
-  test -only-testing:aigosTests/CalculationEngineTests/testHighwayEstimate                       # single test
+xcodebuild -scheme aigos -destination 'platform=iOS Simulator,name=iPhone 16' build
+xcrun simctl install "iPhone 16" \
+  build/DerivedData/Build/Products/Debug-iphonesimulator/aigos.app
+xcrun simctl launch "iPhone 16" com.aigos.app
 ```
+
+The project uses Xcode 16 **synchronized folder groups** (`PBXFileSystemSynchronizedRootGroup`) — new files under `aigos/` are picked up automatically; no need to edit `project.pbxproj` when adding sources.
+
+**DEBUG launch args** (see `Support/DebugSupport.swift`) drive the app headlessly for screenshots/QA — the custom tab bar can't be tapped from `simctl`:
+
+```bash
+# seed a demo garage + trips across two months + a saved route, open a given tab:
+xcrun simctl launch "iPhone 16" com.aigos.app -seedDemo -tab history
+#   -tab: calculate|history|saved|prices|settings   (calculate auto-runs a sample estimate)
+```
+
+No unit-test target exists yet. Pure logic (`CalculationEngine`, `ProfileLearningEngine.rollingAvg`) is currently checked with standalone `swift` scripts against the spec's worked examples; add an `aigosTests` target when hardening.
 
 ## Roadmap (Section 20)
 
@@ -81,3 +95,7 @@ xcodebuild -scheme aigos -destination 'platform=iOS Simulator,name=iPhone 16 Pro
 - **Sprint 3:** Apple Intelligence / `TalkToAigosView`, `AIGateView`, App Store assets + submission.
 
 When starting fresh, default to Sprint 1 unless told otherwise. Keep scope tight — feature creep is the named enemy; ship imperfect and iterate.
+
+## Skills & References
+- UI/UX design system: see UI_GUIDELINES.md
+- SwiftUI patterns: see skills/swiftui-design.md

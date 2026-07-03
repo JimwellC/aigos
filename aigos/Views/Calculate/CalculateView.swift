@@ -2,11 +2,11 @@
 //  CalculateView.swift
 //  aigos
 //
-//  The main trip calculator (Tab 1). Sprint-1 definition of done: pick a vehicle,
-//  enter origin + destination, tap Calculate, see an estimated PHP fuel cost with
-//  a full breakdown. The full "Talk to aigos" interview arrives in Sprint 3; for
-//  now the driving factors are quick inline controls seeded from the vehicle's
-//  DrivingProfile.
+//  The main trip calculator (Tab 1) — the hero screen. Glassmorphism over the
+//  warm amber gradient. Pick a vehicle, enter a route, confirm "same as last
+//  time?" (Section 14B) or adjust, then Calculate for a full breakdown with a
+//  count-up cost. Every trip is auto-saved and folds into the self-learning
+//  DrivingProfile (Section 14C).
 //
 
 import SwiftUI
@@ -14,12 +14,12 @@ import SwiftData
 
 struct CalculateView: View {
     @Environment(\.modelContext) private var context
+    @Environment(AppState.self) private var appState
     @Query(sort: \VehicleProfile.createdAt) private var vehicles: [VehicleProfile]
 
     @State private var selectedVehicleID: UUID?
     @State private var origin = ""
     @State private var destination = ""
-
     @State private var distanceText = ""
     @State private var distanceIsEstimated = false
 
@@ -28,7 +28,10 @@ struct CalculateView: View {
     @State private var avgHighwaySpeed: Double = 90
     @State private var avgCitySpeed: Double = 40
 
+    @State private var showingDrivingDetails = false
     @State private var estimate: FuelEstimate?
+    @State private var heroCost: Double = 0
+    @State private var savedThisRoute = false
     @State private var showingVehiclePicker = false
 
     private let resolver: RouteResolver = GazetteerRouteResolver()
@@ -46,129 +49,274 @@ struct CalculateView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Form {
-                vehicleSection
-                routeSection
-                drivingSection
+        ZStack {
+            AigosBackground()
 
-                Section {
-                    Button(action: calculate) {
-                        Text("Calculate")
-                            .frame(maxWidth: .infinity)
-                            .fontWeight(.semibold)
-                    }
-                    .disabled(!canCalculate)
-                }
+            ScrollView {
+                VStack(spacing: Space.lg) {
+                    header
+                    vehicleCard
+                    routeCard
+                    drivingCard
 
-                if let estimate {
-                    Section {
-                        ResultCard(
-                            estimate: estimate,
-                            fuelType: selectedVehicle?.fuelType ?? .ron95
+                    PrimaryButton(title: "Calculate", systemImage: "bolt.fill", enabled: canCalculate, action: calculate)
+
+                    if let estimate {
+                        ResultCard(estimate: estimate, heroCost: heroCost, confidence: confidenceText)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+
+                        SecondaryButton(
+                            title: savedThisRoute ? "Saved to routes" : "Save this route",
+                            systemImage: savedThisRoute ? "star.fill" : "star",
+                            action: saveRoute
                         )
+                        .disabled(savedThisRoute)
                     }
-                    .listRowInsets(EdgeInsets())
-                    .listRowBackground(Color.clear)
                 }
+                .padding(.horizontal, Space.screen)
+                .padding(.top, Space.xl)
+                .padding(.bottom, Space.xxl)
             }
-            .navigationTitle("Calculate")
-            .sheet(isPresented: $showingVehiclePicker) {
-                VehiclePicker(selectedVehicleID: $selectedVehicleID)
+            .scrollDismissesKeyboard(.interactively)
+        }
+        .sheet(isPresented: $showingVehiclePicker) {
+            VehiclePicker(selectedVehicleID: $selectedVehicleID)
+        }
+        .onAppear(perform: onAppear)
+        .onChange(of: selectedVehicleID) { _, _ in applyVehicleDefaults() }
+        .onChange(of: appState.pendingDraft) { _, draft in applyDraft(draft) }
+    }
+
+    // MARK: - Header
+
+    private var header: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("aigos")
+                    .rounded(15, weight: .semibold)
+                    .foregroundStyle(Color.aigosTextSecondary)
+                Text("CALCULATE")
+                    .rounded(30, weight: .bold)
+                    .kerning(1.5)
+                    .foregroundStyle(.white)
             }
-            .onAppear(perform: syncSelection)
-            .onChange(of: selectedVehicleID) { _, _ in applyVehicleDefaults() }
+            Spacer()
+            Image(systemName: "fuelpump.circle.fill")
+                .font(.system(size: 34))
+                .foregroundStyle(.white.opacity(0.9))
         }
     }
 
-    // MARK: - Sections
+    // MARK: - Vehicle
 
-    private var vehicleSection: some View {
-        Section("Vehicle") {
-            if let vehicle = selectedVehicle {
-                Button {
-                    showingVehiclePicker = true
-                } label: {
-                    HStack {
-                        Label(vehicle.name, systemImage: vehicle.type.systemImage)
-                            .foregroundStyle(.primary)
-                        Spacer()
-                        Text("\(vehicle.efficiencyKmL.oneDecimal) km/L")
-                            .foregroundStyle(.secondary)
-                        Image(systemName: "chevron.right")
-                            .font(.footnote)
-                            .foregroundStyle(.tertiary)
+    private var vehicleCard: some View {
+        Button {
+            Haptics.tap(.light)
+            showingVehiclePicker = true
+        } label: {
+            HStack(spacing: Space.md) {
+                Image(systemName: selectedVehicle?.type.systemImage ?? "car.fill")
+                    .font(.system(size: 22))
+                    .foregroundStyle(Color.aigosAmber)
+                    .frame(width: 44, height: 44)
+                    .background(Color.white.opacity(0.12), in: Circle())
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(selectedVehicle?.name ?? "Add a vehicle")
+                        .rounded(17, weight: .semibold)
+                        .foregroundStyle(.white)
+                    if let vehicle = selectedVehicle {
+                        Text("\(vehicle.fuelType.label) · \(vehicle.efficiencyKmL.oneDecimal) km/L")
+                            .rounded(13)
+                            .foregroundStyle(Color.aigosTextSecondary)
                     }
                 }
-            } else {
-                Button("Add a vehicle to get started") {
-                    showingVehiclePicker = true
-                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .foregroundStyle(Color.aigosTextTertiary)
             }
+            .padding(Space.md)
+            .glassCard()
         }
+        .buttonStyle(.plain)
     }
 
-    private var routeSection: some View {
-        Section("Route") {
-            TextField("Origin (e.g. Manila)", text: $origin)
-                .textInputAutocapitalization(.words)
-            TextField("Destination (e.g. Batangas)", text: $destination)
-                .textInputAutocapitalization(.words)
+    // MARK: - Route
 
-            Button("Estimate distance", action: estimateDistance)
+    private var routeCard: some View {
+        VStack(alignment: .leading, spacing: Space.md) {
+            FieldLabel("Route")
+            GlassField(placeholder: "Origin (e.g. Manila)", text: $origin, autocap: .words)
+            GlassField(placeholder: "Destination (e.g. Batangas)", text: $destination, autocap: .words)
+
+            HStack(spacing: Space.sm) {
+                Button(action: estimateDistance) {
+                    Label("Estimate", systemImage: "map")
+                        .rounded(14, weight: .medium)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, Space.md)
+                        .padding(.vertical, 10)
+                        .background(Color.white.opacity(0.15), in: Capsule())
+                        .overlay(Capsule().stroke(Color.white.opacity(0.3), lineWidth: 1))
+                }
+                .buttonStyle(.plain)
                 .disabled(origin.isEmpty || destination.isEmpty)
+                .opacity(origin.isEmpty || destination.isEmpty ? 0.5 : 1)
 
-            HStack {
-                TextField("Distance", text: $distanceText)
-                    .keyboardType(.decimalPad)
-                Text("km")
-                    .foregroundStyle(.secondary)
+                Spacer()
+
+                HStack(spacing: 6) {
+                    TextField("0", text: $distanceText, prompt: Text("0").foregroundColor(Color.aigosTextTertiary))
+                        .rounded(20, weight: .bold)
+                        .foregroundStyle(.white)
+                        .tint(.white)
+                        .keyboardType(.decimalPad)
+                        .multilineTextAlignment(.trailing)
+                        .frame(width: 80)
+                    Text("km")
+                        .rounded(15, weight: .medium)
+                        .foregroundStyle(Color.aigosTextSecondary)
+                }
             }
 
             if distanceIsEstimated {
-                Label("Estimated distance — tap to adjust", systemImage: "info.circle")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                Text("Estimated distance — tap to adjust")
+                    .rounded(12)
+                    .foregroundStyle(Color.aigosTextTertiary)
+            }
+        }
+        .padding(Space.md)
+        .glassCard()
+    }
+
+    // MARK: - Driving
+
+    private var drivingCard: some View {
+        VStack(alignment: .leading, spacing: Space.md) {
+            HStack {
+                FieldLabel("How you'll drive")
+                Spacer()
+                if hasProfile && !showingDrivingDetails {
+                    Button("Adjust") {
+                        withAnimation(.snappy) { showingDrivingDetails = true }
+                    }
+                    .rounded(13, weight: .semibold)
+                    .foregroundStyle(Color.aigosAmber)
+                }
+            }
+
+            if hasProfile && !showingDrivingDetails {
+                // "Same as last time?" compact confirm (Section 14B)
+                HStack(spacing: Space.sm) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .foregroundStyle(Color.aigosAmber)
+                    Text(sameAsLastSummary)
+                        .rounded(15, weight: .medium)
+                        .foregroundStyle(.white)
+                }
+            } else {
+                roadTypePicker
+                Toggle(isOn: $acInUse) {
+                    Text("Aircon on")
+                        .rounded(15, weight: .medium)
+                        .foregroundStyle(.white)
+                }
+                .tint(Color.aigosAmber)
+
+                speedSlider(title: "Highway speed", value: $avgHighwaySpeed, range: 40...140)
+                speedSlider(title: "City speed", value: $avgCitySpeed, range: 10...80)
+            }
+        }
+        .padding(Space.md)
+        .glassCard()
+    }
+
+    private var roadTypePicker: some View {
+        HStack(spacing: Space.sm) {
+            ForEach(RoadType.allCases) { type in
+                let selected = roadType == type
+                Button {
+                    Haptics.tap(.light)
+                    roadType = type
+                } label: {
+                    Text(type.label)
+                        .rounded(14, weight: .semibold)
+                        .foregroundStyle(selected ? .white : .aigosTextSecondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(selected ? Color.aigosAmber : Color.white.opacity(0.12), in: Capsule())
+                }
+                .buttonStyle(.plain)
             }
         }
     }
 
-    private var drivingSection: some View {
-        Section("How you'll drive") {
-            Picker("Road type", selection: $roadType) {
-                ForEach(RoadType.allCases) { Text($0.label).tag($0) }
+    private func speedSlider(title: String, value: Binding<Double>, range: ClosedRange<Double>) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(title)
+                    .rounded(15, weight: .medium)
+                    .foregroundStyle(.white)
+                Spacer()
+                Text("\(Int(value.wrappedValue)) km/h")
+                    .rounded(15, weight: .semibold)
+                    .foregroundStyle(Color.aigosAmber)
             }
-            Toggle("Aircon on", isOn: $acInUse)
-
-            VStack(alignment: .leading) {
-                Text("Highway speed: \(Int(avgHighwaySpeed)) km/h")
-                Slider(value: $avgHighwaySpeed, in: 40...140, step: 5)
-            }
-            VStack(alignment: .leading) {
-                Text("City speed: \(Int(avgCitySpeed)) km/h")
-                Slider(value: $avgCitySpeed, in: 10...80, step: 5)
-            }
+            Slider(value: value, in: range, step: 5)
+                .tint(Color.aigosAmber)
         }
+    }
+
+    // MARK: - Derived
+
+    private var hasProfile: Bool { selectedVehicle?.drivingProfile != nil }
+
+    private var sameAsLastSummary: String {
+        "\(roadType.label) · \(Int(avgHighwaySpeed)) km/h · AC \(acInUse ? "on" : "off")"
+    }
+
+    private var confidenceText: String? {
+        guard let profile = selectedVehicle?.drivingProfile, profile.tripCount > 0 else { return nil }
+        return "\(profile.confidenceLevel.label) · \(profile.tripCount) trip\(profile.tripCount == 1 ? "" : "s")"
     }
 
     // MARK: - Actions
 
-    private func syncSelection() {
+    private func onAppear() {
         if selectedVehicleID == nil {
             selectedVehicleID = vehicles.first(where: \.isDefault)?.id ?? vehicles.first?.id
         }
         applyVehicleDefaults()
+        applyDraft(appState.pendingDraft)
     }
 
     private func applyVehicleDefaults() {
-        guard let profile = selectedVehicle?.drivingProfile else { return }
+        guard let profile = selectedVehicle?.drivingProfile else {
+            showingDrivingDetails = true
+            return
+        }
         avgHighwaySpeed = profile.avgHighwaySpeedKmh
         avgCitySpeed = profile.avgCitySpeedKmh
         acInUse = profile.usesACByDefault
         roadType = profile.defaultRoadType
+        showingDrivingDetails = false
+    }
+
+    private func applyDraft(_ draft: CalculatorDraft?) {
+        guard let draft else { return }
+        origin = draft.origin
+        destination = draft.destination
+        distanceText = draft.distanceKm.oneDecimal
+        distanceIsEstimated = false
+        if let id = draft.vehicleId, vehicles.contains(where: { $0.id == id }) {
+            selectedVehicleID = id
+        }
+        appState.pendingDraft = nil
+        DispatchQueue.main.async { calculate() }
     }
 
     private func estimateDistance() {
+        Haptics.tap(.light)
         guard let result = resolver.route(from: origin, to: destination) else {
             distanceIsEstimated = false
             return
@@ -179,6 +327,7 @@ struct CalculateView: View {
 
     private func calculate() {
         guard let vehicle = selectedVehicle, let distanceKm else { return }
+        Haptics.tap(.medium)
 
         let price = PriceService.price(for: vehicle.fuelType, in: context)
         let result = CalculationEngine.estimate(
@@ -190,9 +339,16 @@ struct CalculateView: View {
             acInUse: acInUse,
             roadType: roadType
         )
-        estimate = result
 
-        // Auto-save the trip snapshot so History has a record (Section 6).
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+            estimate = result
+            savedThisRoute = false
+        }
+        // Count-up signature moment.
+        heroCost = 0
+        withAnimation(.snappy(duration: 0.6)) { heroCost = result.estimatedCost }
+
+        // Auto-save the trip snapshot and fold it into the self-learning profile.
         let trip = TripRecord(
             origin: origin.isEmpty ? "—" : origin,
             destination: destination.isEmpty ? "—" : destination,
@@ -205,12 +361,30 @@ struct CalculateView: View {
             acWasOn: acInUse
         )
         context.insert(trip)
+        if let profile = vehicle.drivingProfile {
+            ProfileLearningEngine.updateProfile(profile, with: trip)
+        }
         try? context.save()
+    }
+
+    private func saveRoute() {
+        guard let vehicle = selectedVehicle, let distanceKm else { return }
+        Haptics.tap(.light)
+        let route = SavedRoute(
+            name: "\(origin.isEmpty ? "Trip" : origin) → \(destination.isEmpty ? "Destination" : destination)",
+            origin: origin,
+            destination: destination,
+            distanceKm: distanceKm,
+            defaultVehicleId: vehicle.id
+        )
+        context.insert(route)
+        try? context.save()
+        withAnimation { savedThisRoute = true }
     }
 }
 
 #Preview {
-    CalculateView()
+    ContentView()
         .modelContainer(for: [
             VehicleProfile.self, DrivingProfile.self, TripRecord.self,
             SavedRoute.self, FuelPriceCache.self,

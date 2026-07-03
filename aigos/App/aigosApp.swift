@@ -27,6 +27,12 @@ struct aigosApp: App {
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }
+
+        #if DEBUG
+        if DebugSupport.isSeedDemo {
+            DebugSupport.seed(container.mainContext)
+        }
+        #endif
     }
 
     var body: some Scene {

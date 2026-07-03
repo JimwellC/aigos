@@ -2,81 +2,64 @@
 //  ResultCard.swift
 //  aigos
 //
-//  The result breakdown (Section 14D). Shows a full, honest breakdown — distance,
-//  base litres, each adjustment factor with % and litre amount, adjusted litres,
-//  price, and the bold amber total — plus the always-on disclaimer.
+//  The result breakdown (Section 14D) as a glassmorphism hero card. The estimated
+//  cost is the hero — 52pt bold rounded white, counting up on appear. Below it, a
+//  full, honest breakdown, a confidence line, and the always-on disclaimer.
 //
 
 import SwiftUI
 
 struct ResultCard: View {
     let estimate: FuelEstimate
-    let fuelType: FuelType
+    /// Animated cost value driven by the parent's count-up.
+    let heroCost: Double
+    let confidence: String?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            breakdownRows
+        VStack(spacing: Space.lg) {
+            heroCostView
 
-            Divider()
-
-            HStack(alignment: .firstTextBaseline) {
-                Text("ESTIMATED COST")
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Text(estimate.estimatedCost.phpString)
-                    .font(.system(.title, design: .rounded))
-                    .fontWeight(.bold)
-                    .foregroundStyle(Color.aigosAmber)
+            VStack(spacing: 10) {
+                row("Distance", value: "\(estimate.distanceKm.oneDecimal) km")
+                row("Base fuel (rated)",
+                    value: "\(estimate.baseLitres.oneDecimal) L",
+                    detail: "at \(estimate.baseEfficiencyKmL.oneDecimal) km/L")
+                adjustmentRow("Speed", factor: estimate.speedFactor)
+                adjustmentRow("Aircon", factor: estimate.acFactor)
+                adjustmentRow("Road", factor: estimate.roadFactor)
+                Divider().overlay(Color.white.opacity(0.2))
+                row("Adjusted fuel", value: "\(estimate.adjustedLitres.oneDecimal) L", emphasised: true)
+                row("Fuel price", value: "\(estimate.fuelPricePerLitre.phpString) / L")
             }
 
-            Label(
-                "Estimate only. Tap any value to adjust.",
-                systemImage: "exclamationmark.triangle"
-            )
-            .font(.footnote)
-            .foregroundStyle(.secondary)
+            if let confidence {
+                Label(confidence, systemImage: "brain.head.profile")
+                    .rounded(13, weight: .medium)
+                    .foregroundStyle(Color.aigosTextSecondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            }
+
+            Text("Estimate only. Tap any value to adjust.")
+                .rounded(12)
+                .foregroundStyle(Color.aigosTextTertiary)
+                .multilineTextAlignment(.center)
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.secondarySystemGroupedBackground))
-        )
-        .padding(.horizontal)
-        .padding(.vertical, 6)
+        .padding(Space.lg)
+        .glassCard(cornerRadius: Radius.lg)
     }
 
-    private var breakdownRows: some View {
-        VStack(spacing: 8) {
-            row("Distance", value: "\(estimate.distanceKm.oneDecimal) km")
-            row(
-                "Base fuel (rated)",
-                value: "\(estimate.baseLitres.oneDecimal) L",
-                detail: "at \(estimate.baseEfficiencyKmL.oneDecimal) km/L"
-            )
-            adjustmentRow(
-                "Speed adjustment",
-                factor: estimate.speedFactor
-            )
-            adjustmentRow(
-                "AC adjustment",
-                factor: estimate.acFactor
-            )
-            adjustmentRow(
-                "Road adjustment",
-                factor: estimate.roadFactor
-            )
-            row(
-                "Adjusted fuel",
-                value: "\(estimate.adjustedLitres.oneDecimal) L",
-                emphasised: true
-            )
-            row(
-                "Fuel price",
-                value: "\(estimate.fuelPricePerLitre.phpString) / L",
-                detail: fuelType.label
-            )
+    private var heroCostView: some View {
+        VStack(spacing: 2) {
+            Text("ESTIMATED COST")
+                .rounded(12, weight: .medium)
+                .kerning(1.5)
+                .foregroundStyle(Color.aigosTextSecondary)
+            Text(heroCost.phpString)
+                .font(.system(size: 52, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+                .contentTransition(.numericText(value: heroCost))
+                .minimumScaleFactor(0.6)
+                .lineLimit(1)
         }
     }
 
@@ -85,44 +68,38 @@ struct ResultCard: View {
         let litreText = abs(litres) < 0.05
             ? "0.0 L"
             : "\(litres > 0 ? "+" : "")\(litres.oneDecimal) L"
-        return row(title, value: factor.factorPercentString, detail: litreText)
+        return row("\(title) adjustment", value: factor.factorPercentString, detail: litreText)
     }
 
-    private func row(
-        _ title: String,
-        value: String,
-        detail: String? = nil,
-        emphasised: Bool = false
-    ) -> some View {
+    private func row(_ title: String, value: String, detail: String? = nil, emphasised: Bool = false) -> some View {
         HStack(alignment: .firstTextBaseline) {
             Text(title)
-                .foregroundStyle(.primary)
+                .rounded(15, weight: emphasised ? .semibold : .regular)
+                .foregroundStyle(.white)
             Spacer()
             if let detail {
                 Text(detail)
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
+                    .rounded(12)
+                    .foregroundStyle(Color.aigosTextTertiary)
             }
             Text(value)
-                .fontWeight(emphasised ? .semibold : .regular)
-                .monospacedDigit()
+                .font(.system(size: 15, weight: emphasised ? .bold : .medium, design: .monospaced))
+                .foregroundStyle(emphasised ? Color.aigosAmber : .white)
         }
-        .font(.subheadline)
     }
 }
 
 #Preview {
-    ResultCard(
-        estimate: CalculationEngine.estimate(
-            distanceKm: 82.4,
-            baseEfficiencyKmL: 14.5,
-            fuelPricePerLitre: 62.55,
-            avgHighwaySpeedKmh: 110,
-            avgCitySpeedKmh: 40,
-            acInUse: true,
-            roadType: .highway
-        ),
-        fuelType: .ron95
-    )
-    .padding()
+    ZStack {
+        AigosBackground()
+        ResultCard(
+            estimate: CalculationEngine.estimate(
+                distanceKm: 82.4, baseEfficiencyKmL: 14.5, fuelPricePerLitre: 62.55,
+                avgHighwaySpeedKmh: 110, avgCitySpeedKmh: 40, acInUse: true, roadType: .highway
+            ),
+            heroCost: 449.87,
+            confidence: "Getting to know you · 8 trips"
+        )
+        .padding()
+    }
 }
