@@ -37,12 +37,17 @@ struct CalculateView: View {
 
     @State private var showingDrivingDetails = false
     @State private var estimate: FuelEstimate?
-    @State private var heroCost: Double = 0
     @State private var savedThisRoute = false
     @State private var showingVehiclePicker = false
     @State private var showingTalk = false
     @State private var demoSearchOpen = false
     @State private var glowPulse = false
+
+    // Loading + result sheet
+    @State private var isCalculating = false
+    @State private var showingResult = false
+    @State private var resultRouteTitle = ""
+    @State private var resultVehicleName = ""
 
     private var selectedVehicle: VehicleProfile? {
         vehicles.first { $0.id == selectedVehicleID } ?? vehicles.first
@@ -65,47 +70,43 @@ struct CalculateView: View {
         ZStack {
             AigosBackground()
 
-            ScrollViewReader { proxy in
-                ScrollView {
-                    VStack(spacing: Space.lg) {
-                        header
-                        vehicleCard
-                        routeCard
-                        drivingCard
-
-                        calculateButton
-
-                        if let estimate {
-                            ResultCard(estimate: estimate, heroCost: heroCost, confidence: confidenceText,
-                                       tankLiters: selectedVehicle?.type.typicalTankLiters)
-                                .id("result")
-                                .transition(.move(edge: .bottom).combined(with: .opacity))
-
-                            SecondaryButton(
-                                title: savedThisRoute ? "Saved to routes" : "Save this route",
-                                systemImage: savedThisRoute ? "star.fill" : "star",
-                                action: saveRoute
-                            )
-                            .disabled(savedThisRoute)
-                        }
-                    }
-                    .padding(.horizontal, Space.screen)
-                    .padding(.top, Space.xl)
-                    .padding(.bottom, Space.xxl)
+            ScrollView {
+                VStack(spacing: Space.lg) {
+                    header
+                    vehicleCard
+                    routeCard
+                    drivingCard
+                    calculateButton
                 }
-                .scrollDismissesKeyboard(.interactively)
-                .onChange(of: estimate) { _, e in
-                    if e != nil {
-                        withAnimation(.snappy) { proxy.scrollTo("result", anchor: .top) }
-                    }
-                }
+                .padding(.horizontal, Space.screen)
+                .padding(.top, Space.xl)
+                .padding(.bottom, Space.xxl)
             }
+            .scrollDismissesKeyboard(.interactively)
         }
         .sheet(isPresented: $showingVehiclePicker) {
             VehiclePicker(selectedVehicleID: $selectedVehicleID)
         }
         .sheet(isPresented: $showingTalk) {
             TalkToAigosView()
+        }
+        .sheet(isPresented: $showingResult) {
+            if let estimate {
+                ResultSheet(
+                    estimate: estimate,
+                    finalCost: estimate.estimatedCost,
+                    confidence: confidenceText,
+                    tankLiters: selectedVehicle?.type.typicalTankLiters,
+                    routeTitle: resultRouteTitle,
+                    vehicleName: resultVehicleName,
+                    saved: $savedThisRoute,
+                    onSave: saveRoute,
+                    onDone: { showingResult = false }
+                )
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground { AigosBackground() }
+            }
         }
         .onAppear(perform: onAppear)
         .onChange(of: selectedVehicleID) { _, _ in applyVehicleDefaults() }
@@ -116,17 +117,28 @@ struct CalculateView: View {
     }
 
     private var calculateButton: some View {
-        Button {
+        // Glow is live whenever the button is actionable or mid-calc.
+        let live = canCalculate || isCalculating
+        return Button {
+            if isCalculating { return }
             if canCalculate {
-                calculate()
+                startCalculate()
             } else {
                 Haptics.tap(.light)
                 withAnimation(.easeOut(duration: 0.2)) { submitAttempted = true }
             }
         } label: {
             HStack(spacing: Space.sm) {
-                Image(systemName: "bolt.fill")
-                Text("Calculate")
+                if isCalculating {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .tint(.white)
+                        .controlSize(.small)
+                    Text("Calculating…")
+                } else {
+                    Image(systemName: "bolt.fill")
+                    Text("Calculate")
+                }
             }
             .rounded(18, weight: .bold)
             .foregroundStyle(.white)
@@ -135,20 +147,21 @@ struct CalculateView: View {
             .background(
                 Capsule().fill(
                     LinearGradient(
-                        colors: canCalculate
+                        colors: live
                             ? [Color.aigosAmberLight, Color.aigosAmber, Color.aigosAmberDeep]
                             : [Color.aigosAmber.opacity(0.4), Color.aigosAmberDeep.opacity(0.4)],
                         startPoint: .topLeading, endPoint: .bottomTrailing
                     )
                 )
             )
-            // Amber glow beneath the CTA (#E9A84C · 0.5 · r20 · y8), gently pulsing.
-            .shadow(color: Color.aigosAmber.opacity(canCalculate ? (glowPulse ? 0.6 : 0.5) : 0),
-                    radius: canCalculate ? (glowPulse ? 24 : 20) : 0, x: 0, y: 8)
+            // Amber glow; pulses harder while calculating for a "working" feel.
+            .shadow(color: Color.aigosAmber.opacity(live ? (glowPulse ? (isCalculating ? 0.85 : 0.6) : 0.5) : 0),
+                    radius: live ? (glowPulse ? (isCalculating ? 30 : 24) : 20) : 0, x: 0, y: 8)
         }
         .buttonStyle(PressableStyle())
+        .disabled(isCalculating)
         .onAppear {
-            withAnimation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true)) { glowPulse = true }
+            withAnimation(.easeInOut(duration: isCalculating ? 0.7 : 1.6).repeatForever(autoreverses: true)) { glowPulse = true }
         }
     }
 
@@ -459,7 +472,7 @@ struct CalculateView: View {
             showingDrivingDetails = true   // reveal so the user sees what was set
         }
         appState.pendingDraft = nil
-        DispatchQueue.main.async { calculate() }
+        DispatchQueue.main.async { startCalculate() }
     }
 
     /// Resolve a place name to a selection key (personal name or gazetteer key),
@@ -475,10 +488,29 @@ struct CalculateView: View {
         return fuelLevel.fraction * vehicle.type.typicalTankLiters
     }
 
-    private func calculate() {
-        guard let vehicle = selectedVehicle, let distanceKm else { return }
-        Haptics.tap(.medium)
+    /// Kick off a calculation: show the loading state, compute immediately, then
+    /// reveal the result sheet after a minimum 1.2s so it feels considered.
+    private func startCalculate() {
+        guard canCalculate, !isCalculating else { return }
+        Haptics.tap(.light)
         submitAttempted = false
+        withAnimation(.easeInOut(duration: 0.25)) { isCalculating = true }
+
+        performCalculation()
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+            guard isCalculating else { return }   // user may have navigated away
+            Haptics.tap(.medium)
+            withAnimation(.easeOut(duration: 0.2)) { isCalculating = false }
+            showingResult = true
+        }
+    }
+
+    private func performCalculation() {
+        guard let vehicle = selectedVehicle, let distanceKm else { return }
+
+        resultRouteTitle = "\(origin.isEmpty ? "Trip" : origin) → \(destination.isEmpty ? "Destination" : destination)"
+        resultVehicleName = vehicle.name
 
         let price = PriceService.price(for: vehicle.fuelType, in: context)
         let result = CalculationEngine.estimate(
@@ -494,13 +526,8 @@ struct CalculateView: View {
             availableFuelLitres: availableFuelLitres
         )
 
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-            estimate = result
-            savedThisRoute = false
-        }
-        // Count-up signature moment — 0 → final over ~0.8s with a gentle spring.
-        heroCost = 0
-        withAnimation(.spring(response: 0.55, dampingFraction: 0.72)) { heroCost = result.estimatedCost }
+        estimate = result
+        savedThisRoute = false
 
         // Auto-save the trip snapshot and fold it into the self-learning profile.
         let trip = TripRecord(

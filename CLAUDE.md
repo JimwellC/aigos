@@ -47,6 +47,8 @@ Planned structure (Section 17 of the spec): `App/` (`aigosApp.swift` @main + Mod
 
 Physics-based, not simple multipliers. The result screen must show a full breakdown, not just a number — this transparency is a core product principle.
 
+**Result presentation:** the Calculate screen stays clean (vehicle · route · driving profile only). Tapping Calculate shows a loading state (`isCalculating` → spinner + "Calculating…" with an intensified amber glow, light haptic on start), computes immediately, then after a **minimum 1.2s** reveals the result as a bottom **`.sheet`** (`ResultSheet`, `.presentationDetents([.large])`, drag indicator, `.presentationBackground { AigosBackground() }`, medium haptic on reveal). `ResultSheet` = route header ("Origin → Destination" + vehicle name) → `ResultCard` receipt (owns its own 0→final count-up via `heroCost`) → "Save this route" (secondary) + "Done" (primary). Swipe-down dismisses back to the form to adjust. `startCalculate()` orchestrates loading+delay; `performCalculation()` computes/persists/learns. `ResultCard` is never rendered inline anymore.
+
 ```
 adjustmentMultiplier = speedFactor * acFactor * roadFactor * trafficFactor * loadFactor
 adjustedEfficiencyKmL = baseEfficiencyKmL / adjustmentMultiplier
