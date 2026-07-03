@@ -22,8 +22,9 @@ struct CalculateView: View {
     @State private var selectedVehicleID: UUID?
     @State private var origin = ""
     @State private var destination = ""
-    @State private var distanceText = ""
-    @State private var distanceIsEstimated = false
+    @State private var originKey: String?       // non-nil once picked from suggestions
+    @State private var destinationKey: String?
+    @State private var submitAttempted = false
 
     @State private var acInUse = true
     @State private var roadType: RoadType = .highway
@@ -40,18 +41,23 @@ struct CalculateView: View {
     @State private var savedThisRoute = false
     @State private var showingVehiclePicker = false
     @State private var showingTalk = false
-    @FocusState private var distanceFocused: Bool
+    @State private var demoSearchOpen = false
 
     private var selectedVehicle: VehicleProfile? {
         vehicles.first { $0.id == selectedVehicleID } ?? vehicles.first
     }
 
+    /// Distance derived from the two selected places (nil until both are picked).
     private var distanceKm: Double? {
-        Double(distanceText.trimmingCharacters(in: .whitespaces))
+        guard let originKey, let destinationKey,
+              let a = PlaceResolver.point(for: originKey, personalPlaces: personalPlaces),
+              let b = PlaceResolver.point(for: destinationKey, personalPlaces: personalPlaces)
+        else { return nil }
+        return GazetteerRouteResolver.estimate(from: a, to: b).distanceKm
     }
 
     private var canCalculate: Bool {
-        selectedVehicle != nil && (distanceKm ?? 0) > 0
+        selectedVehicle != nil && distanceKm != nil
     }
 
     var body: some View {
@@ -66,7 +72,7 @@ struct CalculateView: View {
                         routeCard
                         drivingCard
 
-                        PrimaryButton(title: "Calculate", systemImage: "bolt.fill", enabled: canCalculate, action: calculate)
+                        calculateButton
 
                         if let estimate {
                             ResultCard(estimate: estimate, heroCost: heroCost, confidence: confidenceText)
@@ -102,6 +108,33 @@ struct CalculateView: View {
         .onAppear(perform: onAppear)
         .onChange(of: selectedVehicleID) { _, _ in applyVehicleDefaults() }
         .onChange(of: appState.pendingDraft) { _, draft in applyDraft(draft) }
+        // Editing/clearing a place resets the submit-error state.
+        .onChange(of: origin) { _, _ in submitAttempted = false }
+        .onChange(of: destination) { _, _ in submitAttempted = false }
+    }
+
+    private var calculateButton: some View {
+        Button {
+            if canCalculate {
+                calculate()
+            } else {
+                Haptics.tap(.light)
+                withAnimation(.easeOut(duration: 0.2)) { submitAttempted = true }
+            }
+        } label: {
+            HStack(spacing: Space.sm) {
+                Image(systemName: "bolt.fill")
+                Text("Calculate")
+            }
+            .rounded(17, weight: .semibold)
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(Color.aigosAmber.opacity(canCalculate ? 1 : 0.4))
+            .clipShape(Capsule())
+            .shadow(color: Color.aigosAmber.opacity(canCalculate ? 0.4 : 0), radius: 12, x: 0, y: 6)
+        }
+        .buttonStyle(PressableStyle())
     }
 
     // MARK: - Header
@@ -172,64 +205,29 @@ struct CalculateView: View {
 
     private var routeCard: some View {
         VStack(alignment: .leading, spacing: Space.md) {
-            FieldLabel("Distance")
+            FieldLabel("Route")
 
-            // The prominent, always-editable distance field — the primary input.
-            HStack(alignment: .firstTextBaseline, spacing: Space.sm) {
-                TextField("0", text: $distanceText, prompt: Text("0").foregroundColor(Color.aigosTextTertiary))
-                    .rounded(38, weight: .bold)
-                    .foregroundStyle(.white)
-                    .tint(.white)
-                    .keyboardType(.decimalPad)
-                    .focused($distanceFocused)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                Text("km")
-                    .rounded(20, weight: .semibold)
-                    .foregroundStyle(Color.aigosTextSecondary)
-                if distanceIsEstimated {
-                    Text("ESTIMATED")
-                        .rounded(10, weight: .bold)
-                        .kerning(0.8)
-                        .foregroundStyle(Color.aigosAmberDeep)
-                        .padding(.horizontal, 8).padding(.vertical, 4)
-                        .background(Color.white.opacity(0.85), in: Capsule())
-                }
+            PlaceField(placeholder: "From (e.g. Manila)", text: $origin,
+                       selectedKey: $originKey, personalPlaces: personalPlaces,
+                       showError: submitAttempted, startOpen: demoSearchOpen)
+                .zIndex(2)   // its dropdown overlays the destination field
+            PlaceField(placeholder: "To (e.g. Batangas)", text: $destination,
+                       selectedKey: $destinationKey, personalPlaces: personalPlaces,
+                       showError: submitAttempted)
+                .zIndex(1)
+
+            if let distanceKm {
+                Label("≈ \(distanceKm.oneDecimal) km (estimated)", systemImage: "map")
+                    .rounded(14, weight: .semibold)
+                    .foregroundStyle(Color.aigosAmber)
+            } else {
+                Text("Pick both places from the suggestions to estimate the distance.")
+                    .rounded(12)
+                    .foregroundStyle(Color.aigosTextTertiary)
             }
-            .padding(.horizontal, Space.md)
-            .padding(.vertical, 12)
-            .background(Color.white.opacity(0.15))
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.white.opacity(0.3), lineWidth: 1))
-
-            Text("Type your trip distance, or estimate it from place names below. All distances are estimates.")
-                .rounded(12)
-                .foregroundStyle(Color.aigosTextTertiary)
-
-            Divider().overlay(Color.white.opacity(0.15))
-
-            FieldLabel("Estimate from places")
-            GlassField(placeholder: "From (e.g. Manila)", text: $origin, autocap: .words)
-            GlassField(placeholder: "To (e.g. Batangas)", text: $destination, autocap: .words)
-            Button(action: estimateDistance) {
-                Label("Estimate distance", systemImage: "map")
-                    .rounded(15, weight: .semibold)
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(Color.white.opacity(0.15), in: Capsule())
-                    .overlay(Capsule().stroke(Color.white.opacity(0.3), lineWidth: 1))
-            }
-            .buttonStyle(.plain)
-            .disabled(origin.isEmpty || destination.isEmpty)
-            .opacity(origin.isEmpty || destination.isEmpty ? 0.5 : 1)
         }
         .padding(Space.md)
         .glassCard()
-        // Tapping the distance field to type means the user is entering their own
-        // figure — clear the "estimated" tag.
-        .onChange(of: distanceFocused) { _, focused in
-            if focused { distanceIsEstimated = false }
-        }
     }
 
     // MARK: - Driving
@@ -385,6 +383,10 @@ struct CalculateView: View {
         #if DEBUG
         if DebugSupport.autoOpenTalk { showingTalk = true }
         if DebugSupport.lowFuel { fuelLevel = .low }
+        if let q = DebugSupport.searchDemo {
+            origin = q
+            DispatchQueue.main.async { demoSearchOpen = true }
+        }
         #endif
     }
 
@@ -404,8 +406,8 @@ struct CalculateView: View {
         guard let draft else { return }
         origin = draft.origin
         destination = draft.destination
-        distanceText = draft.distanceKm.oneDecimal
-        distanceIsEstimated = false
+        originKey = exactKey(for: draft.origin)
+        destinationKey = exactKey(for: draft.destination)
         if let id = draft.vehicleId, vehicles.contains(where: { $0.id == id }) {
             selectedVehicleID = id
         }
@@ -421,26 +423,23 @@ struct CalculateView: View {
         DispatchQueue.main.async { calculate() }
     }
 
+    /// Resolve a place name to a selection key (personal name or gazetteer key),
+    /// used when a Saved route or Talk to aigos hands over a prefilled route.
+    private func exactKey(for name: String) -> String? {
+        PlaceSearch.exactKey(name, personalPlaces: personalPlaces)
+            ?? GazetteerRouteResolver.entry(for: name)?.key
+    }
+
     /// Litres currently in the tank, used only for the low-fuel warning.
     private var availableFuelLitres: Double? {
         guard let vehicle = selectedVehicle else { return nil }
         return fuelLevel.fraction * vehicle.type.typicalTankLiters
     }
 
-    private func estimateDistance() {
-        Haptics.tap(.light)
-        // Personal shortcuts (Home/Office/…) resolve before the gazetteer.
-        guard let result = PlaceResolver.route(from: origin, to: destination, personalPlaces: personalPlaces) else {
-            distanceIsEstimated = false
-            return
-        }
-        distanceText = result.distanceKm.oneDecimal
-        distanceIsEstimated = result.isEstimated
-    }
-
     private func calculate() {
         guard let vehicle = selectedVehicle, let distanceKm else { return }
         Haptics.tap(.medium)
+        submitAttempted = false
 
         let price = PriceService.price(for: vehicle.fuelType, in: context)
         let result = CalculationEngine.estimate(

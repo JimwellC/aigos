@@ -195,7 +195,7 @@ struct TalkToAigosView: View {
         }
         return ChatMessage(
             role: .aigos,
-            text: "I couldn't spot a route in that. Try “Manila to Batangas”, or set your Home and Office in Settings and ask “home to office”."
+            text: "I don't know that location yet. Try typing it in the calculator and pick from the suggestions."
         )
     }
 
@@ -210,7 +210,7 @@ struct TalkToAigosView: View {
     private func estimate(for query: TripQuery) -> ChatMessage {
         // Personal shortcuts (Home/Office/…) resolve before the gazetteer.
         guard let route = PlaceResolver.route(from: query.origin, to: query.destination, personalPlaces: personalPlaces) else {
-            return ChatMessage(role: .aigos, text: "I don't know one of those places yet. Try a nearby city or type the distance in the calculator.")
+            return ChatMessage(role: .aigos, text: "I don't know that location yet. Try typing it in the calculator and pick from the suggestions.")
         }
 
         let vehicle = vehicles.first { $0.name == query.vehicleName }

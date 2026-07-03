@@ -62,6 +62,13 @@ enum DebugSupport {
         ProcessInfo.processInfo.arguments.contains("-lowFuel")
     }
 
+    /// Seed the origin field with a partial query and force the autocomplete open.
+    static var searchDemo: String? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-searchDemo"), i + 1 < args.count else { return nil }
+        return args[i + 1]
+    }
+
     @MainActor
     static func seed(_ context: ModelContext) {
         // Wipe everything for a deterministic demo state.
