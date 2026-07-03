@@ -83,43 +83,53 @@ enum Radius {
 
 // MARK: - Background
 
-/// Full-screen warm amber gradient with 3 soft glowing bokeh orbs for depth. The
-/// base layer of every screen. `variant` shifts the orb positions so screens feel
-/// distinct.
+/// Full-screen "warm sunlight through glass" backdrop: a 3-stop amber gradient
+/// with four soft glowing bokeh orbs for real depth. `variant` (one per tab)
+/// shifts the orb positions so no two screens look identical.
 struct AigosBackground: View {
     var variant: Int = 0
 
-    private struct Orb { let color: Color; let size: CGFloat; let blur: CGFloat; let x: CGFloat; let y: CGFloat }
+    private struct Orb { let color: Color; let size: CGFloat; let blur: CGFloat }
 
-    private var orbs: [Orb] {
-        let sets: [[Orb]] = [
-            [Orb(color: .white.opacity(0.12), size: 340, blur: 70, x: -100, y: -200),
-             Orb(color: Color.aigosAmber.opacity(0.24), size: 260, blur: 55, x: 130, y: 100),
-             Orb(color: Color.aigosAmberLight.opacity(0.18), size: 210, blur: 48, x: -70, y: 400)],
-            [Orb(color: .white.opacity(0.12), size: 300, blur: 65, x: 130, y: -170),
-             Orb(color: Color.aigosAmber.opacity(0.22), size: 290, blur: 60, x: -120, y: 150),
-             Orb(color: Color.aigosAmberLight.opacity(0.16), size: 230, blur: 52, x: 100, y: 430)],
-            [Orb(color: .white.opacity(0.10), size: 320, blur: 68, x: -40, y: -230),
-             Orb(color: Color.aigosAmber.opacity(0.24), size: 250, blur: 56, x: 140, y: 260),
-             Orb(color: Color.aigosAmberLight.opacity(0.18), size: 200, blur: 46, x: -110, y: 60)],
-        ]
-        return sets[variant % sets.count]
-    }
+    /// The four glowing orbs (large white, medium amber, small white, XL soft amber).
+    private let orbKinds: [Orb] = [
+        Orb(color: .white.opacity(0.12),           size: 380, blur: 80),
+        Orb(color: Color.aigosBGTop.opacity(0.18), size: 280, blur: 60),   // amber #F5C97A
+        Orb(color: .white.opacity(0.08),           size: 180, blur: 40),
+        Orb(color: Color.aigosAmber.opacity(0.10), size: 450, blur: 100),  // amber #E9A84C, extra-soft
+    ]
+
+    /// Per-screen (x, y) offsets from centre for the four orbs above.
+    private static let positions: [[(CGFloat, CGFloat)]] = [
+        [(-120, -280), (150,   40), (-110,  320), ( 150,  360)],  // 0 Calculate: top-left + bottom-right
+        [( 130, -290), (-140,   40), ( 120,  300), (-150,  370)],  // 1 History:   top-right + bottom-left
+        [(   0, -300), (150,  120), (-120, -150), ( 150,  360)],  // 2 Saved:     top-centre + bottom-right
+        [(  20, -300), (-140,   70), ( 130, -170), (-150,  360)],  // 3 Prices:    top-centre + bottom-left
+        [( 140, -290), (-130,   30), ( 120,  320), (   0,  380)],  // 4 Settings:  top-right + bottom-centre
+    ]
 
     var body: some View {
-        ZStack {
-            LinearGradient(
-                colors: [Color.aigosBGTop, Color.aigosBGBottom],
-                startPoint: .top, endPoint: .bottom
-            )
-            .ignoresSafeArea()
-
-            ForEach(Array(orbs.enumerated()), id: \.offset) { _, orb in
-                Circle()
-                    .fill(orb.color)
-                    .frame(width: orb.size, height: orb.size)
-                    .blur(radius: orb.blur)
-                    .offset(x: orb.x, y: orb.y)
+        let pos = Self.positions[variant % Self.positions.count]
+        // The gradient is the primary (screen-sized) view; the orbs ride in an
+        // overlay so their sub-screen-width sizes can't inflate the layout and
+        // push sibling content off-screen.
+        return LinearGradient(
+            stops: [
+                .init(color: Color.aigosBGTop, location: 0.0),     // #F5C97A light amber
+                .init(color: Color.aigosAmber, location: 0.5),     // #E9A84C pure amber
+                .init(color: Color.aigosBGBottom, location: 1.0),  // #C4793A deep amber
+            ],
+            startPoint: .top, endPoint: .bottom
+        )
+        .overlay {
+            ZStack {
+                ForEach(Array(orbKinds.enumerated()), id: \.offset) { i, orb in
+                    Circle()
+                        .fill(orb.color)
+                        .frame(width: orb.size, height: orb.size)
+                        .blur(radius: orb.blur)
+                        .offset(x: pos[i].0, y: pos[i].1)
+                }
             }
         }
         .ignoresSafeArea()

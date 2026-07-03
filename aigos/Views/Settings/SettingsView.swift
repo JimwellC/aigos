@@ -21,7 +21,7 @@ struct SettingsView: View {
 
     var body: some View {
         ZStack {
-            AigosBackground(variant: 1)
+            AigosBackground(variant: 4)
 
             ScrollView {
                 VStack(alignment: .leading, spacing: Space.lg) {
