@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-**Sprints 1–3 built.** The `aigos.xcodeproj` app exists and builds warning-clean (Swift 6, iOS 17+); `aigos_architecture.pdf` remains the source-of-truth spec. Done: 5-tab shell with a custom amber tab bar, SwiftData models, physics `CalculationEngine`, editable prices, trip history with month-over-month comparison, saved routes with one-tap recalc, the self-learning `ProfileLearningEngine`, first-launch onboarding, and "Talk to aigos" natural-language trip queries (`TalkToAigosView`). The whole UI follows the glassmorphism design system (see `UI_GUIDELINES.md` / `skills/swiftui-design.md`) built in `Support/DesignSystem.swift`. Not yet built: real OSRM routing (still a gazetteer prototype behind `RouteResolver`), a unit-test target, and real app-icon/mascot art.
+**Sprints 1–3 built.** The `aigos.xcodeproj` app exists and builds warning-clean (Swift 6, iOS 17+); `aigos_architecture.pdf` remains the source-of-truth spec. Done: 5-tab shell with a custom amber tab bar, SwiftData models, physics `CalculationEngine`, editable prices, trip history with month-over-month comparison, saved routes with one-tap recalc, the self-learning `ProfileLearningEngine`, first-launch onboarding, and "Talk to aigos" natural-language trip queries (`TalkToAigosView`). The whole UI follows the glassmorphism design system (see `UI_GUIDELINES.md` / `skills/swiftui-design.md`) built in `Support/DesignSystem.swift`. An `aigosTests` unit-test target covers the pure logic (36 cases). Not yet built: real OSRM routing (still a gazetteer prototype behind `RouteResolver`) and real app-icon/mascot art.
 
 **Apple Intelligence reality check:** this Xcode 16.4 / iOS 18.5 SDK does **not** ship the `FoundationModels` framework (Apple's on-device LLM API lands in a later SDK), so the spec's `LanguageModelSession.isSupported` gate can't compile here. `AIAvailability` puts the real system-model path behind `#if canImport(FoundationModels)` (excluded now, lights up when built against that SDK on an A17 Pro+ device); NL understanding today runs through `TripQueryParser`, a deterministic offline parser that works on every device. Don't add `import FoundationModels` outside that guard until the SDK provides it.
 
@@ -78,7 +78,16 @@ xcrun simctl install "iPhone 16" \
 xcrun simctl launch "iPhone 16" com.aigos.app
 ```
 
-The project uses Xcode 16 **synchronized folder groups** (`PBXFileSystemSynchronizedRootGroup`) — new files under `aigos/` are picked up automatically; no need to edit `project.pbxproj` when adding sources.
+Tests (36 cases covering the pure logic — `CalculationEngine`, `ProfileLearningEngine`, `TripQueryParser`, `GazetteerRouteResolver`, formatting, `MonthGroup`):
+
+```bash
+xcodebuild -scheme aigos -destination 'platform=iOS Simulator,name=iPhone 16' test
+# single test:
+xcodebuild -scheme aigos -destination 'platform=iOS Simulator,name=iPhone 16' \
+  test -only-testing:aigosTests/CalculationEngineTests/testSpecWorkedExample
+```
+
+The project uses Xcode 16 **synchronized folder groups** (`PBXFileSystemSynchronizedRootGroup`) — new files under `aigos/` (app) and `aigosTests/` (tests) are picked up automatically; no need to edit `project.pbxproj` when adding sources. Tests use `@testable import aigos`, so app types can stay `internal`.
 
 **DEBUG launch args** (see `Support/DebugSupport.swift`) drive the app headlessly for screenshots/QA — the custom tab bar can't be tapped from `simctl`:
 

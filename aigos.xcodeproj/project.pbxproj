@@ -8,23 +8,28 @@
 
 /* Begin PBXFileReference section */
 		1A0000000000000000000002 /* aigos.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = aigos.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2B0000000000000000000002 /* aigosTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = aigosTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		1A0000000000000000000001 /* aigos */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = aigos; sourceTree = "<group>"; };
+		2B0000000000000000000001 /* aigosTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = aigosTests; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		1A0000000000000000000003 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		2B0000000000000000000003 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		1A0000000000000000000004 = {isa = PBXGroup; children = (
 				1A0000000000000000000001 /* aigos */,
+				2B0000000000000000000001 /* aigosTests */,
 				1A0000000000000000000005 /* Products */,
 			); sourceTree = "<group>"; };
 		1A0000000000000000000005 /* Products */ = {isa = PBXGroup; children = (
 				1A0000000000000000000002 /* aigos.app */,
+				2B0000000000000000000002 /* aigosTests.xctest */,
 			); name = Products; sourceTree = "<group>"; };
 /* End PBXGroup section */
 
@@ -36,7 +41,24 @@
 			); buildRules = (); dependencies = (); fileSystemSynchronizedGroups = (
 				1A0000000000000000000001 /* aigos */,
 			); name = aigos; productName = aigos; productReference = 1A0000000000000000000002 /* aigos.app */; productType = "com.apple.product-type.application"; };
+		2B0000000000000000000006 /* aigosTests */ = {isa = PBXNativeTarget; buildConfigurationList = 2B0000000000000000000007 /* Build configuration list for PBXNativeTarget "aigosTests" */; buildPhases = (
+				2B0000000000000000000008 /* Sources */,
+				2B0000000000000000000003 /* Frameworks */,
+				2B0000000000000000000009 /* Resources */,
+			); buildRules = (); dependencies = (
+				2B0000000000000000000010 /* PBXTargetDependency */,
+			); fileSystemSynchronizedGroups = (
+				2B0000000000000000000001 /* aigosTests */,
+			); name = aigosTests; productName = aigosTests; productReference = 2B0000000000000000000002 /* aigosTests.xctest */; productType = "com.apple.product-type.bundle.unit-test"; };
 /* End PBXNativeTarget section */
+
+/* Begin PBXTargetDependency section */
+		2B0000000000000000000010 /* PBXTargetDependency */ = {isa = PBXTargetDependency; target = 1A0000000000000000000006 /* aigos */; targetProxy = 2B0000000000000000000011 /* PBXContainerItemProxy */; };
+/* End PBXTargetDependency section */
+
+/* Begin PBXContainerItemProxy section */
+		2B0000000000000000000011 /* PBXContainerItemProxy */ = {isa = PBXContainerItemProxy; containerPortal = 1A000000000000000000000A /* Project object */; proxyType = 1; remoteGlobalIDString = 1A0000000000000000000006; remoteInfo = aigos; };
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXProject section */
 		1A000000000000000000000A /* Project object */ = {isa = PBXProject; attributes = {
@@ -47,21 +69,28 @@
 					1A0000000000000000000006 = {
 						CreatedOnToolsVersion = 16.4;
 					};
+					2B0000000000000000000006 = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = 1A0000000000000000000006;
+					};
 				};
 			}; buildConfigurationList = 1A000000000000000000000B /* Build configuration list for PBXProject "aigos" */; compatibilityVersion = "Xcode 15.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (
 				en,
 				Base,
 			); mainGroup = 1A0000000000000000000004; productRefGroup = 1A0000000000000000000005 /* Products */; projectDirPath = ""; projectRoot = ""; targets = (
 				1A0000000000000000000006 /* aigos */,
+				2B0000000000000000000006 /* aigosTests */,
 			); };
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		1A0000000000000000000009 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		2B0000000000000000000009 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		1A0000000000000000000008 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		2B0000000000000000000008 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
@@ -194,6 +223,34 @@
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			}; name = Release; };
+		2B000000000000000000000E /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.aigos.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/aigos.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/aigos";
+			}; name = Debug; };
+		2B000000000000000000000F /* Release */ = {isa = XCBuildConfiguration; buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.aigos.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/aigos.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/aigos";
+			}; name = Release; };
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -204,6 +261,10 @@
 		1A000000000000000000000B /* Build configuration list for PBXProject "aigos" */ = {isa = XCConfigurationList; buildConfigurations = (
 				1A000000000000000000000C /* Debug */,
 				1A000000000000000000000D /* Release */,
+			); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		2B0000000000000000000007 /* Build configuration list for PBXNativeTarget "aigosTests" */ = {isa = XCConfigurationList; buildConfigurations = (
+				2B000000000000000000000E /* Debug */,
+				2B000000000000000000000F /* Release */,
 			); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
 /* End XCConfigurationList section */
 	};
