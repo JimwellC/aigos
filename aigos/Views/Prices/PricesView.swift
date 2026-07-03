@@ -21,6 +21,14 @@ struct PricesView: View {
 
     private var lastUpdated: Date? { prices.map(\.lastUpdated).max() }
 
+    private func startEditing(_ index: Int) -> Bool {
+        #if DEBUG
+        return index == 0 && ProcessInfo.processInfo.arguments.contains("-editPrice")
+        #else
+        return false
+        #endif
+    }
+
     var body: some View {
         ZStack {
             AigosBackground(variant: 3)
@@ -33,7 +41,7 @@ struct PricesView: View {
 
                     VStack(spacing: 0) {
                         ForEach(Array(sortedPrices.enumerated()), id: \.element.id) { index, price in
-                            PriceRowView(price: price) { try? context.save() }
+                            PriceRowView(price: price, startEditing: startEditing(index)) { try? context.save() }
                             if index < sortedPrices.count - 1 {
                                 Divider().overlay(Color.white.opacity(0.15))
                             }
