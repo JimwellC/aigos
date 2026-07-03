@@ -46,16 +46,15 @@ enum FuelType: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    /// Approximate PH pump prices (PHP/L) used to seed the price cache on first
-    /// launch. Sourced from DOE-tracked Metro Manila rates for the week of
-    /// 2026-06-30; users can override any price in the Prices tab (Section 9).
-    /// RON 97 is interpolated — trackers list an RON 100 premium, not RON 97.
+    /// PH pump prices (PHP/L) used to seed the price cache on first launch.
+    /// Sourced from fuelprice.ph (DOE) for the week of Jun 30 – Jul 6, 2026;
+    /// users can override any price in the Prices tab (Section 9).
     var seedPrice: Double {
         switch self {
-        case .ron91: 56.65
-        case .ron95: 58.15
-        case .ron97: 60.80
-        case .diesel: 56.74
+        case .ron91: 72.00
+        case .ron95: 73.00
+        case .ron97: 76.00
+        case .diesel: 69.10
         }
     }
 }

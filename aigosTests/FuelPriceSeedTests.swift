@@ -26,12 +26,12 @@ final class FuelPriceSeedTests: XCTestCase {
         XCTAssertLessThan(FuelType.ron95.seedPrice, FuelType.ron97.seedPrice)
     }
 
-    /// Current DOE-tracked Metro Manila rates (week of 2026-06-30). Update these
-    /// alongside the values in FuelPrices.json / Enums.swift on each price refresh.
+    /// Current DOE rates via fuelprice.ph (week of Jun 30 – Jul 6, 2026). Update
+    /// these alongside FuelPrices.json / Enums.swift on each price refresh.
     func testCurrentSeedValues() {
-        XCTAssertEqual(FuelType.ron91.seedPrice, 56.65)
-        XCTAssertEqual(FuelType.ron95.seedPrice, 58.15)
-        XCTAssertEqual(FuelType.ron97.seedPrice, 60.80)
-        XCTAssertEqual(FuelType.diesel.seedPrice, 56.74)
+        XCTAssertEqual(FuelType.ron91.seedPrice, 72.00)
+        XCTAssertEqual(FuelType.ron95.seedPrice, 73.00)
+        XCTAssertEqual(FuelType.ron97.seedPrice, 76.00)
+        XCTAssertEqual(FuelType.diesel.seedPrice, 69.10)
     }
 }
