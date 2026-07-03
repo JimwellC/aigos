@@ -343,31 +343,24 @@ private struct MascotBubble: View {
     }
 }
 
-/// Placeholder jeepney mascot — a glowing amber badge until real art lands.
-/// `floating: true` gives it a gentle up/down bob.
+/// Jeepney mascot artwork. `floating: true` gives it a gentle up/down bob.
 struct MascotView: View {
     var size: CGFloat = 120
     var floating: Bool = false
     @State private var floatUp = false
 
     var body: some View {
-        ZStack {
-            Circle()
-                .fill(Color.aigosAmber.opacity(0.28))
-                .frame(width: size, height: size)
-                .blur(radius: size * 0.18)
-            Image(systemName: "bus.fill")
-                .font(.system(size: size * 0.5))
-                .foregroundStyle(.white)
-                .shadow(color: Color.aigosAmber.opacity(0.85), radius: size * 0.14)
-        }
-        .frame(width: size, height: size)
-        .offset(y: floating && floatUp ? -5 : 0)
-        .onAppear {
-            if floating {
-                withAnimation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true)) { floatUp = true }
+        Image("Mascot")
+            .resizable()
+            .scaledToFit()
+            .frame(width: size, height: size)
+            .shadow(color: .black.opacity(0.28), radius: size * 0.09, x: 0, y: size * 0.035)
+            .offset(y: floating && floatUp ? -6 : 0)
+            .onAppear {
+                if floating {
+                    withAnimation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true)) { floatUp = true }
+                }
             }
-        }
     }
 }
 
