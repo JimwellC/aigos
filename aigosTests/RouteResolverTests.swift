@@ -28,8 +28,21 @@ final class RouteResolverTests: XCTestCase {
     func testIsPlaceKeyDistinguishesWholeWords() {
         XCTAssertTrue(GazetteerRouteResolver.isPlaceKey("makati"))
         XCTAssertTrue(GazetteerRouteResolver.isPlaceKey("pampanga"))
-        XCTAssertFalse(GazetteerRouteResolver.isPlaceKey("cagayan"))  // part of "cagayan de oro"
+        XCTAssertFalse(GazetteerRouteResolver.isPlaceKey("oro"))   // only part of "cagayan de oro"
         XCTAssertFalse(GazetteerRouteResolver.isPlaceKey("nowhere"))
+    }
+
+    func testNationwideCoverage() {
+        // All three island groups + a spread of provinces resolve.
+        XCTAssertGreaterThan(GazetteerRouteResolver.places.count, 150)
+        for place in ["davao", "tacloban", "palawan", "puerto princesa", "batanes",
+                      "zamboanga", "butuan", "iloilo", "baguio", "marawi", "boracay"] {
+            XCTAssertTrue(GazetteerRouteResolver.isPlace(place), "\(place) should resolve")
+        }
+        // A long cross-country route is plausible (Batanes -> General Santos ~2000 km).
+        let far = GazetteerRouteResolver().route(from: "Batanes", to: "General Santos")
+        XCTAssertNotNil(far)
+        XCTAssertGreaterThan(far!.distanceKm, 1500)
     }
 
     func testUnknownPlaceReturnsNil() {

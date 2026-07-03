@@ -35,6 +35,7 @@ struct CalculateView: View {
     @State private var savedThisRoute = false
     @State private var showingVehiclePicker = false
     @State private var showingTalk = false
+    @FocusState private var distanceFocused: Bool
 
     private let resolver: RouteResolver = GazetteerRouteResolver()
 
@@ -160,48 +161,64 @@ struct CalculateView: View {
 
     private var routeCard: some View {
         VStack(alignment: .leading, spacing: Space.md) {
-            FieldLabel("Route")
-            GlassField(placeholder: "Origin (e.g. Manila)", text: $origin, autocap: .words)
-            GlassField(placeholder: "Destination (e.g. Batangas)", text: $destination, autocap: .words)
+            FieldLabel("Distance")
 
-            HStack(spacing: Space.sm) {
-                Button(action: estimateDistance) {
-                    Label("Estimate", systemImage: "map")
-                        .rounded(14, weight: .medium)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, Space.md)
-                        .padding(.vertical, 10)
-                        .background(Color.white.opacity(0.15), in: Capsule())
-                        .overlay(Capsule().stroke(Color.white.opacity(0.3), lineWidth: 1))
-                }
-                .buttonStyle(.plain)
-                .disabled(origin.isEmpty || destination.isEmpty)
-                .opacity(origin.isEmpty || destination.isEmpty ? 0.5 : 1)
-
-                Spacer()
-
-                HStack(spacing: 6) {
-                    TextField("0", text: $distanceText, prompt: Text("0").foregroundColor(Color.aigosTextTertiary))
-                        .rounded(20, weight: .bold)
-                        .foregroundStyle(.white)
-                        .tint(.white)
-                        .keyboardType(.decimalPad)
-                        .multilineTextAlignment(.trailing)
-                        .frame(width: 80)
-                    Text("km")
-                        .rounded(15, weight: .medium)
-                        .foregroundStyle(Color.aigosTextSecondary)
+            // The prominent, always-editable distance field — the primary input.
+            HStack(alignment: .firstTextBaseline, spacing: Space.sm) {
+                TextField("0", text: $distanceText, prompt: Text("0").foregroundColor(Color.aigosTextTertiary))
+                    .rounded(38, weight: .bold)
+                    .foregroundStyle(.white)
+                    .tint(.white)
+                    .keyboardType(.decimalPad)
+                    .focused($distanceFocused)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text("km")
+                    .rounded(20, weight: .semibold)
+                    .foregroundStyle(Color.aigosTextSecondary)
+                if distanceIsEstimated {
+                    Text("ESTIMATED")
+                        .rounded(10, weight: .bold)
+                        .kerning(0.8)
+                        .foregroundStyle(Color.aigosAmberDeep)
+                        .padding(.horizontal, 8).padding(.vertical, 4)
+                        .background(Color.white.opacity(0.85), in: Capsule())
                 }
             }
+            .padding(.horizontal, Space.md)
+            .padding(.vertical, 12)
+            .background(Color.white.opacity(0.15))
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.white.opacity(0.3), lineWidth: 1))
 
-            if distanceIsEstimated {
-                Text("Estimated distance — tap to adjust")
-                    .rounded(12)
-                    .foregroundStyle(Color.aigosTextTertiary)
+            Text("Type your trip distance, or estimate it from place names below. All distances are estimates.")
+                .rounded(12)
+                .foregroundStyle(Color.aigosTextTertiary)
+
+            Divider().overlay(Color.white.opacity(0.15))
+
+            FieldLabel("Estimate from places")
+            GlassField(placeholder: "From (e.g. Manila)", text: $origin, autocap: .words)
+            GlassField(placeholder: "To (e.g. Batangas)", text: $destination, autocap: .words)
+            Button(action: estimateDistance) {
+                Label("Estimate distance", systemImage: "map")
+                    .rounded(15, weight: .semibold)
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(Color.white.opacity(0.15), in: Capsule())
+                    .overlay(Capsule().stroke(Color.white.opacity(0.3), lineWidth: 1))
             }
+            .buttonStyle(.plain)
+            .disabled(origin.isEmpty || destination.isEmpty)
+            .opacity(origin.isEmpty || destination.isEmpty ? 0.5 : 1)
         }
         .padding(Space.md)
         .glassCard()
+        // Tapping the distance field to type means the user is entering their own
+        // figure — clear the "estimated" tag.
+        .onChange(of: distanceFocused) { _, focused in
+            if focused { distanceIsEstimated = false }
+        }
     }
 
     // MARK: - Driving

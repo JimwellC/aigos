@@ -2,9 +2,8 @@
 //  AIGateView.swift
 //  aigos
 //
-//  Explains how "Talk to aigos" understands your query and its Apple Intelligence
-//  status (Section 13). On unsupported devices the message is reassuring, not a
-//  dead end: the offline parser still works, so the feature is never blocked.
+//  Explains how "Talk to aigos" understands your query: a natural-language trip
+//  assistant that runs entirely on-device, offline, on every iPhone.
 //
 
 import SwiftUI
@@ -19,13 +18,13 @@ struct AIGateView: View {
             VStack(spacing: Space.lg) {
                 Spacer()
 
-                Image(systemName: AIAvailability.isAvailable ? "apple.logo" : "cpu")
+                Image(systemName: "cpu")
                     .font(.system(size: 52))
                     .foregroundStyle(.white)
                     .padding(Space.lg)
                     .background(Color.white.opacity(0.12), in: Circle())
 
-                Text(AIAvailability.isAvailable ? "Apple Intelligence" : "On-device understanding")
+                Text(AIAvailability.tagline)
                     .rounded(26, weight: .bold)
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)

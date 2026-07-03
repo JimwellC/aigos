@@ -5,8 +5,8 @@
 //  "Talk to aigos" natural-language trip queries (Section 7, Feature 07). Ask in
 //  plain English — "How much to drive Pampanga to Manila in my Vios?" — and aigos
 //  replies with a cost, then hands off to the calculator for the saved, learning
-//  calculation. Understanding is on-device: Apple Intelligence when available,
-//  otherwise the built-in offline parser (works on every device).
+//  calculation. Understanding runs entirely on-device via the built-in offline
+//  parser — works on every iPhone, no account, no internet.
 //
 
 import SwiftUI
@@ -54,9 +54,9 @@ struct TalkToAigosView: View {
                     .foregroundStyle(.white)
                 Button { showingGate = true } label: {
                     HStack(spacing: 4) {
-                        Image(systemName: AIAvailability.isAvailable ? "apple.logo" : "wifi.slash")
+                        Image(systemName: "cpu")
                             .font(.system(size: 10))
-                        Text(AIAvailability.badgeText)
+                        Text("\(AIAvailability.badgeText) · works offline")
                             .rounded(12, weight: .medium)
                         Image(systemName: "info.circle")
                             .font(.system(size: 10))

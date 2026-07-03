@@ -53,7 +53,10 @@ final class AppState {
     init() {
         #if DEBUG
         if let tab = DebugSupport.initialTab { selectedTab = tab }
-        if DebugSupport.isSeedDemo, selectedTab == .calculate {
+        // Only auto-run a sample estimate when explicitly asked (-autoCalc), so
+        // -seedDemo alone shows the fresh Calculate screen.
+        if DebugSupport.isSeedDemo, selectedTab == .calculate,
+           ProcessInfo.processInfo.arguments.contains("-autoCalc") {
             pendingDraft = DebugSupport.demoDraft
         }
         #endif
