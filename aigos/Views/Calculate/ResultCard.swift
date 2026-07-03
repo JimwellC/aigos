@@ -10,6 +10,7 @@
 import SwiftUI
 
 struct ResultCard: View {
+    @AppStorage("fuelUnit") private var fuelUnit: FuelUnit = .kmPerL
     let estimate: FuelEstimate
     /// Animated cost value driven by the parent's count-up.
     let heroCost: Double

@@ -14,6 +14,7 @@ struct OnboardingView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \VehicleProfile.createdAt) private var vehicles: [VehicleProfile]
     @Query private var prices: [FuelPriceCache]
+    @AppStorage("fuelUnit") private var fuelUnit: FuelUnit = .kmPerL
 
     @Binding var hasOnboarded: Bool
 
@@ -23,7 +24,7 @@ struct OnboardingView: View {
     @State private var name = "My Car"
     @State private var type: VehicleType = .car
     @State private var fuelType: FuelType = .ron95
-    @State private var efficiencyText = "12"
+    @State private var efficiencyText = ""
 
     // Driving style
     @State private var highwayChoice = 2      // 0..3 -> 70/90/110/130
@@ -97,8 +98,9 @@ struct OnboardingView: View {
                 FieldLabel("Fuel type")
                 PillRow(items: FuelType.allCases, selection: $fuelType) { $0.label }
 
-                FieldLabel("Efficiency (km/L)")
-                GlassField(placeholder: "12", text: $efficiencyText, keyboard: .decimalPad)
+                FieldLabel("Efficiency (\(fuelUnit.label))")
+                GlassField(placeholder: fuelUnit.defaultInput, text: $efficiencyText, keyboard: .decimalPad)
+                    .onAppear { if efficiencyText.isEmpty { efficiencyText = fuelUnit.defaultInput } }
             }
             .padding(Space.md)
             .glassCard()
@@ -194,12 +196,14 @@ struct OnboardingView: View {
 
     private func finish() {
         Haptics.tap(.medium)
-        // Create the first vehicle + its driving profile from the answers.
+        // Create the first vehicle + its driving profile from the answers. Input
+        // is in the user's chosen unit; store canonical km/L.
+        let enteredEff = efficiency ?? Double(fuelUnit.defaultInput) ?? 12
         let vehicle = VehicleProfile(
             name: name.trimmingCharacters(in: .whitespaces),
             type: type,
             fuelType: fuelType,
-            efficiencyKmL: efficiency ?? 12,
+            efficiencyKmL: fuelUnit.kmL(fromDisplay: enteredEff),
             isDefault: true
         )
         let profile = DrivingProfile(vehicleId: vehicle.id)

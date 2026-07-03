@@ -16,6 +16,7 @@ struct CalculateView: View {
     @Environment(\.modelContext) private var context
     @Environment(AppState.self) private var appState
     @Query(sort: \VehicleProfile.createdAt) private var vehicles: [VehicleProfile]
+    @AppStorage("fuelUnit") private var fuelUnit: FuelUnit = .kmPerL
 
     @State private var selectedVehicleID: UUID?
     @State private var origin = ""
@@ -140,7 +141,7 @@ struct CalculateView: View {
                         .rounded(17, weight: .semibold)
                         .foregroundStyle(.white)
                     if let vehicle = selectedVehicle {
-                        Text("\(vehicle.fuelType.label) · \(vehicle.efficiencyKmL.oneDecimal) km/L")
+                        Text("\(vehicle.fuelType.label) · \(fuelUnit.format(kmL: vehicle.efficiencyKmL))")
                             .rounded(13)
                             .foregroundStyle(Color.aigosTextSecondary)
                     }

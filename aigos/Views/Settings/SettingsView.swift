@@ -9,20 +9,6 @@
 import SwiftUI
 import SwiftData
 
-/// Fuel efficiency display unit (Section 6).
-enum FuelUnit: String, CaseIterable, Identifiable {
-    case kmPerL
-    case lPer100km
-
-    var id: String { rawValue }
-    var label: String {
-        switch self {
-        case .kmPerL: "km/L"
-        case .lPer100km: "L/100km"
-        }
-    }
-}
-
 struct SettingsView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \VehicleProfile.createdAt) private var vehicles: [VehicleProfile]

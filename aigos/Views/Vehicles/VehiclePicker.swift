@@ -12,6 +12,7 @@ struct VehiclePicker: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \VehicleProfile.createdAt) private var vehicles: [VehicleProfile]
+    @AppStorage("fuelUnit") private var fuelUnit: FuelUnit = .kmPerL
 
     @Binding var selectedVehicleID: UUID?
     @State private var showingAddVehicle = false
@@ -38,7 +39,7 @@ struct VehiclePicker: View {
                                         Text(vehicle.name)
                                             .rounded(16, weight: .semibold)
                                             .foregroundStyle(.white)
-                                        Text("\(vehicle.fuelType.label) · \(vehicle.efficiencyKmL.oneDecimal) km/L")
+                                        Text("\(vehicle.fuelType.label) · \(fuelUnit.format(kmL: vehicle.efficiencyKmL))")
                                             .rounded(13)
                                             .foregroundStyle(Color.aigosTextSecondary)
                                     }

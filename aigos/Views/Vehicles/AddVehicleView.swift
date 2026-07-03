@@ -13,13 +13,14 @@ struct AddVehicleView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @Query private var vehicles: [VehicleProfile]
+    @AppStorage("fuelUnit") private var fuelUnit: FuelUnit = .kmPerL
 
     @Binding var selectedVehicleID: UUID?
 
     @State private var name = "My Car"
     @State private var type: VehicleType = .car
     @State private var fuelType: FuelType = .ron95
-    @State private var efficiencyText = "12"
+    @State private var efficiencyText = ""
 
     private var efficiency: Double? {
         Double(efficiencyText.trimmingCharacters(in: .whitespaces))
@@ -45,13 +46,14 @@ struct AddVehicleView: View {
                         FieldLabel("Fuel type")
                         pillRow(FuelType.allCases, selected: fuelType) { fuelType = $0 } label: { $0.label }
 
-                        FieldLabel("Efficiency (km/L)")
-                        GlassField(placeholder: "12", text: $efficiencyText, keyboard: .decimalPad)
+                        FieldLabel("Efficiency (\(fuelUnit.label))")
+                        GlassField(placeholder: fuelUnit.defaultInput, text: $efficiencyText, keyboard: .decimalPad)
                     }
                     .padding(.horizontal, Space.screen)
                     .padding(.vertical, Space.lg)
                 }
             }
+            .onAppear { if efficiencyText.isEmpty { efficiencyText = fuelUnit.defaultInput } }
             .navigationTitle("Add Vehicle")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Color.aigosBGTop, for: .navigationBar)
@@ -95,7 +97,7 @@ struct AddVehicleView: View {
             name: name.trimmingCharacters(in: .whitespaces),
             type: type,
             fuelType: fuelType,
-            efficiencyKmL: efficiency,
+            efficiencyKmL: fuelUnit.kmL(fromDisplay: efficiency),   // store canonical km/L
             isDefault: isFirst
         )
         let profile = DrivingProfile(vehicleId: vehicle.id)
