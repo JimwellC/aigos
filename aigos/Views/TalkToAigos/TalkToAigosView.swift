@@ -86,6 +86,11 @@ struct TalkToAigosView: View {
                             dismiss()
                         }
                         .id(message.id)
+                        .transition(.asymmetric(
+                            insertion: .move(edge: message.role == .user ? .trailing : .leading)
+                                .combined(with: .opacity),
+                            removal: .opacity
+                        ))
                     }
 
                     if messages.count <= 1 {
@@ -165,8 +170,11 @@ struct TalkToAigosView: View {
         guard !trimmed.isEmpty else { return }
         Haptics.tap(.light)
         input = ""
-        messages.append(ChatMessage(role: .user, text: trimmed))
-        messages.append(reply(to: trimmed))
+        let response = reply(to: trimmed)
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+            messages.append(ChatMessage(role: .user, text: trimmed))
+            messages.append(response)
+        }
     }
 
     private func reply(to text: String) -> ChatMessage {

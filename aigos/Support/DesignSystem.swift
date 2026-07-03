@@ -163,6 +163,7 @@ struct PrimaryButton: View {
             .clipShape(Capsule())
             .shadow(color: Color.aigosAmber.opacity(enabled ? 0.4 : 0), radius: 12, x: 0, y: 6)
         }
+        .buttonStyle(PressableStyle())
         .disabled(!enabled)
     }
 }
@@ -187,6 +188,7 @@ struct SecondaryButton: View {
             .clipShape(Capsule())
             .overlay(Capsule().stroke(Color.white.opacity(0.4), lineWidth: 1))
         }
+        .buttonStyle(PressableStyle())
     }
 }
 

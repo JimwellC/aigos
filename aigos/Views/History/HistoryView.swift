@@ -24,7 +24,7 @@ struct HistoryView: View {
                 emptyState
             } else {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: Space.lg) {
+                    LazyVStack(alignment: .leading, spacing: Space.lg) {
                         Text("HISTORY")
                             .rounded(30, weight: .bold)
                             .kerning(1.5)
@@ -38,9 +38,12 @@ struct HistoryView: View {
                                     .rounded(13, weight: .semibold)
                                     .kerning(1.2)
                                     .foregroundStyle(Color.aigosTextTertiary)
+                                    // Fades in as the section scrolls into view (LazyVStack).
+                                    .staggeredAppear(yOffset: 8)
 
-                                ForEach(group.trips) { trip in
+                                ForEach(Array(group.trips.enumerated()), id: \.element.id) { i, trip in
                                     TripRowView(trip: trip)
+                                        .staggeredAppear(index: i)
                                         .contextMenu {
                                             Button(role: .destructive) { delete(trip) } label: {
                                                 Label("Delete", systemImage: "trash")

@@ -55,7 +55,7 @@ struct AigosTabBar: View {
             ForEach(Tab.allCases) { tab in
                 Button {
                     Haptics.tap(.light)
-                    selected = tab
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) { selected = tab }
                 } label: {
                     VStack(spacing: 4) {
                         Image(systemName: tab.icon)
@@ -64,6 +64,7 @@ struct AigosTabBar: View {
                             .rounded(11, weight: .medium)
                     }
                     .foregroundStyle(selected == tab ? Color.aigosAmber : Color.white.opacity(0.45))
+                    .scaleEffect(selected == tab ? 1.12 : 1.0)
                     .frame(maxWidth: .infinity)
                     .contentShape(Rectangle())
                 }

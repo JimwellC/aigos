@@ -30,8 +30,9 @@ struct SavedRoutesView: View {
                             .foregroundStyle(.white)
                             .padding(.bottom, Space.sm)
 
-                        ForEach(routes) { route in
+                        ForEach(Array(routes.enumerated()), id: \.element.id) { i, route in
                             routeCard(route)
+                                .staggeredAppear(index: i)
                         }
                     }
                     .padding(.horizontal, Space.screen)

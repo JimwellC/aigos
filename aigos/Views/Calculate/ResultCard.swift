@@ -16,27 +16,34 @@ struct ResultCard: View {
     let heroCost: Double
     let confidence: String?
 
+    @State private var warningShake: CGFloat = 0
+
     var body: some View {
         VStack(spacing: Space.lg) {
             heroCostView
 
             VStack(spacing: 10) {
-                row("Distance", value: "\(estimate.distanceKm.oneDecimal) km")
+                row("Distance", value: "\(estimate.distanceKm.oneDecimal) km").staggeredAppear(index: 0)
                 row("Base fuel (rated)",
                     value: "\(estimate.baseLitres.oneDecimal) L",
-                    detail: "at \(estimate.baseEfficiencyKmL.oneDecimal) km/L")
-                adjustmentRow("Speed", factor: estimate.speedFactor)
-                adjustmentRow("Aircon", factor: estimate.acFactor)
-                adjustmentRow("Road type", factor: estimate.roadFactor)
-                adjustmentRow("Traffic", factor: estimate.trafficFactor)
-                adjustmentRow("Load", factor: estimate.loadFactor)
+                    detail: "at \(estimate.baseEfficiencyKmL.oneDecimal) km/L").staggeredAppear(index: 1)
+                adjustmentRow("Speed", factor: estimate.speedFactor).staggeredAppear(index: 2)
+                adjustmentRow("Aircon", factor: estimate.acFactor).staggeredAppear(index: 3)
+                adjustmentRow("Road type", factor: estimate.roadFactor).staggeredAppear(index: 4)
+                adjustmentRow("Traffic", factor: estimate.trafficFactor).staggeredAppear(index: 5)
+                adjustmentRow("Load", factor: estimate.loadFactor).staggeredAppear(index: 6)
                 Divider().overlay(Color.white.opacity(0.2))
-                row("Adjusted fuel", value: "\(estimate.adjustedLitres.oneDecimal) L", emphasised: true)
-                row("Fuel price", value: "\(estimate.fuelPricePerLitre.phpString) / L")
+                row("Adjusted fuel", value: "\(estimate.adjustedLitres.oneDecimal) L", emphasised: true).staggeredAppear(index: 7)
+                row("Fuel price", value: "\(estimate.fuelPricePerLitre.phpString) / L").staggeredAppear(index: 8)
             }
 
             if estimate.needsRefuel {
                 refuelWarning
+                    .modifier(Shake(animatableData: warningShake))
+                    .onAppear {
+                        warningShake = 0
+                        withAnimation(.easeInOut(duration: 0.5)) { warningShake = 1 }
+                    }
             }
 
             if let confidence {
@@ -82,6 +89,8 @@ struct ResultCard: View {
                 .rounded(12, weight: .medium)
                 .kerning(1.5)
                 .foregroundStyle(Color.aigosTextSecondary)
+            // Count-up: numericText rolls the digits from 0 → final as heroCost
+            // animates (driven by the parent's spring). Native + Swift-6 clean.
             Text(heroCost.phpString)
                 .font(.system(size: 52, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)

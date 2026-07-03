@@ -120,20 +120,25 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: Space.lg) {
             title("Your driving style", subtitle: "Let me learn how you drive for a smarter estimate.")
 
+            MascotBubble(text: "Quick 3 taps and I'll nail your estimate 👇")
+
             ScrollView {
                 VStack(spacing: Space.md) {
                     QuestionCard(question: "How fast on the highway?",
                                  options: ["Under 80", "80–100", "100–120", "Over 120"],
                                  selection: $highwayChoice)
+                        .staggeredAppear(index: 0, delayStep: 0.12)
                     QuestionCard(question: "Do you use aircon?",
                                  options: ["Almost always", "Sometimes", "Rarely"],
                                  selection: $acChoice)
+                        .staggeredAppear(index: 1, delayStep: 0.12)
                     QuestionCard(question: "Usual road?",
                                  options: RoadType.allCases.map(\.label),
                                  selection: Binding(
                                     get: { RoadType.allCases.firstIndex(of: roadChoice) ?? 0 },
                                     set: { roadChoice = RoadType.allCases[$0] }
                                  ))
+                        .staggeredAppear(index: 2, delayStep: 0.12)
                 }
             }
             .scrollIndicators(.hidden)
@@ -191,7 +196,7 @@ struct OnboardingView: View {
 
     private func advance() {
         Haptics.tap(.light)
-        withAnimation(.snappy) { step += 1 }
+        withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) { step += 1 }
     }
 
     private func finish() {
@@ -231,7 +236,7 @@ private struct ProgressDots: View {
                 Capsule()
                     .fill(i == index ? Color.aigosAmber : Color.white.opacity(0.35))
                     .frame(width: i == index ? 22 : 8, height: 8)
-                    .animation(.snappy, value: index)
+                    .animation(.spring(response: 0.4, dampingFraction: 0.7), value: index)
             }
         }
     }
@@ -310,6 +315,29 @@ private struct FlowPills: View {
                 }
                 .buttonStyle(.plain)
             }
+        }
+    }
+}
+
+/// Mascot speech bubble that slides in from the left on appear.
+private struct MascotBubble: View {
+    let text: String
+    @State private var shown = false
+
+    var body: some View {
+        HStack(alignment: .center, spacing: Space.sm) {
+            MascotView(size: 40)
+            Text(text)
+                .rounded(15, weight: .medium)
+                .foregroundStyle(.white)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(Space.md)
+                .glassCard(cornerRadius: 18)
+        }
+        .opacity(shown ? 1 : 0)
+        .offset(x: shown ? 0 : -70)
+        .onAppear {
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) { shown = true }
         }
     }
 }

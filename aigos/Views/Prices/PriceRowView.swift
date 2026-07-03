@@ -12,6 +12,7 @@ struct PriceRowView: View {
     var onCommit: () -> Void
 
     @State private var text: String = ""
+    @State private var pulse = false
 
     var body: some View {
         HStack {
@@ -38,6 +39,7 @@ struct PriceRowView: View {
         }
         .padding(.horizontal, Space.md)
         .padding(.vertical, 14)
+        .background(Color.aigosAmber.opacity(pulse ? 0.3 : 0))
         // Two-decimal seed formatting so merely displaying a price (e.g. 62.55)
         // never round-trips through a lossy string and marks it "user"-edited.
         .onAppear { text = String(format: "%.2f", price.pricePHP) }
@@ -50,5 +52,12 @@ struct PriceRowView: View {
         price.updatedBy = "user"
         price.lastUpdated = Date()
         onCommit()
+        flashPulse()
+    }
+
+    /// Brief amber pulse to confirm an edit landed.
+    private func flashPulse() {
+        pulse = true
+        withAnimation(.easeOut(duration: 0.6)) { pulse = false }
     }
 }

@@ -460,9 +460,9 @@ struct CalculateView: View {
             estimate = result
             savedThisRoute = false
         }
-        // Count-up signature moment.
+        // Count-up signature moment — 0 → final over ~0.8s with a gentle spring.
         heroCost = 0
-        withAnimation(.snappy(duration: 0.6)) { heroCost = result.estimatedCost }
+        withAnimation(.spring(response: 0.55, dampingFraction: 0.72)) { heroCost = result.estimatedCost }
 
         // Auto-save the trip snapshot and fold it into the self-learning profile.
         let trip = TripRecord(

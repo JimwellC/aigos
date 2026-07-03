@@ -127,7 +127,7 @@ struct SettingsView: View {
             }
 
             VStack(spacing: Space.sm) {
-                ForEach(personalPlaces) { place in
+                ForEach(Array(personalPlaces.enumerated()), id: \.element.id) { i, place in
                     Button {
                         Haptics.tap(.light)
                         editingPlace = place
@@ -148,6 +148,7 @@ struct SettingsView: View {
                         }
                     }
                     .buttonStyle(.plain)
+                    .staggeredAppear(index: i)
                     .contextMenu {
                         Button(role: .destructive) { delete(place) } label: {
                             Label("Delete", systemImage: "trash")
