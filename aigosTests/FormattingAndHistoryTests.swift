@@ -14,8 +14,18 @@ final class FormattingTests: XCTestCase {
     func testPHPPrefixAndDecimals() {
         XCTAssertEqual(449.87.phpString, "PHP 449.87")
         XCTAssertEqual(62.5.phpString, "PHP 62.50")     // always two decimals
+        XCTAssertEqual(0.0.phpString, "PHP 0.00")
         XCTAssertTrue(1234.5.phpString.hasPrefix("PHP "))
-        XCTAssertFalse(449.87.phpString.contains("₱"))  // never the peso glyph
+    }
+
+    /// The peso glyph must never appear — "PHP" prefix only (Section 22, note 6).
+    func testNeverUsesPesoGlyph() {
+        let values = [0.0, 0.5, 62.55, 449.87, 1234.5, 1_000_000.0, -75.25]
+        for v in values {
+            let s = v.phpString
+            XCTAssertFalse(s.contains("₱"), "\(s) must not contain the peso glyph")
+            XCTAssertTrue(s.hasPrefix("PHP "), "\(s) must start with the PHP prefix")
+        }
     }
 
     func testOneDecimal() {

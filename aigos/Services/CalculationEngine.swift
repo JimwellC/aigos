@@ -106,8 +106,15 @@ enum CalculationEngine {
         )
     }
 
-    /// Convert L/100km to km/L before feeding the formula (Settings toggle).
+    /// Convert L/100km → km/L before feeding the formula (Settings toggle).
     static func kmL(fromL100 value: Double) -> Double {
+        guard value > 0 else { return 0 }
+        return 100.0 / value
+    }
+
+    /// Convert km/L → L/100km (the Settings display unit). Inverse of
+    /// `kmL(fromL100:)`; the two round-trip losslessly for positive values.
+    static func l100(fromKmL value: Double) -> Double {
         guard value > 0 else { return 0 }
         return 100.0 / value
     }

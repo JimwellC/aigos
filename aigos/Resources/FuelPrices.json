@@ -1,10 +1,10 @@
 {
-  "lastUpdated": "2026-04-28",
-  "note": "Developer updates weekly from DOE pump-price bulletins (published Tuesdays). Users can override any price in the Prices tab.",
+  "lastUpdated": "2026-06-30",
+  "note": "DOE-tracked Metro Manila pump prices, week of 2026-06-30 (updated weekly, Tuesdays). RON 97 is interpolated — trackers list an RON 100 premium, not RON 97. Users can override any price in the Prices tab.",
   "prices": {
-    "ron91": 59.10,
-    "ron95": 62.55,
-    "ron97": 65.20,
-    "diesel": 56.45
+    "ron91": 56.65,
+    "ron95": 58.15,
+    "ron97": 60.80,
+    "diesel": 56.74
   }
 }
