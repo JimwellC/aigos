@@ -91,12 +91,14 @@ struct AigosBackground: View {
 
     private struct Orb { let color: Color; let size: CGFloat; let blur: CGFloat }
 
-    /// The four glowing orbs (large white, medium amber, small white, XL soft amber).
+    /// The four glowing orbs. Tighter blur keeps them as defined circles; the
+    /// warm orbs use a near-white gold so they read against the amber gradient.
+    private static let goldGlow = Color(hex: "#FFE8B8")
     private let orbKinds: [Orb] = [
-        Orb(color: .white.opacity(0.22),           size: 380, blur: 80),
-        Orb(color: Color.aigosBGTop.opacity(0.30), size: 280, blur: 60),   // amber #F5C97A
-        Orb(color: .white.opacity(0.15),           size: 180, blur: 40),
-        Orb(color: Color.aigosAmber.opacity(0.20), size: 450, blur: 100),  // amber #E9A84C, extra-soft
+        Orb(color: .white.opacity(0.22),         size: 380, blur: 45),
+        Orb(color: goldGlow.opacity(0.30),       size: 280, blur: 35),   // near-white gold
+        Orb(color: .white.opacity(0.15),         size: 180, blur: 25),
+        Orb(color: goldGlow.opacity(0.20),       size: 450, blur: 60),   // near-white gold, extra-soft
     ]
 
     /// Per-screen (x, y) offsets from centre for the four orbs above.
