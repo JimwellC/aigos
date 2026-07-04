@@ -30,10 +30,11 @@ struct TalkToAigosView: View {
 
     private let suggestions = [
         "Manila to Batangas",
+        "How's my driving?",
+        "How can I save fuel?",
         "I just filled up",
         "Show my monthly report",
         "How accurate were my estimates?",
-        "What's the km/L of a Vios?",
     ]
 
     var body: some View {
@@ -200,6 +201,11 @@ struct TalkToAigosView: View {
         if let report = reportReply(text) { return ChatMessage(role: .aigos, text: report) }
         if let acc = accuracyReply(text) { return ChatMessage(role: .aigos, text: acc) }
 
+        // Feature 4: driving score, personalized tips, cost-trend analysis.
+        if let driving = drivingReply(text) { return ChatMessage(role: .aigos, text: driving) }
+        if let tips = saveTipsReply(text) { return ChatMessage(role: .aigos, text: tips) }
+        if let trend = costTrendReply(text) { return ChatMessage(role: .aigos, text: trend) }
+
         // "Will I make it to X on one tank?" — trip fuel vs tank capacity. Checked
         // before the trip/knowledge intents (it names a trip but isn't a cost query).
         if let oneTank = oneTankReply(text) {
@@ -337,6 +343,65 @@ struct TalkToAigosView: View {
         var s = "Across \(done.count) tracked trip\(done.count == 1 ? "" : "s"), your estimates averaged \(Int(avg.rounded()))% accurate."
         if let last { s += " Your last (\(last.origin) → \(last.destination)) was \(Int(last.accuracyPercent.rounded()))%." }
         return s
+    }
+
+    // MARK: - Feature 4 intents (driving score / tips / cost trend)
+
+    private func defaultVehicle() -> VehicleProfile? { vehicles.first(where: \.isDefault) ?? vehicles.first }
+
+    /// "How's my driving?" → the fuel-efficiency score + breakdown.
+    private func drivingReply(_ text: String) -> String? {
+        let q = text.lowercased()
+        guard q.contains("my driving") || q.contains("driving score") || q.contains("fuel score")
+            || (q.contains("how") && q.contains("driv")) || (q.contains("score") && q.contains("driv")) else { return nil }
+        guard let v = defaultVehicle() else { return "Add a vehicle and take a few trips — then I can score your driving." }
+        let trips = tripRecords.filter { $0.vehicleName == v.name }
+        let s = DrivingScorer.score(for: v, trips: trips, trackedTrips: trackedTrips)
+        return "Your \(v.name) scores \(s.total)/100 — \(s.label).\nSpeed \(s.speed)/30 · AC \(s.ac)/15 · Smoothness \(s.smoothness)/15 · Rush-hour \(s.rushHour)/20 · Maintenance \(s.maintenance)/20.\nSee Settings → Driving Insights for tips and a shareable card."
+    }
+
+    /// "How can I save fuel?" → up to 3 personalized tips.
+    private func saveTipsReply(_ text: String) -> String? {
+        let q = text.lowercased()
+        guard (q.contains("save") && (q.contains("fuel") || q.contains("gas") || q.contains("petrol")))
+            || q.contains("fuel saving") || q.contains("save money on gas")
+            || (q.contains("tips") && (q.contains("fuel") || q.contains("driv"))) else { return nil }
+        guard let v = defaultVehicle() else { return "Add a vehicle and take a few trips — I'll tailor fuel-saving tips to how you drive." }
+        let trips = tripRecords.filter { $0.vehicleName == v.name }
+        let cands = SuggestionEngine.candidates(
+            vehicle: v, trips: trips, now: Date(),
+            currentFuelPrice: PriceService.price(for: v.fuelType, in: context),
+            unleaded91Price: PriceService.price(for: .unleaded91, in: context))
+        guard !cands.isEmpty else {
+            return "You're already driving efficiently — nice! Keep speeds near 80–100 km/h, ease off the aircon in slow traffic, and stay on top of PMS."
+        }
+        let top = SuggestionEngine.pick(cands, recentlyShownAt: [:], now: Date(), limit: 3)
+        return "Here's how you could save on your \(v.name):\n" + top.map { "• \($0.detail)" }.joined(separator: "\n")
+    }
+
+    /// "Why is my fuel cost increasing?" → month-over-month analysis + likely causes.
+    private func costTrendReply(_ text: String) -> String? {
+        let q = text.lowercased()
+        let mentionsCost = q.contains("cost") || q.contains("spend") || q.contains("bill") || q.contains("gas") || q.contains("fuel") || q.contains("mahal")
+        let mentionsRise = q.contains("increas") || q.contains("higher") || q.contains("going up") || q.contains("more expensive") || q.contains("mahal") || q.contains("why")
+        guard mentionsCost, mentionsRise else { return nil }
+        let r = FuelReport.monthly(for: Date(), trips: tripRecords, logs: fuelLogs)
+        guard !r.isEmpty else { return "Not enough trips this month yet to spot a trend. Calculate a few and ask again." }
+        var s = "This month you've spent \(r.totalSpentPHP.phpString) across \(r.tripCount) trips."
+        if let d = r.spendDeltaPHP, let p = r.spendDeltaPct {
+            if d > 0 { s += " That's \(d.phpString) more than last month (+\(Int(p.rounded()))%)." }
+            else if d < 0 { s += " That's actually \(abs(d).phpString) less than last month." }
+            else { s += " About the same as last month." }
+        }
+        var causes: [String] = []
+        if let v = defaultVehicle() {
+            if v.maintenanceStatus == .overduePMS { causes.append("an overdue PMS (~15% more fuel)") }
+            let month = tripRecords.filter { $0.vehicleName == v.name && Calendar.current.isDate($0.calculatedAt, equalTo: Date(), toGranularity: .month) }
+            let rush = month.filter { $0.wasRushHour || $0.traffic == .heavy || $0.traffic == .standstill }.count
+            if !month.isEmpty, rush * 2 >= month.count { causes.append("lots of rush-hour / heavy-traffic trips") }
+        }
+        if !causes.isEmpty { s += " Likely causes: " + causes.joined(separator: ", ") + "." }
+        return s + " Pump prices also shift week to week — check the Prices tab."
     }
 
     // MARK: - Tank questions

@@ -19,6 +19,7 @@ struct SettingsView: View {
     @State private var showingClearConfirm = false
     @State private var showingResetConfirm = false
     @State private var editingPlace: PersonalPlace?
+    @State private var showingInsights = false
 
     var body: some View {
         ZStack {
@@ -29,6 +30,7 @@ struct SettingsView: View {
                     Text("SETTINGS").screenTitle()
 
                     unitsSection
+                    if !vehicles.isEmpty { insightsSection }
                     if !vehicles.isEmpty { defaultVehicleSection }
                     myPlacesSection
                     dataSection
@@ -46,6 +48,9 @@ struct SettingsView: View {
         }
         .sheet(item: $editingPlace) { place in
             PersonalPlaceEditor(place: place)
+        }
+        .sheet(isPresented: $showingInsights) {
+            DrivingDashboardView()
         }
         #if DEBUG
         .onAppear {
@@ -65,6 +70,29 @@ struct SettingsView: View {
     }
 
     // MARK: - Sections
+
+    private var insightsSection: some View {
+        Button {
+            Haptics.tap(.light)
+            showingInsights = true
+        } label: {
+            HStack(spacing: Space.md) {
+                Image(systemName: "chart.line.uptrend.xyaxis")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundStyle(Color.aigosAmber).frame(width: 30)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Driving Insights").rounded(16, weight: .bold).foregroundStyle(.white)
+                    Text("Your fuel score, stats & ways to save")
+                        .rounded(12).foregroundStyle(Color.aigosTextSecondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.4))
+            }
+            .padding(Space.md).frame(maxWidth: .infinity, alignment: .leading).glassCard()
+        }
+        .buttonStyle(.plain)
+    }
 
     private var unitsSection: some View {
         section("Units") {

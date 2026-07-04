@@ -18,7 +18,10 @@ struct CalculateView: View {
     @Environment(AppState.self) private var appState
     @Query(sort: \VehicleProfile.createdAt) private var vehicles: [VehicleProfile]
     @Query private var personalPlaces: [PersonalPlace]
+    @Query(sort: \TripRecord.calculatedAt, order: .reverse) private var allTrips: [TripRecord]
     @AppStorage("fuelUnit") private var fuelUnit: FuelUnit = .kmPerL
+
+    @State private var dismissedSuggestions: Set<String> = []
 
     @State private var selectedVehicleID: UUID?
     @State private var origin = ""
@@ -75,6 +78,18 @@ struct CalculateView: View {
         vehicles.first { $0.id == selectedVehicleID } ?? vehicles.first
     }
 
+    /// The single most relevant fuel-saving tip for the selected vehicle (Feature 4).
+    private var topSuggestion: Suggestion? {
+        guard let v = selectedVehicle else { return nil }
+        let trips = allTrips.filter { $0.vehicleName == v.name }
+        let cands = SuggestionEngine.candidates(
+            vehicle: v, trips: trips, now: Date(),
+            currentFuelPrice: PriceService.price(for: v.fuelType, in: context),
+            unleaded91Price: PriceService.price(for: .unleaded91, in: context))
+            .filter { !dismissedSuggestions.contains($0.id) }
+        return SuggestionEngine.pick(cands, recentlyShownAt: SuggestionLog.shownAt, now: Date(), limit: 1).first
+    }
+
     private var originPoint: GeoPoint? {
         originKey.flatMap { PlaceResolver.point(for: $0, personalPlaces: personalPlaces) }
     }
@@ -119,6 +134,13 @@ struct CalculateView: View {
                     Color.clear.frame(height: tracker.isLive ? 220 : 0)   // room for the banner
                     header
                     vehicleCard
+                    if let s = topSuggestion {
+                        SuggestionCard(suggestion: s) {
+                            withAnimation { dismissedSuggestions.insert(s.id) }
+                            SuggestionLog.record([s])   // mark shown so it rotates out
+                        }
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
                     routeCard
                     drivingCard
                     calculateButton

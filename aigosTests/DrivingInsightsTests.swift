@@ -124,6 +124,36 @@ final class DrivingInsightsTests: XCTestCase {
         XCTAssertTrue(cands.allSatisfy { ($0.savingsPHP ?? 1) > 0 })
     }
 
+    func testScoreFromModelsUsesTripHistory() {
+        let profile = DrivingProfile()
+        profile.avgActualHighwaySpeed = 95      // near optimal
+        let v = VehicleProfile(name: "Model", type: .car, fuelType: .unleaded91,
+                               efficiencyKmL: 16, maintenanceStatus: .wellMaintained, drivingProfile: profile)
+        let est = CalculationEngine.estimate(distanceKm: 30, baseEfficiencyKmL: 16, fuelPricePerLitre: 60,
+                                             avgHighwaySpeedKmh: 95, avgCitySpeedKmh: 40, acInUse: false, roadType: .highway)
+        // 4 calm, AC-off, non-rush trips → should score well.
+        let trips = (0..<4).map { _ in
+            TripRecord(origin: "A", destination: "B", vehicleName: "Model", fuelType: .unleaded91,
+                       estimate: est, avgHighwaySpeed: 95, avgCitySpeed: 40, roadType: .highway,
+                       acWasOn: false, traffic: .light, wasRushHour: false)
+        }
+        let s = DrivingScorer.score(for: v, trips: trips)
+        XCTAssertGreaterThanOrEqual(s.total, 75)     // Smart Driver or better
+        XCTAssertEqual(s.ac, 15)                     // no AC in the trips
+        XCTAssertEqual(s.rushHour, 20)               // no rush-hour trips
+    }
+
+    func testSuggestionLogPersistsAndClears() {
+        SuggestionLog.clear()
+        XCTAssertTrue(SuggestionLog.shownAt.isEmpty)
+        let s = Suggestion(type: .speed, icon: "", title: "", detail: "", savingsPHP: 0)
+        let stamp = Date(timeIntervalSince1970: 1_700_000_000)
+        SuggestionLog.record([s], at: stamp)
+        XCTAssertEqual(SuggestionLog.shownAt["speed"], stamp)
+        SuggestionLog.clear()
+        XCTAssertNil(SuggestionLog.shownAt["speed"])
+    }
+
     func testNoCandidatesForCleanEfficientVehicle() {
         let profile = DrivingProfile()
         profile.avgActualHighwaySpeed = 90      // optimal
