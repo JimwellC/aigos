@@ -13,6 +13,11 @@ import SwiftData
 struct HistoryView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \TripRecord.calculatedAt, order: .reverse) private var trips: [TripRecord]
+    @Query(sort: \FuelLog.date, order: .reverse) private var fuelLogs: [FuelLog]
+    @Query private var vehicles: [VehicleProfile]
+
+    @State private var segment = 0
+    @State private var showingLogFuel = false
 
     private var months: [MonthGroup] { MonthGroup.group(trips) }
 
@@ -20,22 +25,47 @@ struct HistoryView: View {
         ZStack {
             AigosBackground(variant: 1, mascotPeek: CGSize(width: 65, height: -80))
 
+            VStack(spacing: Space.md) {
+                Text("HISTORY").screenTitle()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, Space.screen)
+                    .padding(.top, Space.xl)
+
+                Picker("", selection: $segment) {
+                    Text("Trips").tag(0)
+                    Text("Fuel Log").tag(1)
+                    Text("Report").tag(2)
+                }
+                .pickerStyle(.segmented)
+                .colorScheme(.dark)
+                .padding(.horizontal, Space.screen)
+
+                switch segment {
+                case 1: fuelLogTab
+                case 2: reportTab
+                default: tripsTab
+                }
+            }
+        }
+        .sheet(isPresented: $showingLogFuel) { FuelLogFormView() }
+    }
+
+    // MARK: - Trips tab
+
+    private var tripsTab: some View {
+        Group {
             if trips.isEmpty {
                 emptyState
             } else {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: Space.lg) {
-                        Text("HISTORY").screenTitle()
-
                         summaryCard
-
                         ForEach(months) { group in
                             VStack(alignment: .leading, spacing: Space.sm) {
                                 Text(group.title.uppercased())
                                     .rounded(13, weight: .semibold)
                                     .kerning(1.2)
                                     .foregroundStyle(Color.aigosTextTertiary)
-                                    // Fades in as the section scrolls into view (LazyVStack).
                                     .staggeredAppear(yOffset: 8)
 
                                 ForEach(Array(group.trips.enumerated()), id: \.element.id) { i, trip in
@@ -51,10 +81,101 @@ struct HistoryView: View {
                         }
                     }
                     .padding(.horizontal, Space.screen)
-                    .padding(.top, Space.xl)
                     .padding(.bottom, Space.xxl)
                 }
             }
+        }
+    }
+
+    // MARK: - Fuel Log tab
+
+    private var fuelLogTab: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: Space.lg) {
+                Button { Haptics.tap(.light); showingLogFuel = true } label: {
+                    HStack(spacing: 8) { Image(systemName: "plus.circle.fill"); Text("Log Fuel Purchase") }
+                        .rounded(17, weight: .bold).foregroundStyle(Color.aigosAmberDeep)
+                        .frame(maxWidth: .infinity).padding(.vertical, 15)
+                        .background(Color.aigosAmber, in: Capsule())
+                }
+                .buttonStyle(.plain)
+
+                if let eff = FuelReport.trueEfficiency(from: fuelLogs) { trueEfficiencyCard(eff) }
+
+                if fuelLogs.isEmpty {
+                    Text("No fuel logs yet. Log every full-tank fill-up (with the odometer) and aigos will work out your real km/L.")
+                        .rounded(14).foregroundStyle(.white.opacity(0.7))
+                        .frame(maxWidth: .infinity, alignment: .center).padding(.top, Space.xl)
+                } else {
+                    let monthTotal = fuelLogs.filter { Calendar.current.isDate($0.date, equalTo: Date(), toGranularity: .month) }
+                        .reduce(0) { $0 + $1.totalCostPHP }
+                    Text("This month's fuel spend: \(monthTotal.phpString)")
+                        .rounded(14, weight: .semibold).foregroundStyle(.white)
+                    ForEach(fuelLogs) { log in fuelLogRow(log) }
+                }
+            }
+            .padding(.horizontal, Space.screen).padding(.bottom, Space.xxl)
+        }
+    }
+
+    private func fuelLogRow(_ log: FuelLog) -> some View {
+        HStack(spacing: Space.md) {
+            Image(systemName: "fuelpump.fill").foregroundStyle(Color.aigosAmber).frame(width: 32)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(log.stationName ?? log.vehicleName).rounded(16, weight: .semibold).foregroundStyle(.white)
+                Text("\(log.date.formatted(date: .abbreviated, time: .omitted)) · \(log.litersPurchased.oneDecimal) L · PHP \(log.pricePerLiter.oneDecimal)/L")
+                    .rounded(12).foregroundStyle(Color.aigosTextSecondary)
+            }
+            Spacer()
+            Text(log.totalCostPHP.phpString).rounded(15, weight: .bold).foregroundStyle(.white)
+        }
+        .padding(Space.md).glassCard()
+        .contextMenu {
+            Button(role: .destructive) { context.delete(log); try? context.save() } label: { Label("Delete", systemImage: "trash") }
+        }
+    }
+
+    private func trueEfficiencyCard(_ eff: (kmL: Double, distanceKm: Double, litres: Double)) -> some View {
+        let rated = (vehicles.first(where: \.isDefault) ?? vehicles.first)?.efficiencyKmL
+        return VStack(alignment: .leading, spacing: Space.sm) {
+            Text("REAL EFFICIENCY DETECTED 📊").rounded(13, weight: .bold).foregroundStyle(Color.aigosAmberLight)
+            Text("Based on your last 2 full-tank fill-ups: \(Int(eff.distanceKm)) km on \(eff.litres.oneDecimal) L.")
+                .rounded(13).foregroundStyle(.white.opacity(0.85)).fixedSize(horizontal: false, vertical: true)
+            Text("Your ACTUAL km/L: \(eff.kmL.oneDecimal)")
+                .rounded(18, weight: .black).foregroundStyle(.white)
+            if let rated {
+                let pct = Int(((eff.kmL - rated) / rated * 100).rounded())
+                Text("Rated: \(rated.oneDecimal) km/L · \(pct >= 0 ? "+" : "")\(pct)% vs rated")
+                    .rounded(13).foregroundStyle(.white.opacity(0.7))
+                Button { applyRealEfficiency(eff.kmL) } label: {
+                    Text("Update my vehicle profile")
+                        .rounded(15, weight: .bold).foregroundStyle(Color.aigosAmberDeep)
+                        .frame(maxWidth: .infinity).padding(.vertical, 12)
+                        .background(Color.aigosAmber, in: Capsule())
+                }
+                .buttonStyle(.plain).padding(.top, Space.xs)
+            }
+        }
+        .padding(Space.md).frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.aigosAmberDeep.opacity(0.5), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Color.aigosAmber.opacity(0.4), lineWidth: 1))
+    }
+
+    private func applyRealEfficiency(_ kmL: Double) {
+        guard let v = vehicles.first(where: \.isDefault) ?? vehicles.first else { return }
+        Haptics.success()
+        v.efficiencyKmL = kmL
+        v.drivingProfile?.lastUpdated = Date()
+        try? context.save()
+    }
+
+    // MARK: - Report tab
+
+    private var reportTab: some View {
+        ScrollView {
+            MonthlyReportView(report: FuelReport.monthly(for: Date(), trips: trips, logs: fuelLogs))
+                .padding(.horizontal, Space.screen)
+                .padding(.vertical, Space.lg)
         }
     }
 
