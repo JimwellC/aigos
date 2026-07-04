@@ -179,9 +179,13 @@ struct CalculateView: View {
         request.destination = MKMapItem(placemark: MKPlacemark(coordinate: b.clCoordinate))
         request.transportType = .automobile
         MKDirections(request: request).calculate { response, _ in
-            guard let metres = response?.routes.first?.distance else { return }
-            preciseDistanceKm = metres / 1000.0
-            routeIsPrecise = true
+            guard let metres = response?.routes.first?.distance, metres.isFinite else { return }
+            // Hop back to the main actor before touching @State — the completion
+            // is a @Sendable closure and may run off-main (Swift 6 / iOS 26).
+            Task { @MainActor in
+                preciseDistanceKm = metres / 1000.0
+                routeIsPrecise = true
+            }
         }
     }
 
@@ -503,7 +507,10 @@ struct CalculateView: View {
     }
 
     private func performCalculation() {
-        guard let vehicle = selectedVehicle, let distanceKm else { return }
+        // Defensive: never proceed without a vehicle and a FINITE distance. A NaN
+        // or infinite distance would later trap in Int()/gauge rendering.
+        guard let vehicle = selectedVehicle,
+              let distanceKm, distanceKm.isFinite, distanceKm >= 0 else { return }
 
         resultRouteTitle = "\(origin.isEmpty ? "Trip" : origin) → \(destination.isEmpty ? "Destination" : destination)"
         resultVehicleName = vehicle.name

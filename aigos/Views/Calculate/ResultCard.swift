@@ -214,7 +214,10 @@ struct ResultCard: View {
     // MARK: - Fuel gauge
 
     private func fuelGauge(tank: Double) -> some View {
-        let fraction = min(estimate.adjustedLitres / max(tank, 1), 1.0)
+        // Guard against NaN/inf reaching Int()/frame() — those trap or corrupt layout.
+        let safeTank = tank.isFinite && tank > 0 ? tank : 1
+        let litres = estimate.adjustedLitres.isFinite ? estimate.adjustedLitres : 0
+        let fraction = min(max(litres / safeTank, 0), 1.0)
         return VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text("FUEL GAUGE")
@@ -222,7 +225,7 @@ struct ResultCard: View {
                     .kerning(1.5)
                     .foregroundStyle(Color.white.opacity(0.55))
                 Spacer()
-                Text("\(estimate.adjustedLitres.oneDecimal) L of ~\(Int(tank)) L tank")
+                Text("\(litres.oneDecimal) L of ~\(Int(safeTank)) L tank")
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
                     .foregroundStyle(Color.white.opacity(0.7))
             }

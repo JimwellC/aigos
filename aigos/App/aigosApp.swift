@@ -14,6 +14,11 @@ struct aigosApp: App {
     let container: ModelContainer
 
     init() {
+        // Capture a best-effort stack for any crash so build 60/61's device-only
+        // crashes surface a cause (the OS/TestFlight report stays the source of
+        // truth — handlers re-raise to preserve it).
+        CrashReporter.install()
+
         let schema = Schema([
             VehicleProfile.self,
             DrivingProfile.self,
@@ -26,7 +31,16 @@ struct aigosApp: App {
         do {
             container = try ModelContainer(for: schema, configurations: [config])
         } catch {
-            fatalError("Could not create ModelContainer: \(error)")
+            // A persistent-store failure (e.g. a migration/format issue on a new OS)
+            // must NOT hard-crash at launch. Log the cause, then fall back to an
+            // in-memory container so the app still opens and the user can retry.
+            CrashReporter.record("ModelContainer(persistent) failed: \(error)")
+            do {
+                let memory = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+                container = try ModelContainer(for: schema, configurations: [memory])
+            } catch {
+                fatalError("Could not create ModelContainer (even in-memory): \(error)")
+            }
         }
 
         #if DEBUG

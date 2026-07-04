@@ -26,10 +26,19 @@ enum AIAvailability {
 
     /// Internal only — decides whether a future build can use the system model.
     /// Never surfaced as user-facing text.
+    ///
+    /// NOTE: for v1.0 this is intentionally NOT called anywhere — Talk runs on the
+    /// deterministic offline parser and the badge is static text. The property is
+    /// kept (defensively) so a v1.1 build can flip on the system model. On the
+    /// iOS 26 SDK the `FoundationModels` branch now compiles in; querying the
+    /// model on a non-Apple-Intelligence device (e.g. iPhone 11 / A13) returns
+    /// `.unavailable`, it does not throw — but we still isolate it so nothing here
+    /// can ever take down the app.
     static var status: Status {
         #if canImport(FoundationModels)
         if #available(iOS 26.0, *) {
-            if case .available = SystemLanguageModel.default.availability { return .available }
+            let availability = SystemLanguageModel.default.availability
+            if case .available = availability { return .available }
         }
         return .unavailable
         #else

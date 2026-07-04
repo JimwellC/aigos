@@ -234,7 +234,9 @@ struct PlaceMapPicker: View {
             let parts = [p.subLocality ?? p.name, p.locality, p.administrativeArea].compactMap { $0 }
             // De-dupe consecutive equal components (e.g. name == locality).
             var seen = Set<String>()
-            address = parts.filter { seen.insert($0).inserted }.joined(separator: ", ")
+            let joined = parts.filter { seen.insert($0).inserted }.joined(separator: ", ")
+            // Hop to the main actor before mutating @State (Swift 6 / iOS 26).
+            Task { @MainActor in address = joined }
         }
     }
 }

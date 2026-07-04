@@ -213,12 +213,17 @@ struct LocationPickerView: View {
         }
         // Reverse geocode for a friendly name + address (online).
         CLGeocoder().reverseGeocodeLocation(CLLocation(latitude: coord.latitude, longitude: coord.longitude)) { placemarks, _ in
-            guard let p = placemarks?.first else {
-                if pinName == nil { pinName = "Dropped pin" }
-                return
+            // The geocoder completion is @Sendable and may run off-main — hop to
+            // the main actor before mutating @State (Swift 6 / iOS 26).
+            let first = placemarks?.first
+            Task { @MainActor in
+                guard let p = first else {
+                    if pinName == nil { pinName = "Dropped pin" }
+                    return
+                }
+                address = [p.name, p.locality, p.administrativeArea].compactMap { $0 }.joined(separator: ", ")
+                if pinName == nil { pinName = p.name ?? p.locality ?? "Dropped pin" }
             }
-            address = [p.name, p.locality, p.administrativeArea].compactMap { $0 }.joined(separator: ", ")
-            if pinName == nil { pinName = p.name ?? p.locality ?? "Dropped pin" }
         }
     }
 }
