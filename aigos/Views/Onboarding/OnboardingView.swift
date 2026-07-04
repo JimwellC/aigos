@@ -23,7 +23,11 @@ struct OnboardingView: View {
     init(hasOnboarded: Binding<Bool>) {
         self._hasOnboarded = hasOnboarded
         #if DEBUG
-        if let s = DebugSupport.onboardingStep { _step = State(initialValue: s) }
+        if let s = DebugSupport.onboardingStep {
+            _step = State(initialValue: s)
+            // Debug screenshots of the vehicle step expect the form, not search.
+            if s == 1 { _vehicleSearching = State(initialValue: false) }
+        }
         #endif
     }
 
@@ -32,7 +36,10 @@ struct OnboardingView: View {
     @State private var type: VehicleType = .car
     @State private var fuelType: FuelType = .premium95
     @State private var efficiencyText = ""
+    @State private var tankText = ""
     @State private var yearText = ""
+    @State private var vehicleSearching = true    // database search step before the form
+    @State private var selectedModel: String?
 
     // Driving style
     @State private var highwayChoice = 2      // 0..3 -> 70/90/110/130
@@ -156,9 +163,39 @@ struct OnboardingView: View {
 
     // MARK: - Screen 1 — Add vehicle
 
+    @ViewBuilder
     private var addVehicle: some View {
+        if vehicleSearching {
+            VehicleSearchStep(
+                heading: "What's your vehicle?",
+                selectedDisplayName: selectedModel,
+                onSelect: { applyVehicleEntry($0); withAnimation { vehicleSearching = false } },
+                onManual: { _ in applyVehicleManual(); withAnimation { vehicleSearching = false } }
+            )
+        } else {
+            vehicleForm
+        }
+    }
+
+    private var vehicleForm: some View {
         screen(cta: "Save vehicle", ctaEnabled: canSaveVehicle, action: advance) {
             title("Add your vehicle", subtitle: "So estimates match how it drives.")
+
+            Button {
+                withAnimation { vehicleSearching = true }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "magnifyingglass")
+                    Text(selectedModel != nil ? "Change vehicle model" : "Search the vehicle database")
+                }
+                .rounded(14, weight: .semibold)
+                .foregroundStyle(.white)
+                .padding(.vertical, 10)
+                .frame(maxWidth: .infinity)
+                .background(Color.white.opacity(0.12), in: Capsule())
+                .overlay(Capsule().strokeBorder(Color.white.opacity(0.25), lineWidth: 1))
+            }
+            .buttonStyle(.plain)
 
             VStack(alignment: .leading, spacing: Space.md) {
                 FieldLabel("Name")
@@ -174,6 +211,9 @@ struct OnboardingView: View {
                 GlassField(placeholder: fuelUnit.defaultInput, text: $efficiencyText, keyboard: .decimalPad)
                     .onAppear { if efficiencyText.isEmpty { efficiencyText = fuelUnit.defaultInput } }
 
+                FieldLabel("Tank size (L)")
+                GlassField(placeholder: "\(Int(type.typicalTankLiters))", text: $tankText, keyboard: .decimalPad)
+
                 FieldLabel("Year (optional)")
                 GlassField(placeholder: "e.g. 2018", text: $yearText, keyboard: .numberPad)
                 Text("We use this to estimate real-world efficiency based on engine wear.")
@@ -188,6 +228,28 @@ struct OnboardingView: View {
 
     private var canSaveVehicle: Bool {
         !name.trimmingCharacters(in: .whitespaces).isEmpty && (efficiency ?? 0) > 0
+    }
+
+    /// Tank capacity (L) — typed value, else the vehicle type's typical tank.
+    private var tankCapacityL: Double {
+        let typed = Double(tankText.trimmingCharacters(in: .whitespaces)) ?? 0
+        return typed > 0 ? typed : type.typicalTankLiters
+    }
+
+    private func applyVehicleEntry(_ entry: VehicleEntry) {
+        selectedModel = entry.displayName
+        name = entry.model
+        type = entry.vehicleType
+        fuelType = entry.fuelType
+        efficiencyText = fuelUnit.displayValue(fromKmL: entry.kmL).oneDecimal
+        tankText = entry.tankCapacityL.clean
+    }
+
+    private func applyVehicleManual() {
+        selectedModel = nil
+        name = ""
+        if efficiencyText.isEmpty { efficiencyText = fuelUnit.defaultInput }
+        tankText = ""
     }
 
     // MARK: - Screen 2 — Driving style
@@ -284,6 +346,7 @@ struct OnboardingView: View {
             type: type,
             fuelType: fuelType,
             efficiencyKmL: fuelUnit.kmL(fromDisplay: enteredEff),
+            tankCapacityL: tankCapacityL,
             isDefault: true,
             manufacturingYear: year
         )

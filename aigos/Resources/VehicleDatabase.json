@@ -1635,6 +1635,452 @@
       "fuel": "unleaded91",
       "type": "motorcycle",
       "category": "moto_150"
+    },
+    {
+      "make": "Toyota",
+      "model": "Yaris",
+      "kmL": 15.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "hatchback",
+      "variant": "1.5L",
+      "tankL": 42
+    },
+    {
+      "make": "Toyota",
+      "model": "Corolla Cross",
+      "kmL": 13.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas",
+      "variant": "gas",
+      "tankL": 47
+    },
+    {
+      "make": "Toyota",
+      "model": "Zenix",
+      "kmL": 20.0,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "mpv",
+      "variant": "hybrid",
+      "tankL": 52
+    },
+    {
+      "make": "Toyota",
+      "model": "Zenix",
+      "kmL": 12.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "mpv",
+      "variant": "gas",
+      "tankL": 52
+    },
+    {
+      "make": "Toyota",
+      "model": "Tamaraw",
+      "kmL": 13.0,
+      "fuel": "diesel",
+      "type": "van",
+      "category": "van",
+      "tankL": 55
+    },
+    {
+      "make": "Toyota",
+      "model": "Wigo",
+      "kmL": 19.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "hatchback",
+      "variant": "1.0L",
+      "tankL": 33
+    },
+    {
+      "make": "Honda",
+      "model": "City Hatchback",
+      "kmL": 16.0,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "hatchback",
+      "variant": "1.5L",
+      "tankL": 40
+    },
+    {
+      "make": "Honda",
+      "model": "Mobilio",
+      "kmL": 15.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "mpv",
+      "tankL": 42
+    },
+    {
+      "make": "Honda",
+      "model": "Elevate",
+      "kmL": 14.0,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas",
+      "tankL": 40
+    },
+    {
+      "make": "Mitsubishi",
+      "model": "Mirage G4",
+      "kmL": 20.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "sedan_small",
+      "tankL": 35
+    },
+    {
+      "make": "Mitsubishi",
+      "model": "Triton",
+      "kmL": 11.5,
+      "fuel": "diesel",
+      "type": "truck",
+      "category": "pickup",
+      "tankL": 75
+    },
+    {
+      "make": "Nissan",
+      "model": "Juke",
+      "kmL": 14.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas",
+      "tankL": 46
+    },
+    {
+      "make": "Nissan",
+      "model": "Livina",
+      "kmL": 13.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "mpv",
+      "tankL": 41
+    },
+    {
+      "make": "Ford",
+      "model": "Territory",
+      "kmL": 12.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas",
+      "variant": "gas",
+      "tankL": 53
+    },
+    {
+      "make": "Suzuki",
+      "model": "Swift",
+      "kmL": 18.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "hatchback",
+      "tankL": 37
+    },
+    {
+      "make": "Suzuki",
+      "model": "Vitara",
+      "kmL": 14.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas",
+      "tankL": 47
+    },
+    {
+      "make": "Suzuki",
+      "model": "XL7",
+      "kmL": 13.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "mpv",
+      "tankL": 45
+    },
+    {
+      "make": "Suzuki",
+      "model": "Carry",
+      "kmL": 17.0,
+      "fuel": "unleaded91",
+      "type": "van",
+      "category": "van",
+      "tankL": 34
+    },
+    {
+      "make": "Hyundai",
+      "model": "Stargazer",
+      "kmL": 15.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "mpv",
+      "tankL": 50
+    },
+    {
+      "make": "Hyundai",
+      "model": "Venue",
+      "kmL": 15.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas",
+      "tankL": 45
+    },
+    {
+      "make": "Kia",
+      "model": "Stonic",
+      "kmL": 15.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas",
+      "tankL": 45
+    },
+    {
+      "make": "Kia",
+      "model": "Sonet",
+      "kmL": 15.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas",
+      "tankL": 45
+    },
+    {
+      "make": "Kia",
+      "model": "Rio",
+      "kmL": 16.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "sedan_small",
+      "tankL": 45
+    },
+    {
+      "make": "Chery",
+      "model": "Tiggo 2 Pro",
+      "kmL": 14.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas",
+      "tankL": 51
+    },
+    {
+      "make": "Chery",
+      "model": "Tiggo 5X",
+      "kmL": 13.0,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas",
+      "tankL": 51
+    },
+    {
+      "make": "Chery",
+      "model": "Omoda 5",
+      "kmL": 13.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas",
+      "tankL": 51
+    },
+    {
+      "make": "GAC",
+      "model": "GS3 Emzoom",
+      "kmL": 13.0,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas",
+      "tankL": 55
+    },
+    {
+      "make": "GAC",
+      "model": "GS4",
+      "kmL": 12.0,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas",
+      "tankL": 55
+    },
+    {
+      "make": "GAC",
+      "model": "Empow",
+      "kmL": 14.0,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "sedan",
+      "tankL": 55
+    },
+    {
+      "make": "Changan",
+      "model": "Alsvin",
+      "kmL": 17.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "sedan_small",
+      "tankL": 44
+    },
+    {
+      "make": "Changan",
+      "model": "CS35 Plus",
+      "kmL": 13.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas",
+      "tankL": 51
+    },
+    {
+      "make": "Changan",
+      "model": "CS55 Plus",
+      "kmL": 12.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas",
+      "tankL": 58
+    },
+    {
+      "make": "Geely",
+      "model": "GX3 Pro",
+      "kmL": 15.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas",
+      "tankL": 45
+    },
+    {
+      "make": "Geely",
+      "model": "Monjaro",
+      "kmL": 11.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas",
+      "tankL": 60
+    },
+    {
+      "make": "MG",
+      "model": "MG3",
+      "kmL": 16.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "hatchback",
+      "tankL": 45
+    },
+    {
+      "make": "MG",
+      "model": "HS",
+      "kmL": 12.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas",
+      "tankL": 55
+    },
+    {
+      "make": "MG",
+      "model": "RX5",
+      "kmL": 12.0,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas",
+      "tankL": 55
+    },
+    {
+      "make": "Maxus",
+      "model": "G50",
+      "kmL": 12.0,
+      "fuel": "unleaded91",
+      "type": "van",
+      "category": "mpv",
+      "tankL": 55
+    },
+    {
+      "make": "Maxus",
+      "model": "D90",
+      "kmL": 10.5,
+      "fuel": "diesel",
+      "type": "car",
+      "category": "suv_diesel",
+      "tankL": 75
+    },
+    {
+      "make": "Tesla",
+      "model": "Model 3",
+      "kmL": 6.5,
+      "fuel": "electric",
+      "type": "car",
+      "category": "ev"
+    },
+    {
+      "make": "Tesla",
+      "model": "Model Y",
+      "kmL": 6.0,
+      "fuel": "electric",
+      "type": "car",
+      "category": "ev"
+    },
+    {
+      "make": "BYD",
+      "model": "Sealion 6",
+      "kmL": 25.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas",
+      "variant": "DM-i",
+      "tankL": 60
+    },
+    {
+      "make": "GWM",
+      "model": "Ora Good Cat",
+      "kmL": 6.8,
+      "fuel": "electric",
+      "type": "car",
+      "category": "ev"
+    },
+    {
+      "make": "Honda",
+      "model": "Wave 110",
+      "kmL": 55.0,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "motorcycle",
+      "tankL": 3.7
+    },
+    {
+      "make": "Honda",
+      "model": "RS125",
+      "kmL": 52.0,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "motorcycle",
+      "tankL": 4.0
+    },
+    {
+      "make": "Honda",
+      "model": "CB150X",
+      "kmL": 40.0,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "motorcycle",
+      "tankL": 12.0
+    },
+    {
+      "make": "Yamaha",
+      "model": "YZF-R15",
+      "kmL": 40.0,
+      "fuel": "premium95",
+      "type": "motorcycle",
+      "category": "motorcycle",
+      "tankL": 11.0
+    },
+    {
+      "make": "Suzuki",
+      "model": "Burgman Street",
+      "kmL": 45.0,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "motorcycle",
+      "tankL": 5.5
+    },
+    {
+      "make": "KTM",
+      "model": "Duke 200",
+      "kmL": 35.0,
+      "fuel": "premium95",
+      "type": "motorcycle",
+      "category": "motorcycle",
+      "tankL": 13.4
     }
   ]
 }

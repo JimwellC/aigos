@@ -186,6 +186,85 @@ enum VehicleDatabase {
         return best?.entry
     }
 
+    // MARK: - Search (autocomplete dropdown)
+
+    /// Ranked matches for the Add-Vehicle search field. Handles prefixes ("vio"),
+    /// substrings, joined forms ("crv" → CR-V), fuzzy typos ("toyta" → Toyota),
+    /// nicknames ("fort" → Fortuner), and category words ("SUV", "sedan", "EV").
+    /// Variants are kept separate (Vios 1.3L and 1.5L both appear).
+    static func search(_ query: String,
+                       entries: [VehicleEntry] = VehicleDatabase.entries,
+                       limit: Int = 20) -> [VehicleEntry] {
+        let raw = query.lowercased().trimmingCharacters(in: .whitespaces)
+        guard !raw.isEmpty else { return [] }
+
+        // Category search — "SUV" lists all SUVs, "sedan" all sedans, etc.
+        if let filter = categoryFilter(for: raw) {
+            return Array(entries.filter(filter).sorted { $0.kmL > $1.kmL }.prefix(limit))
+        }
+
+        let q = stripped(raw)   // alphanumerics only: "cr-v" → "crv"
+        var scored: [(e: VehicleEntry, rank: Int)] = []
+        for e in entries {
+            let name = e.displayName.lowercased()
+            let rank: Int
+            if stripped(e.model).hasPrefix(q) || stripped(e.makeModel).hasPrefix(q) || name.hasPrefix(raw) {
+                rank = 0                              // prefix — best
+            } else if stripped(e.displayName).contains(q) || name.contains(raw) {
+                rank = 1                              // substring
+            } else if fuzzyMatches(raw, entry: e) {
+                rank = 2                              // typo-tolerant
+            } else {
+                continue
+            }
+            scored.append((e, rank))
+        }
+        return scored.sorted { a, b in
+            if a.rank != b.rank { return a.rank < b.rank }
+            if a.e.makeModel != b.e.makeModel { return a.e.makeModel < b.e.makeModel }
+            return (a.e.variant ?? "") < (b.e.variant ?? "")
+        }.prefix(limit).map(\.e)
+    }
+
+    /// A category word → a filter over entries, or nil if `q` isn't a category.
+    static func categoryFilter(for q: String) -> ((VehicleEntry) -> Bool)? {
+        switch q {
+        case "suv", "suvs", "crossover", "crossovers":
+            return { $0.category.contains("suv") || $0.category.contains("crossover") }
+        case "sedan", "sedans":
+            return { $0.category.contains("sedan") }
+        case "hatchback", "hatchbacks", "hatch":
+            return { $0.category.contains("hatch") }
+        case "mpv", "mpvs", "van", "vans":
+            return { $0.category.contains("van") || $0.category.contains("mpv") }
+        case "pickup", "pickups", "truck", "trucks":
+            return { $0.category.contains("pickup") || $0.vehicleType == .truck }
+        case "motorcycle", "motorcycles", "motorbike", "motorbikes",
+             "scooter", "scooters", "bike", "bikes", "moto":
+            return { $0.vehicleType == .motorcycle }
+        case "ev", "evs", "electric":
+            return { $0.isElectric }
+        default:
+            return nil
+        }
+    }
+
+    /// Typo-tolerant word match (Levenshtein) against make/model/variant words.
+    private static func fuzzyMatches(_ query: String, entry: VehicleEntry) -> Bool {
+        let qWords = query.split { !$0.isLetter && !$0.isNumber }.map(String.init).filter { $0.count >= 3 }
+        guard !qWords.isEmpty else { return false }
+        let targets = ([entry.make, entry.model] + (entry.variant.map { [$0] } ?? []))
+            .flatMap { $0.lowercased().split { !$0.isLetter && !$0.isNumber }.map(String.init) }
+            .filter { $0.count >= 3 }
+        for qw in qWords {
+            for t in targets {
+                let tol = (qw.count >= 6 && t.count >= 6) ? 2 : 1
+                if levenshtein(qw, t) <= tol { return true }
+            }
+        }
+        return false
+    }
+
     // MARK: - Tier 2 category ranges
 
     /// Typical km/L ranges by category (spec Tier 2).

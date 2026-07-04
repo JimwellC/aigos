@@ -32,12 +32,23 @@ enum VehicleType: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    /// Typical fuel-tank capacity (litres) used to estimate the low-fuel warning.
+    /// Emoji used in the vehicle-search result rows.
+    var emoji: String {
+        switch self {
+        case .car: "🚗"
+        case .motorcycle: "🏍️"
+        case .truck: "🚚"
+        case .van: "🚐"
+        }
+    }
+
+    /// Typical fuel-tank capacity (litres) — the per-type default in manual entry
+    /// and the fallback for database models without a listed tank size.
     var typicalTankLiters: Double {
         switch self {
-        case .car: 45
-        case .motorcycle: 6
-        case .truck: 100
+        case .car: 42
+        case .motorcycle: 5
+        case .truck: 75
         case .van: 65
         }
     }

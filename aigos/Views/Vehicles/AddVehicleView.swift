@@ -28,6 +28,8 @@ struct AddVehicleView: View {
     @State private var maintenance: MaintenanceStatus = .average
     @State private var makeDefault = false
     @State private var didLoad = false
+    @State private var showingForm = false     // false = database search step (new vehicles)
+    @State private var selectedModel: String?  // the picked DB model (for the checkmark)
 
     private var isEditing: Bool { editing != nil }
 
@@ -59,12 +61,67 @@ struct AddVehicleView: View {
             ZStack {
                 AigosBackground()
 
-                ScrollView {
-                    VStack(alignment: .leading, spacing: Space.md) {
-                        FieldLabel("Name")
-                        GlassField(placeholder: "My Car", text: $name, autocap: .words)
+                if showingForm {
+                    formScroll
+                } else {
+                    VehicleSearchStep(
+                        heading: "Search your vehicle",
+                        selectedDisplayName: selectedModel,
+                        onSelect: { applyEntry($0); withAnimation { showingForm = true } },
+                        onManual: { applyManual(query: $0); withAnimation { showingForm = true } }
+                    )
+                }
+            }
+            .onAppear(perform: load)
+            .navigationTitle(navTitle)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color.aigosAmberDeep, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }.tint(.white)
+                }
+                if showingForm {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button(isEditing ? "Save changes" : "Save", action: save)
+                            .disabled(!canSave).tint(.white)
+                    }
+                }
+            }
+        }
+    }
 
-                        FieldLabel("Type")
+    private var navTitle: String {
+        if !showingForm { return "Add Vehicle" }
+        return isEditing ? "Edit Vehicle" : "Vehicle details"
+    }
+
+    private var formScroll: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: Space.md) {
+                // Jump back to the database search (change the picked model).
+                Button {
+                    Haptics.tap(.light)
+                    withAnimation { showingForm = false }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "magnifyingglass")
+                        Text((isEditing || selectedModel != nil) ? "Change vehicle model" : "Search the vehicle database")
+                    }
+                    .rounded(14, weight: .semibold)
+                    .foregroundStyle(.white)
+                    .padding(.vertical, 10)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.white.opacity(0.12), in: Capsule())
+                    .overlay(Capsule().strokeBorder(Color.white.opacity(0.25), lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+
+                Group {
+                    FieldLabel("Name")
+                    GlassField(placeholder: "My Car", text: $name, autocap: .words)
+
+                    FieldLabel("Type")
                         SelectablePillFlow(items: VehicleType.allCases, selection: $type) { $0.label }
 
                         FieldLabel("Fuel type")
@@ -72,6 +129,12 @@ struct AddVehicleView: View {
 
                         FieldLabel("Efficiency (\(fuelUnit.label))")
                         GlassField(placeholder: fuelUnit.defaultInput, text: $efficiencyText, keyboard: .decimalPad)
+                        if selectedModel == nil {
+                            Text("You can find your km/L in the car manual or at fuelly.com.")
+                                .rounded(12)
+                                .foregroundStyle(.white.opacity(0.5))
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
 
                         FieldLabel("Tank size (L)")
                         GlassField(placeholder: "\(Int(type.typicalTankLiters))", text: $tankText, keyboard: .decimalPad)
@@ -90,38 +153,24 @@ struct AddVehicleView: View {
                         FieldLabel("Maintenance")
                         SelectablePillFlow(items: MaintenanceStatus.allCases, selection: $maintenance) { "\($0.emoji) \($0.label)" }
 
-                        if isEditing || !vehicles.isEmpty {
-                            Toggle(isOn: $makeDefault) {
-                                Text("Set as default vehicle")
-                                    .rounded(15, weight: .medium)
-                                    .foregroundStyle(.white)
-                            }
-                            .tint(Color.aigosAmber)
-                            .padding(.top, Space.xs)
+                    if isEditing || !vehicles.isEmpty {
+                        Toggle(isOn: $makeDefault) {
+                            Text("Set as default vehicle")
+                                .rounded(15, weight: .medium)
+                                .foregroundStyle(.white)
                         }
+                        .tint(Color.aigosAmber)
+                        .padding(.top, Space.xs)
                     }
-                    .padding(.horizontal, Space.screen)
-                    .padding(.vertical, Space.lg)
-                }
+                }   // end Group
             }
-            .onAppear(perform: load)
-            .navigationTitle(isEditing ? "Edit Vehicle" : "Add Vehicle")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color.aigosAmberDeep, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }.tint(.white)
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(isEditing ? "Save changes" : "Save", action: save)
-                        .disabled(!canSave).tint(.white)
-                }
-            }
+            .padding(.horizontal, Space.screen)
+            .padding(.vertical, Space.lg)
         }
     }
 
-    /// Seed fields once — from the vehicle being edited, else a Talk suggestion.
+    /// Seed fields once. Editing or a Talk suggestion goes straight to the form;
+    /// a fresh add starts on the database search step.
     private func load() {
         guard !didLoad else { return }
         didLoad = true
@@ -134,6 +183,7 @@ struct AddVehicleView: View {
             yearText = v.manufacturingYear.map(String.init) ?? ""
             maintenance = v.maintenanceStatus
             makeDefault = v.isDefault
+            showingForm = true                 // edit: straight to the form
         } else if let p = prefill {
             name = p.name
             type = p.vehicleType
@@ -141,10 +191,33 @@ struct AddVehicleView: View {
             if let kmL = p.efficiencyKmL { efficiencyText = fuelUnit.displayValue(fromKmL: kmL).oneDecimal }
             if let tank = p.tankCapacityL { tankText = tank.clean }   // auto-filled from the DB
             makeDefault = vehicles.isEmpty
+            selectedModel = p.name
+            showingForm = true                 // Talk already picked → form
         } else {
             makeDefault = vehicles.isEmpty
+            showingForm = false                // fresh add → database search first
         }
         if efficiencyText.isEmpty { efficiencyText = fuelUnit.defaultInput }
+    }
+
+    /// Auto-fill the form from a database selection.
+    private func applyEntry(_ entry: VehicleEntry) {
+        selectedModel = entry.displayName
+        name = entry.model                     // "Vios" — the user can rename to "My Vios"
+        type = entry.vehicleType
+        fuelType = entry.fuelType
+        efficiencyText = fuelUnit.displayValue(fromKmL: entry.kmL).oneDecimal
+        tankText = entry.tankCapacityL.clean
+    }
+
+    /// Fall back to manual entry ("My car is not in the list").
+    private func applyManual(query: String) {
+        selectedModel = nil
+        name = ""                              // user names it
+        efficiencyText = fuelUnit.defaultInput // a sensible starting point to adjust
+        tankText = ""                          // placeholder shows the type default
+        yearText = ""
+        maintenance = .average
     }
 
     private func save() {
