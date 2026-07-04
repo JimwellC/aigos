@@ -76,14 +76,23 @@ struct SettingsView: View {
                 HStack(spacing: Space.sm) {
                     ForEach(FuelUnit.allCases) { unit in
                         let selected = fuelUnit == unit
-                        Text(unit.label)
-                            .font(.system(size: 13, weight: selected ? .bold : .semibold, design: .rounded))
-                            .foregroundStyle(.white)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                            .frame(width: 80, height: 36)   // both pills exactly the same size
-                            .pillStyle(selected: selected)
-                            .onTapGesture { Haptics.tap(.light); fuelUnit = unit }
+                        // A real Button (not .onTapGesture on a Text) so the whole
+                        // pill is reliably tappable and switches on every tap.
+                        Button {
+                            guard fuelUnit != unit else { return }
+                            Haptics.selection()
+                            withAnimation(.spring(response: 0.3)) { fuelUnit = unit }
+                        } label: {
+                            Text(unit.label)
+                                .font(.system(size: 13, weight: selected ? .bold : .semibold, design: .rounded))
+                                .foregroundStyle(.white)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
+                                .frame(width: 80, height: 36)   // both pills exactly the same size
+                                .pillStyle(selected: selected)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
             }
