@@ -130,7 +130,6 @@ struct TripComparisonView: View {
 
                     VStack(spacing: Space.sm) {
                         Button {
-                            Haptics.success()
                             onUpdateProfile(impliedKmL)
                             dismiss()
                         } label: {

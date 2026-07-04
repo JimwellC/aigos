@@ -58,7 +58,6 @@ struct AigosTabBar: View {
         HStack(spacing: 0) {
             ForEach(Tab.allCases) { tab in
                 Button {
-                    Haptics.tap(.light)
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { selected = tab }
                 } label: {
                     ZStack {

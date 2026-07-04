@@ -73,7 +73,6 @@ struct SettingsView: View {
 
     private var insightsSection: some View {
         Button {
-            Haptics.tap(.light)
             showingInsights = true
         } label: {
             HStack(spacing: Space.md) {
@@ -108,7 +107,6 @@ struct SettingsView: View {
                         // pill is reliably tappable and switches on every tap.
                         Button {
                             guard fuelUnit != unit else { return }
-                            Haptics.selection()
                             withAnimation(.spring(response: 0.3)) { fuelUnit = unit }
                         } label: {
                             Text(unit.label)
@@ -137,7 +135,6 @@ struct SettingsView: View {
             VStack(spacing: Space.sm) {
                 ForEach(vehicles) { vehicle in
                     Button {
-                        Haptics.tap(.light)
                         setDefault(vehicle)
                     } label: {
                         HStack(spacing: Space.md) {
@@ -164,7 +161,6 @@ struct SettingsView: View {
                 FieldLabel("My places")
                 Spacer()
                 Button {
-                    Haptics.tap(.light)
                     addPlace()
                 } label: {
                     Label("Add", systemImage: "plus")
@@ -176,7 +172,6 @@ struct SettingsView: View {
             VStack(spacing: Space.sm) {
                 ForEach(Array(personalPlaces.enumerated()), id: \.element.id) { i, place in
                     Button {
-                        Haptics.tap(.light)
                         editingPlace = place
                     } label: {
                         HStack(spacing: Space.md) {
@@ -267,6 +262,7 @@ struct SettingsView: View {
     // MARK: - Actions
 
     private func setDefault(_ vehicle: VehicleProfile) {
+        Haptics.tap(.light)   // vehicle set as default
         VehicleProfile.setAsDefault(vehicle, context: context)
     }
 
@@ -333,14 +329,14 @@ struct PersonalPlaceEditor: View {
                                 }
                                 Divider().overlay(Color.white.opacity(0.12))
                                 HStack {
-                                    Button { Haptics.tap(.light); showingMap = true } label: {
+                                    Button { showingMap = true } label: {
                                         Label("Edit on map", systemImage: "map")
                                             .rounded(14, weight: .semibold)
                                             .foregroundStyle(Color.aigosAmberLight)
                                     }
                                     Spacer()
                                     Button(role: .destructive) {
-                                        Haptics.tap(.light); place.clearLocation(); save()
+                                        place.clearLocation(); save()
                                     } label: {
                                         Label("Clear", systemImage: "trash")
                                             .rounded(14, weight: .semibold)
@@ -351,7 +347,7 @@ struct PersonalPlaceEditor: View {
                             .padding(Space.md)
                             .glassCard()
                         } else {
-                            Button { Haptics.tap(.light); showingMap = true } label: {
+                            Button { showingMap = true } label: {
                                 HStack(spacing: Space.md) {
                                     Image(systemName: "map")
                                         .font(.system(size: 22)).foregroundStyle(.white.opacity(0.7))

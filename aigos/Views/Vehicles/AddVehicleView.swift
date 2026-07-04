@@ -101,7 +101,6 @@ struct AddVehicleView: View {
             VStack(alignment: .leading, spacing: Space.md) {
                 // Jump back to the database search (change the picked model).
                 Button {
-                    Haptics.tap(.light)
                     withAnimation { showingForm = false }
                 } label: {
                     HStack(spacing: 6) {
@@ -222,7 +221,6 @@ struct AddVehicleView: View {
 
     private func save() {
         guard let efficiency else { return }
-        Haptics.success()
         let kmL = fuelUnit.kmL(fromDisplay: efficiency)   // store canonical km/L
         let trimmedName = name.trimmingCharacters(in: .whitespaces)
 

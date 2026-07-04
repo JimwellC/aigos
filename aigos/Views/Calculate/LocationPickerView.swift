@@ -194,7 +194,6 @@ struct LocationPickerView: View {
 
             PrimaryButton(title: "Confirm location") {
                 guard let c = pinCoord else { return }
-                Haptics.tap(.medium)
                 onConfirm(PickedPlace(name: pinName ?? "Selected", address: address, lat: c.latitude, lon: c.longitude))
                 dismiss()
             }

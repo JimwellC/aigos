@@ -92,7 +92,7 @@ struct HistoryView: View {
     private var fuelLogTab: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Space.lg) {
-                Button { Haptics.tap(.light); showingLogFuel = true } label: {
+                Button { showingLogFuel = true } label: {
                     HStack(spacing: 8) { Image(systemName: "plus.circle.fill"); Text("Log Fuel Purchase") }
                         .rounded(17, weight: .bold).foregroundStyle(Color.aigosAmberDeep)
                         .frame(maxWidth: .infinity).padding(.vertical, 15)
@@ -163,7 +163,6 @@ struct HistoryView: View {
 
     private func applyRealEfficiency(_ kmL: Double) {
         guard let v = vehicles.first(where: \.isDefault) ?? vehicles.first else { return }
-        Haptics.success()
         v.efficiencyKmL = kmL
         v.drivingProfile?.lastUpdated = Date()
         try? context.save()

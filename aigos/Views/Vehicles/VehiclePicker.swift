@@ -76,11 +76,9 @@ struct VehiclePicker: View {
                     .listRowInsets(EdgeInsets(top: 6, leading: Space.screen, bottom: 6, trailing: Space.screen))
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         Button(role: .destructive) {
-                            Haptics.tap(.light)
                             pendingDelete = vehicle
                         } label: { Label("Delete", systemImage: "trash") }
                         Button {
-                            Haptics.tap(.light)
                             editingVehicle = vehicle
                         } label: { Label("Edit", systemImage: "pencil") }
                             .tint(Color.aigosAmber)
@@ -140,7 +138,6 @@ struct VehiclePicker: View {
         .glassCard()
         .contentShape(Rectangle())
         .onTapGesture {
-            Haptics.tap(.light)
             selectedVehicleID = vehicle.id
             dismiss()
         }
@@ -149,12 +146,11 @@ struct VehiclePicker: View {
     // MARK: - Actions
 
     private func setDefault(_ vehicle: VehicleProfile) {
-        Haptics.tap(.light)
+        Haptics.tap(.light)   // vehicle set as default
         VehicleProfile.setAsDefault(vehicle, context: context)
     }
 
     private func delete(_ vehicle: VehicleProfile) {
-        Haptics.tap(.medium)
         let wasSelected = vehicle.id == selectedVehicleID
         let wasDefault = vehicle.isDefault
         let remaining = vehicles.filter { $0.id != vehicle.id }

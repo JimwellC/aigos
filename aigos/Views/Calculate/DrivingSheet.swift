@@ -95,7 +95,6 @@ struct DrivingSheet: View {
                 }
                 Spacer()
                 Button {
-                    Haptics.tap(.light)
                     dismiss()
                 } label: {
                     Image(systemName: "xmark.circle.fill")
@@ -127,7 +126,6 @@ struct DrivingSheet: View {
 
     private var doneButton: some View {
         Button {
-            Haptics.tap(.medium)
             dismiss()
         } label: {
             Text("Done")
@@ -177,7 +175,6 @@ struct DrivingSheet: View {
         return FlowLayout(spacing: Space.sm) {
             ForEach(buckets, id: \.1) { item in
                 pill(item.0, selected: item.1 == current) {
-                    Haptics.tap(.light)
                     value.wrappedValue = item.1
                 }
             }

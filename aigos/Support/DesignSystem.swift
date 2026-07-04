@@ -353,7 +353,6 @@ struct SelectablePillFlow<T: Hashable & Identifiable>: View {
                     .padding(.vertical, 10)
                     .pillStyle(selected: selected)
                     .onTapGesture {
-                        Haptics.tap(.light)
                         selection = item
                     }
             }

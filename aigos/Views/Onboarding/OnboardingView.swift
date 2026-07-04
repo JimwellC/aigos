@@ -330,12 +330,10 @@ struct OnboardingView: View {
     }
 
     private func advance() {
-        Haptics.tap(.light)
         withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) { step += 1 }
     }
 
     private func finish() {
-        Haptics.tap(.medium)
         // Create the first vehicle + its driving profile from the answers. Input
         // is in the user's chosen unit; store canonical km/L.
         let enteredEff = efficiency ?? Double(fuelUnit.defaultInput) ?? 12
@@ -418,7 +416,6 @@ private struct FlowPills: View {
             ForEach(Array(options.enumerated()), id: \.offset) { index, option in
                 let selected = index == selection
                 Button {
-                    Haptics.tap(.light)
                     selection = index
                 } label: {
                     HStack {

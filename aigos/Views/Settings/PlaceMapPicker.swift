@@ -198,7 +198,6 @@ struct PlaceMapPicker: View {
             .background(Color.black.opacity(0.55), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
 
             PrimaryButton(title: placeName.isEmpty ? "Set location" : "Set as \(placeName)") {
-                Haptics.tap(.medium)
                 let short = address.split(separator: ",").first.map(String.init) ?? (placeName.isEmpty ? "Pinned location" : placeName)
                 onConfirm(PickedPlace(name: short, address: address,
                                       lat: centerCoord.latitude, lon: centerCoord.longitude))

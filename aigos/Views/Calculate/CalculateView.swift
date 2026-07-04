@@ -289,7 +289,6 @@ struct CalculateView: View {
             if canCalculate {
                 startCalculate()
             } else {
-                Haptics.tap(.light)
                 withAnimation(.easeOut(duration: 0.2)) { submitAttempted = true }
             }
         } label: {
@@ -347,7 +346,6 @@ struct CalculateView: View {
             }
             Spacer(minLength: Space.sm)
             Button {
-                Haptics.tap(.light)
                 showingTalk = true
             } label: {
                 Image(systemName: "bubble.left.and.text.bubble.right.fill")
@@ -366,7 +364,6 @@ struct CalculateView: View {
 
     private var vehicleCard: some View {
         Button {
-            Haptics.tap(.light)
             showingVehiclePicker = true
         } label: {
             HStack(spacing: Space.md) {
@@ -464,7 +461,6 @@ struct CalculateView: View {
                 .foregroundStyle(.white.opacity(0.9))
                 .fixedSize(horizontal: false, vertical: true)
             Button {
-                Haptics.tap(.light)
                 showingTalk = true
             } label: {
                 HStack(spacing: 6) {
@@ -507,7 +503,6 @@ struct CalculateView: View {
 
     private var drivingCard: some View {
         Button {
-            Haptics.tap(.light)
             showingDrivingSheet = true
         } label: {
             VStack(alignment: .leading, spacing: Space.sm) {
@@ -651,7 +646,7 @@ struct CalculateView: View {
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
             guard isCalculating else { return }   // user may have navigated away
-            Haptics.tap(.medium)
+            Haptics.success()   // result sheet appearing
             withAnimation(.easeOut(duration: 0.2)) { isCalculating = false }
             showingResult = true
         }
@@ -716,6 +711,7 @@ struct CalculateView: View {
 
     private func startTracking() {
         guard let vehicle = selectedVehicle, let trip = lastTrip, let est = estimate else { return }
+        Haptics.tap(.medium)   // "Track This Trip" start
         trackEstDistance = est.distanceKm
         trackEstFuel = est.adjustedLitres
         trackEstCost = est.estimatedCost
@@ -739,7 +735,7 @@ struct CalculateView: View {
     private func endTracking() {
         guard tracker.isLive else { return }
         let summary = tracker.finish()
-        Haptics.tap(.medium)
+        Haptics.success()   // End Trip confirmation
         if let trip = lastTrip {
             let tracked = TrackedTrip(
                 tripRecordId: trip.id, estimatedDistanceKm: trackEstDistance,
@@ -774,7 +770,6 @@ struct CalculateView: View {
 
     private func saveRoute() {
         guard let vehicle = selectedVehicle, let distanceKm else { return }
-        Haptics.tap(.light)
         let route = SavedRoute(
             name: "\(origin.isEmpty ? "Trip" : origin) → \(destination.isEmpty ? "Destination" : destination)",
             origin: origin,

@@ -83,7 +83,6 @@ struct SavedRoutesView: View {
     }
 
     private func recalculate(_ route: SavedRoute) {
-        Haptics.tap(.medium)
         appState.recalculate(CalculatorDraft(
             origin: route.origin,
             destination: route.destination,

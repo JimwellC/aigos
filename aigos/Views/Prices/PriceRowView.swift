@@ -106,7 +106,6 @@ struct PriceRowView: View {
     }
 
     private func startEdit() {
-        Haptics.tap(.light)
         text = priceString
         withAnimation(.easeOut(duration: 0.2)) { isEditing = true }
         focused = true

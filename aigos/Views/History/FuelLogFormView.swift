@@ -115,7 +115,7 @@ struct FuelLogFormView: View {
 
     private func save() {
         guard let v = vehicle else { return }
-        Haptics.success()
+        Haptics.tap(.light)   // fuel log saved
         let log = FuelLog(
             date: date, vehicleId: v.id, vehicleName: v.name, fuelType: v.fuelType,
             litersPurchased: liters, totalCostPHP: cost, pricePerLiter: pricePerL,

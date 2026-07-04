@@ -266,7 +266,6 @@ struct PlaceField: View {
     }
 
     private func select(_ s: PlaceSuggestion) {
-        Haptics.tap(.light)
         justSelected = true
         text = s.title
         selectedKey = s.resolveKey

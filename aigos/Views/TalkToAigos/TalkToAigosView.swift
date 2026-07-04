@@ -178,7 +178,6 @@ struct TalkToAigosView: View {
     private func send(_ text: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
-        Haptics.tap(.light)
         input = ""
         let response = reply(to: trimmed)
         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {

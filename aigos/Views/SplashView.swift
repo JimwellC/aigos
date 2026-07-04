@@ -65,7 +65,6 @@ struct SplashView: View {
     }
 
     private func animate() {
-        Haptics.tap(.light)
         withAnimation(.spring(response: 0.6, dampingFraction: 0.6)) { mascotIn = true }
         withAnimation(.easeOut(duration: 0.4).delay(0.3)) { titleIn = true }
         withAnimation(.easeOut(duration: 0.4).delay(0.6)) { taglineIn = true }
@@ -77,7 +76,6 @@ struct SplashView: View {
     }
 
     private func finish() {
-        Haptics.tap(.medium)
         onFinish()
     }
 }

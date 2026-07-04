@@ -66,7 +66,6 @@ struct VehicleSearchStep: View {
 
     private func resultRow(_ entry: VehicleEntry) -> some View {
         Button {
-            Haptics.tap(.light)
             onSelect(entry)
         } label: {
             HStack(spacing: Space.md) {
@@ -106,7 +105,6 @@ struct VehicleSearchStep: View {
 
     private var notListedButton: some View {
         Button {
-            Haptics.tap(.light)
             UnlistedSearchLog.record(query)   // private, local-only
             onManual(trimmed)
         } label: {

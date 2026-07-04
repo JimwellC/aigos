@@ -32,7 +32,6 @@ struct SuggestionCard: View {
 
             if let onDismiss {
                 Button {
-                    Haptics.selection()
                     onDismiss()
                 } label: {
                     Image(systemName: "xmark.circle.fill")
