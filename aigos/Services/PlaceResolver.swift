@@ -30,8 +30,13 @@ enum PlaceResolver {
         }
         let key = query.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         guard !key.isEmpty else { return nil }
-        if let gazetteerKey = aliasMap(personalPlaces)[key] {
-            return GazetteerRouteResolver.lookup(gazetteerKey)
+        // A personal place by name: prefer its precise map-picked coordinate,
+        // then fall back to its legacy city-level gazetteer key.
+        if let place = personalPlaces.first(where: {
+            $0.isConfigured && $0.name.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) == key
+        }) {
+            if let point = place.geoPoint { return point }
+            if !place.gazetteerKey.isEmpty { return GazetteerRouteResolver.lookup(place.gazetteerKey) }
         }
         return GazetteerRouteResolver.lookup(query)
     }

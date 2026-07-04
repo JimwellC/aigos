@@ -8,6 +8,7 @@
 
 import SwiftUI
 import SwiftData
+import CoreLocation
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var context
@@ -46,6 +47,13 @@ struct SettingsView: View {
         .sheet(item: $editingPlace) { place in
             PersonalPlaceEditor(place: place)
         }
+        #if DEBUG
+        .onAppear {
+            if DebugSupport.editPlace, editingPlace == nil, let first = personalPlaces.first {
+                editingPlace = first
+            }
+        }
+        #endif
         .confirmationDialog("Clear all trip history?", isPresented: $showingClearConfirm, titleVisibility: .visible) {
             Button("Clear history", role: .destructive, action: clearHistory)
             Button("Cancel", role: .cancel) {}
@@ -135,9 +143,10 @@ struct SettingsView: View {
                                 Text(place.name.isEmpty ? "Unnamed" : place.name)
                                     .rounded(16, weight: .semibold)
                                     .foregroundStyle(.white)
-                                Text(place.isConfigured ? place.gazetteerKey.capitalized : "Tap to set a location")
+                                Text(place.isConfigured ? place.mappedLabel : "Tap to set a location")
                                     .rounded(13)
                                     .foregroundStyle(place.isConfigured ? Color.white.opacity(0.75) : Color.white.opacity(0.55))
+                                    .lineLimit(1)
                             }
                             Spacer()
                             Image(systemName: "chevron.right").foregroundStyle(Color.white.opacity(0.4))
@@ -249,19 +258,14 @@ struct SettingsView: View {
     }
 }
 
-/// Editor sheet: rename a personal place and map it to a gazetteer location.
+/// Editor sheet: rename a personal place and map it to a precise location via the
+/// full-screen `PlaceMapPicker` (search, drop-by-panning, or use-my-location).
 struct PersonalPlaceEditor: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
     @Bindable var place: PersonalPlace
 
-    @State private var search = ""
-
-    private var keys: [String] {
-        let all = GazetteerRouteResolver.places.keys.sorted()
-        let q = search.lowercased().trimmingCharacters(in: .whitespaces)
-        return q.isEmpty ? all : all.filter { $0.contains(q) }
-    }
+    @State private var showingMap = false
 
     var body: some View {
         NavigationStack {
@@ -269,54 +273,65 @@ struct PersonalPlaceEditor: View {
                 AigosBackground(variant: 1)
 
                 ScrollView {
-                    VStack(alignment: .leading, spacing: Space.md) {
+                    VStack(alignment: .leading, spacing: Space.lg) {
                         FieldLabel("Shortcut name")
                         GlassField(placeholder: "Home", text: $place.name, autocap: .words)
 
-                        HStack {
-                            FieldLabel("Mapped to")
-                            Spacer()
-                            if place.isConfigured {
-                                Button("Clear") {
-                                    place.gazetteerKey = ""
-                                    save()
-                                }
-                                .rounded(13, weight: .semibold)
-                                .foregroundStyle(.white.opacity(0.9))
-                            }
-                        }
-                        Text(place.isConfigured ? place.gazetteerKey.capitalized : "Not set")
-                            .rounded(17, weight: .semibold)
-                            .foregroundStyle(place.isConfigured ? .white : Color.white.opacity(0.55))
+                        FieldLabel("Mapped to")
 
-                        GlassField(placeholder: "Search city or province…", text: $search)
-
-                        LazyVStack(spacing: 0) {
-                            ForEach(keys, id: \.self) { key in
-                                Button {
-                                    Haptics.tap(.light)
-                                    place.gazetteerKey = key
-                                    save()
-                                    dismiss()
-                                } label: {
-                                    HStack {
-                                        Text(key.capitalized)
-                                            .rounded(16, weight: .medium)
-                                            .foregroundStyle(.white)
-                                        Spacer()
-                                        if place.gazetteerKey == key {
-                                            Image(systemName: "checkmark.circle.fill")
-                                                .foregroundStyle(.white)
-                                        }
-                                    }
-                                    .padding(.horizontal, Space.md)
-                                    .padding(.vertical, 12)
+                        if place.isConfigured {
+                            VStack(alignment: .leading, spacing: Space.md) {
+                                HStack(alignment: .top, spacing: Space.md) {
+                                    Image(systemName: "mappin.circle.fill")
+                                        .font(.system(size: 26)).foregroundStyle(Color.aigosAmber)
+                                    Text(place.mappedLabel)
+                                        .rounded(16, weight: .semibold)
+                                        .foregroundStyle(.white)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    Spacer(minLength: 0)
                                 }
-                                .buttonStyle(.plain)
                                 Divider().overlay(Color.white.opacity(0.12))
+                                HStack {
+                                    Button { Haptics.tap(.light); showingMap = true } label: {
+                                        Label("Edit on map", systemImage: "map")
+                                            .rounded(14, weight: .semibold)
+                                            .foregroundStyle(Color.aigosAmberLight)
+                                    }
+                                    Spacer()
+                                    Button(role: .destructive) {
+                                        Haptics.tap(.light); place.clearLocation(); save()
+                                    } label: {
+                                        Label("Clear", systemImage: "trash")
+                                            .rounded(14, weight: .semibold)
+                                            .foregroundStyle(.white.opacity(0.8))
+                                    }
+                                }
                             }
+                            .padding(Space.md)
+                            .glassCard()
+                        } else {
+                            Button { Haptics.tap(.light); showingMap = true } label: {
+                                HStack(spacing: Space.md) {
+                                    Image(systemName: "map")
+                                        .font(.system(size: 22)).foregroundStyle(.white.opacity(0.7))
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Set location on map")
+                                            .rounded(16, weight: .semibold).foregroundStyle(.white)
+                                        Text("Search, drop a pin, or use your location")
+                                            .rounded(12).foregroundStyle(.white.opacity(0.6))
+                                    }
+                                    Spacer()
+                                    Image(systemName: "chevron.right").foregroundStyle(.white.opacity(0.4))
+                                }
+                                .padding(Space.md)
+                                .glassCard()
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .glassCard()
+
+                        Text("Pinned places use exact coordinates — more accurate distances than a city-level match.")
+                            .rounded(12).foregroundStyle(.white.opacity(0.5))
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     .padding(.horizontal, Space.screen)
                     .padding(.vertical, Space.lg)
@@ -332,6 +347,16 @@ struct PersonalPlaceEditor: View {
                 }
             }
         }
+        .fullScreenCover(isPresented: $showingMap) {
+            PlaceMapPicker(placeName: place.name,
+                           initial: place.geoPoint?.clCoordinate) { picked in
+                place.setCoordinate(lat: picked.lat, lon: picked.lon, address: picked.address)
+                save()
+            }
+        }
+        #if DEBUG
+        .onAppear { if DebugSupport.placeMap { showingMap = true } }
+        #endif
     }
 
     private func save() { try? context.save() }

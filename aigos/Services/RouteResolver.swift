@@ -25,6 +25,7 @@ struct GeoPoint: Sendable, Equatable {
 /// distance path as gazetteer places (see `PlaceResolver.point`).
 struct PickedPlace: Equatable {
     let name: String
+    let address: String   // reverse-geocoded full address (may be empty offline)
     let lat: Double
     let lon: Double
     var keyString: String { "@pin:\(lat),\(lon)" }

@@ -33,11 +33,11 @@ enum PlaceSearch {
             results.append(PlaceSuggestion(
                 id: "personal:\(place.id.uuidString)",
                 title: place.name,
-                subtitle: "Saved place · \(place.gazetteerKey.capitalized)",
+                subtitle: place.hasCoordinate ? "Saved place" : "Saved place · \(place.gazetteerKey.capitalized)",
                 resolveKey: place.name,
                 isPersonal: true
             ))
-            seenKeys.insert(place.gazetteerKey.lowercased())
+            if !place.gazetteerKey.isEmpty { seenKeys.insert(place.gazetteerKey.lowercased()) }
         }
 
         // 2. Gazetteer matches on title, key, or alias — prefix matches ranked first.

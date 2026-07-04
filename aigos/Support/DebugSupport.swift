@@ -46,6 +46,16 @@ enum DebugSupport {
         ProcessInfo.processInfo.arguments.contains("-mapPicker")
     }
 
+    /// Auto-open the Edit Place editor for the first personal place (screenshots/QA).
+    static var editPlace: Bool {
+        ProcessInfo.processInfo.arguments.contains("-editPlace")
+    }
+
+    /// With `-editPlace`, also auto-present the map location picker (screenshots/QA).
+    static var placeMap: Bool {
+        ProcessInfo.processInfo.arguments.contains("-placeMap")
+    }
+
     /// Prefill Manila → Batangas (no auto-calc) so the route mini-map shows.
     static var routePreview: Bool {
         ProcessInfo.processInfo.arguments.contains("-routePreview")
