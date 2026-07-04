@@ -11,8 +11,11 @@
 
 import SwiftUI
 import SwiftData
+import UIKit
 
 struct TalkToAigosView: View {
+    private static let bottomID = "chatBottom"
+
     @Environment(\.modelContext) private var context
     @Environment(AppState.self) private var appState
     @Environment(\.dismiss) private var dismiss
@@ -123,14 +126,33 @@ struct TalkToAigosView: View {
                         }
                         .padding(.top, Space.sm)
                     }
+
+                    // Invisible anchor at the true bottom of the content (below the
+                    // last bubble AND the suggestion chips / action buttons), so
+                    // scrollTo always lands at the real end.
+                    Color.clear.frame(height: 1).id(Self.bottomID)
                 }
                 .padding(.horizontal, Space.screen)
                 .padding(.vertical, Space.md)
             }
-            .onChange(of: messages.count) { _, _ in
-                if let last = messages.last {
-                    withAnimation { proxy.scrollTo(last.id, anchor: .bottom) }
-                }
+            // Auto-scroll only when NEW content appears — never while the user is
+            // manually scrolling up to read history.
+            .onChange(of: messages.count) { _, _ in scrollToBottom(proxy) }
+            .onAppear { scrollToBottom(proxy, animated: false) }   // show latest on open
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+                scrollToBottom(proxy)   // keep the newest message above the keyboard
+            }
+        }
+    }
+
+    /// Scroll to the bottom anchor, deferred one runloop so a just-inserted bubble
+    /// (and any action buttons inside it) is laid out before we measure the end.
+    private func scrollToBottom(_ proxy: ScrollViewProxy, animated: Bool = true) {
+        DispatchQueue.main.async {
+            if animated {
+                withAnimation(.easeOut(duration: 0.3)) { proxy.scrollTo(Self.bottomID, anchor: .bottom) }
+            } else {
+                proxy.scrollTo(Self.bottomID, anchor: .bottom)
             }
         }
     }
