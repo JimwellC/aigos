@@ -23,6 +23,7 @@ struct AddVehicleView: View {
     @State private var type: VehicleType = .car
     @State private var fuelType: FuelType = .premium95
     @State private var efficiencyText = ""
+    @State private var tankText = ""
     @State private var yearText = ""
     @State private var maintenance: MaintenanceStatus = .average
     @State private var makeDefault = false
@@ -41,6 +42,12 @@ struct AddVehicleView: View {
         guard let y = Int(yearText.trimmingCharacters(in: .whitespaces)),
               (1990...currentYear).contains(y) else { return nil }
         return y
+    }
+
+    /// Tank capacity (L) — the typed value, else the vehicle type's typical tank.
+    private var tankCapacityL: Double {
+        let typed = Double(tankText.trimmingCharacters(in: .whitespaces)) ?? 0
+        return typed > 0 ? typed : type.typicalTankLiters
     }
 
     private var canSave: Bool {
@@ -65,6 +72,13 @@ struct AddVehicleView: View {
 
                         FieldLabel("Efficiency (\(fuelUnit.label))")
                         GlassField(placeholder: fuelUnit.defaultInput, text: $efficiencyText, keyboard: .decimalPad)
+
+                        FieldLabel("Tank size (L)")
+                        GlassField(placeholder: "\(Int(type.typicalTankLiters))", text: $tankText, keyboard: .decimalPad)
+                        Text("Used for the fuel gauge and refuel warnings. Auto-filled when you pick a known model — adjust if your tank differs.")
+                            .rounded(12)
+                            .foregroundStyle(.white.opacity(0.5))
+                            .fixedSize(horizontal: false, vertical: true)
 
                         FieldLabel("Year (optional)")
                         GlassField(placeholder: "e.g. 2018", text: $yearText, keyboard: .numberPad)
@@ -116,6 +130,7 @@ struct AddVehicleView: View {
             type = v.type
             fuelType = v.fuelType
             efficiencyText = fuelUnit.displayValue(fromKmL: v.efficiencyKmL).oneDecimal
+            tankText = v.tankCapacityL.clean
             yearText = v.manufacturingYear.map(String.init) ?? ""
             maintenance = v.maintenanceStatus
             makeDefault = v.isDefault
@@ -124,6 +139,7 @@ struct AddVehicleView: View {
             type = p.vehicleType
             fuelType = p.fuelType
             if let kmL = p.efficiencyKmL { efficiencyText = fuelUnit.displayValue(fromKmL: kmL).oneDecimal }
+            if let tank = p.tankCapacityL { tankText = tank.clean }   // auto-filled from the DB
             makeDefault = vehicles.isEmpty
         } else {
             makeDefault = vehicles.isEmpty
@@ -142,6 +158,7 @@ struct AddVehicleView: View {
             v.type = type
             v.fuelType = fuelType
             v.efficiencyKmL = kmL
+            v.tankCapacityL = tankCapacityL
             v.manufacturingYear = year
             v.maintenanceStatus = maintenance
             if makeDefault {
@@ -155,6 +172,7 @@ struct AddVehicleView: View {
             let makeItDefault = makeDefault || vehicles.isEmpty
             let vehicle = VehicleProfile(
                 name: trimmedName, type: type, fuelType: fuelType, efficiencyKmL: kmL,
+                tankCapacityL: tankCapacityL,
                 isDefault: false, manufacturingYear: year, maintenanceStatus: maintenance
             )
             let profile = DrivingProfile()

@@ -18,6 +18,7 @@ struct VehicleEntry: Decodable, Equatable {
     let fuel: String        // FuelType raw value
     let type: String        // VehicleType raw value
     let category: String
+    let tankL: Double?      // real fuel-tank capacity (litres); nil → type fallback
 
     var displayName: String {
         if let variant { return "\(make) \(model) \(variant)" }
@@ -29,6 +30,8 @@ struct VehicleEntry: Decodable, Equatable {
     var vehicleType: VehicleType { VehicleType(rawValue: type) ?? .car }
     /// Electric vehicle — its `kmL` value is really km/kWh, not km/L.
     var isElectric: Bool { fuel == "electric" }
+    /// Tank capacity to use — the real value when known, else the type's typical.
+    var tankCapacityL: Double { tankL ?? vehicleType.typicalTankLiters }
 }
 
 /// A structured answer to a vehicle question. `text` is always shown; when
@@ -36,6 +39,7 @@ struct VehicleEntry: Decodable, Equatable {
 struct VehicleAnswer: Equatable {
     let text: String
     var efficiencyKmL: Double? = nil
+    var tankCapacityL: Double? = nil     // carried into the vehicle draft when known
     var fuelType: FuelType? = nil
     var vehicleType: VehicleType? = nil
     var suggestedName: String? = nil
@@ -90,7 +94,7 @@ enum VehicleDatabase {
             let (label, range) = correctionBlurb(for: entry, stated: stated)
             return VehicleAnswer(
                 text: "Got it! The \(entry.makeModel) is \(label). Based on its category, it typically gets around \(range). Want me to use about \(unit.format(kmL: entry.kmL)) for your calculation?",
-                efficiencyKmL: entry.kmL, fuelType: entry.fuelType,
+                efficiencyKmL: entry.kmL, tankCapacityL: entry.tankCapacityL, fuelType: entry.fuelType,
                 vehicleType: entry.vehicleType, suggestedName: entry.makeModel)
         }
 
@@ -107,7 +111,8 @@ enum VehicleDatabase {
                     text = "Older cars typically get 10–20% less than rated due to engine wear. The \(entry.displayName) is rated \(unit.format(kmL: entry.kmL)), so I'd use about \(unit.format(kmL: realistic)) as a realistic estimate."
                 }
                 return VehicleAnswer(
-                    text: text, efficiencyKmL: realistic, fuelType: entry.fuelType,
+                    text: text, efficiencyKmL: realistic, tankCapacityL: entry.tankCapacityL,
+                    fuelType: entry.fuelType,
                     vehicleType: entry.vehicleType, suggestedName: entry.displayName)
             }
             return VehicleAnswer(text: "Older cars typically get 10–20% less than their rated efficiency due to engine wear. A good rule of thumb is rated × 0.85 for a realistic estimate.")
@@ -117,7 +122,7 @@ enum VehicleDatabase {
         if let entry, q.contains("fuel type") || q.contains("what fuel") || q.contains("which fuel") || q.contains("what gas") || q.contains("runs on") || q.contains("gas type") {
             return VehicleAnswer(
                 text: "The \(entry.displayName) runs on \(entry.fuelType.label) — that's what most owners use and what the maker recommends.",
-                efficiencyKmL: entry.kmL, fuelType: entry.fuelType,
+                efficiencyKmL: entry.kmL, tankCapacityL: entry.tankCapacityL, fuelType: entry.fuelType,
                 vehicleType: entry.vehicleType, suggestedName: entry.displayName)
         }
 
@@ -125,7 +130,7 @@ enum VehicleDatabase {
         if let entry {
             return VehicleAnswer(
                 text: "The \(entry.displayName) gets about \(unit.format(kmL: entry.kmL)) in typical Philippine driving. Want me to use this?",
-                efficiencyKmL: entry.kmL, fuelType: entry.fuelType,
+                efficiencyKmL: entry.kmL, tankCapacityL: entry.tankCapacityL, fuelType: entry.fuelType,
                 vehicleType: entry.vehicleType, suggestedName: entry.displayName)
         }
 

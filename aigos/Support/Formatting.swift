@@ -31,6 +31,10 @@ extension Double {
     /// One-decimal string, e.g. "82.4".
     var oneDecimal: String { String(format: "%.1f", self) }
 
+    /// Whole numbers as integers ("42"), otherwise one decimal ("3.7"). Used for
+    /// tank sizes, which are usually whole litres but fractional for motorcycles.
+    var clean: String { self == rounded() ? String(Int(self)) : oneDecimal }
+
     /// Percentage delta from a multiplier, e.g. 1.13 -> "+13%".
     var factorPercentString: String {
         let pct = Int(((self - 1.0) * 100).rounded())

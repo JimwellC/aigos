@@ -8,7 +8,8 @@
       "fuel": "unleaded91",
       "type": "car",
       "category": "sedan_small",
-      "variant": "1.3L"
+      "variant": "1.3L",
+      "tankL": 42
     },
     {
       "make": "Toyota",
@@ -17,7 +18,8 @@
       "fuel": "premium95",
       "type": "car",
       "category": "sedan_small",
-      "variant": "1.5L"
+      "variant": "1.5L",
+      "tankL": 42
     },
     {
       "make": "Toyota",
@@ -26,7 +28,8 @@
       "fuel": "diesel",
       "type": "car",
       "category": "suv_diesel",
-      "variant": "diesel"
+      "variant": "diesel",
+      "tankL": 55
     },
     {
       "make": "Toyota",
@@ -35,7 +38,8 @@
       "fuel": "unleaded91",
       "type": "car",
       "category": "suv_gas",
-      "variant": "gas"
+      "variant": "gas",
+      "tankL": 55
     },
     {
       "make": "Toyota",
@@ -44,7 +48,8 @@
       "fuel": "diesel",
       "type": "car",
       "category": "suv_diesel",
-      "variant": "diesel"
+      "variant": "diesel",
+      "tankL": 65
     },
     {
       "make": "Toyota",
@@ -52,7 +57,8 @@
       "kmL": 14.5,
       "fuel": "unleaded91",
       "type": "car",
-      "category": "suv_gas"
+      "category": "suv_gas",
+      "tankL": 45
     },
     {
       "make": "Toyota",
@@ -60,7 +66,8 @@
       "kmL": 20.5,
       "fuel": "unleaded91",
       "type": "car",
-      "category": "hatchback"
+      "category": "hatchback",
+      "tankL": 35
     },
     {
       "make": "Toyota",
@@ -68,7 +75,8 @@
       "kmL": 14.2,
       "fuel": "unleaded91",
       "type": "car",
-      "category": "mpv"
+      "category": "mpv",
+      "tankL": 45
     },
     {
       "make": "Toyota",
@@ -76,7 +84,8 @@
       "kmL": 14.5,
       "fuel": "premium95",
       "type": "car",
-      "category": "sedan_large"
+      "category": "sedan_large",
+      "tankL": 60
     },
     {
       "make": "Toyota",
@@ -85,7 +94,8 @@
       "fuel": "diesel",
       "type": "truck",
       "category": "pickup_diesel",
-      "variant": "diesel"
+      "variant": "diesel",
+      "tankL": 80
     },
     {
       "make": "Honda",
@@ -93,7 +103,8 @@
       "kmL": 16.5,
       "fuel": "unleaded91",
       "type": "car",
-      "category": "sedan_small"
+      "category": "sedan_small",
+      "tankL": 40
     },
     {
       "make": "Honda",
@@ -101,7 +112,8 @@
       "kmL": 14.8,
       "fuel": "premium95",
       "type": "car",
-      "category": "sedan_large"
+      "category": "sedan_large",
+      "tankL": 47
     },
     {
       "make": "Honda",
@@ -109,7 +121,8 @@
       "kmL": 14.5,
       "fuel": "unleaded91",
       "type": "car",
-      "category": "mpv"
+      "category": "mpv",
+      "tankL": 42
     },
     {
       "make": "Honda",
@@ -117,7 +130,8 @@
       "kmL": 14.3,
       "fuel": "premium95",
       "type": "car",
-      "category": "suv_gas"
+      "category": "suv_gas",
+      "tankL": 50
     },
     {
       "make": "Honda",
@@ -125,7 +139,8 @@
       "kmL": 20.0,
       "fuel": "unleaded91",
       "type": "car",
-      "category": "hatchback"
+      "category": "hatchback",
+      "tankL": 35
     },
     {
       "make": "Honda",
@@ -133,7 +148,8 @@
       "kmL": 16.8,
       "fuel": "unleaded91",
       "type": "car",
-      "category": "hatchback"
+      "category": "hatchback",
+      "tankL": 40
     },
     {
       "make": "Mitsubishi",
@@ -141,7 +157,8 @@
       "kmL": 22.0,
       "fuel": "unleaded91",
       "type": "car",
-      "category": "hatchback"
+      "category": "hatchback",
+      "tankL": 35
     },
     {
       "make": "Mitsubishi",
@@ -149,7 +166,8 @@
       "kmL": 13.5,
       "fuel": "unleaded91",
       "type": "car",
-      "category": "mpv"
+      "category": "mpv",
+      "tankL": 48
     },
     {
       "make": "Mitsubishi",
@@ -158,7 +176,8 @@
       "fuel": "diesel",
       "type": "car",
       "category": "suv_diesel",
-      "variant": "diesel"
+      "variant": "diesel",
+      "tankL": 68
     },
     {
       "make": "Mitsubishi",
@@ -167,7 +186,8 @@
       "fuel": "diesel",
       "type": "van",
       "category": "van_diesel",
-      "variant": "diesel"
+      "variant": "diesel",
+      "tankL": 50
     },
     {
       "make": "Nissan",
@@ -175,7 +195,8 @@
       "kmL": 16.5,
       "fuel": "unleaded91",
       "type": "car",
-      "category": "sedan_small"
+      "category": "sedan_small",
+      "tankL": 41
     },
     {
       "make": "Nissan",
@@ -184,7 +205,8 @@
       "fuel": "diesel",
       "type": "car",
       "category": "suv_diesel",
-      "variant": "diesel"
+      "variant": "diesel",
+      "tankL": 65
     },
     {
       "make": "Nissan",
@@ -193,7 +215,8 @@
       "fuel": "diesel",
       "type": "truck",
       "category": "pickup_diesel",
-      "variant": "diesel"
+      "variant": "diesel",
+      "tankL": 80
     },
     {
       "make": "Ford",
@@ -202,7 +225,8 @@
       "fuel": "diesel",
       "type": "truck",
       "category": "pickup_diesel",
-      "variant": "diesel"
+      "variant": "diesel",
+      "tankL": 80
     },
     {
       "make": "Ford",
@@ -210,7 +234,8 @@
       "kmL": 14.5,
       "fuel": "unleaded91",
       "type": "car",
-      "category": "suv_gas"
+      "category": "suv_gas",
+      "tankL": 52
     },
     {
       "make": "Ford",
@@ -219,7 +244,8 @@
       "fuel": "diesel",
       "type": "car",
       "category": "suv_diesel",
-      "variant": "diesel"
+      "variant": "diesel",
+      "tankL": 80
     },
     {
       "make": "Suzuki",
@@ -227,7 +253,8 @@
       "kmL": 16.5,
       "fuel": "unleaded91",
       "type": "car",
-      "category": "mpv"
+      "category": "mpv",
+      "tankL": 45
     },
     {
       "make": "Suzuki",
@@ -235,7 +262,8 @@
       "kmL": 19.5,
       "fuel": "unleaded91",
       "type": "car",
-      "category": "sedan_small"
+      "category": "sedan_small",
+      "tankL": 37
     },
     {
       "make": "Suzuki",
@@ -243,7 +271,8 @@
       "kmL": 14.5,
       "fuel": "unleaded91",
       "type": "car",
-      "category": "suv_gas"
+      "category": "suv_gas",
+      "tankL": 40
     },
     {
       "make": "Suzuki",
@@ -251,7 +280,8 @@
       "kmL": 21.0,
       "fuel": "unleaded91",
       "type": "car",
-      "category": "hatchback"
+      "category": "hatchback",
+      "tankL": 32
     },
     {
       "make": "Suzuki",
@@ -259,7 +289,8 @@
       "kmL": 21.5,
       "fuel": "unleaded91",
       "type": "car",
-      "category": "hatchback"
+      "category": "hatchback",
+      "tankL": 32
     },
     {
       "make": "Isuzu",
@@ -268,7 +299,8 @@
       "fuel": "diesel",
       "type": "truck",
       "category": "pickup_diesel",
-      "variant": "diesel"
+      "variant": "diesel",
+      "tankL": 76
     },
     {
       "make": "Isuzu",
@@ -277,7 +309,8 @@
       "fuel": "diesel",
       "type": "car",
       "category": "suv_diesel",
-      "variant": "diesel"
+      "variant": "diesel",
+      "tankL": 59
     },
     {
       "make": "Hyundai",
@@ -285,7 +318,8 @@
       "kmL": 16.5,
       "fuel": "unleaded91",
       "type": "car",
-      "category": "sedan_small"
+      "category": "sedan_small",
+      "tankL": 40
     },
     {
       "make": "Hyundai",
@@ -293,7 +327,8 @@
       "kmL": 15.5,
       "fuel": "unleaded91",
       "type": "car",
-      "category": "sedan_small"
+      "category": "sedan_small",
+      "tankL": 40
     },
     {
       "make": "Hyundai",
@@ -302,7 +337,8 @@
       "fuel": "diesel",
       "type": "car",
       "category": "suv_diesel",
-      "variant": "diesel"
+      "variant": "diesel",
+      "tankL": 54
     },
     {
       "make": "Hyundai",
@@ -311,7 +347,8 @@
       "fuel": "diesel",
       "type": "car",
       "category": "suv_diesel",
-      "variant": "diesel"
+      "variant": "diesel",
+      "tankL": 67
     },
     {
       "make": "Kia",
@@ -319,7 +356,8 @@
       "kmL": 18.5,
       "fuel": "unleaded91",
       "type": "car",
-      "category": "hatchback"
+      "category": "hatchback",
+      "tankL": 35
     },
     {
       "make": "Kia",
@@ -327,7 +365,8 @@
       "kmL": 16.5,
       "fuel": "unleaded91",
       "type": "car",
-      "category": "sedan_small"
+      "category": "sedan_small",
+      "tankL": 40
     },
     {
       "make": "Kia",
@@ -344,7 +383,8 @@
       "kmL": 14.0,
       "fuel": "premium95",
       "type": "car",
-      "category": "suv_gas"
+      "category": "suv_gas",
+      "tankL": 45
     },
     {
       "make": "Geely",
@@ -361,7 +401,8 @@
       "kmL": 14.0,
       "fuel": "premium95",
       "type": "car",
-      "category": "suv_gas"
+      "category": "suv_gas",
+      "tankL": 47
     },
     {
       "make": "MG",
@@ -369,7 +410,8 @@
       "kmL": 15.5,
       "fuel": "premium95",
       "type": "car",
-      "category": "sedan_small"
+      "category": "sedan_small",
+      "tankL": 53
     },
     {
       "make": "Mazda",
@@ -377,7 +419,8 @@
       "kmL": 16.5,
       "fuel": "unleaded91",
       "type": "car",
-      "category": "sedan_small"
+      "category": "sedan_small",
+      "tankL": 44
     },
     {
       "make": "Mazda",
@@ -385,7 +428,8 @@
       "kmL": 14.5,
       "fuel": "premium95",
       "type": "car",
-      "category": "sedan_large"
+      "category": "sedan_large",
+      "tankL": 51
     },
     {
       "make": "Mazda",
@@ -393,7 +437,8 @@
       "kmL": 14.0,
       "fuel": "premium95",
       "type": "car",
-      "category": "suv_gas"
+      "category": "suv_gas",
+      "tankL": 48
     },
     {
       "make": "Mazda",
@@ -402,7 +447,8 @@
       "fuel": "diesel",
       "type": "car",
       "category": "suv_diesel",
-      "variant": "diesel"
+      "variant": "diesel",
+      "tankL": 56
     },
     {
       "make": "Subaru",
@@ -410,7 +456,8 @@
       "kmL": 13.5,
       "fuel": "premium95",
       "type": "car",
-      "category": "suv_gas"
+      "category": "suv_gas",
+      "tankL": 63
     },
     {
       "make": "Subaru",
@@ -418,7 +465,8 @@
       "kmL": 12.5,
       "fuel": "premium95",
       "type": "car",
-      "category": "suv_gas"
+      "category": "suv_gas",
+      "tankL": 63
     },
     {
       "make": "Chevrolet",
@@ -443,7 +491,8 @@
       "kmL": 55,
       "fuel": "unleaded91",
       "type": "motorcycle",
-      "category": "moto_125"
+      "category": "moto_125",
+      "tankL": 3.7
     },
     {
       "make": "Honda",
@@ -451,7 +500,8 @@
       "kmL": 45,
       "fuel": "unleaded91",
       "type": "motorcycle",
-      "category": "moto_125"
+      "category": "moto_125",
+      "tankL": 5.5
     },
     {
       "make": "Honda",
@@ -459,7 +509,8 @@
       "kmL": 40,
       "fuel": "unleaded91",
       "type": "motorcycle",
-      "category": "moto_150"
+      "category": "moto_150",
+      "tankL": 8.1
     },
     {
       "make": "Honda",
@@ -467,7 +518,8 @@
       "kmL": 55,
       "fuel": "unleaded91",
       "type": "motorcycle",
-      "category": "moto_125"
+      "category": "moto_125",
+      "tankL": 3.7
     },
     {
       "make": "Honda",
@@ -475,7 +527,8 @@
       "kmL": 38,
       "fuel": "unleaded91",
       "type": "motorcycle",
-      "category": "moto_150"
+      "category": "moto_150",
+      "tankL": 8.1
     },
     {
       "make": "Yamaha",
@@ -483,7 +536,8 @@
       "kmL": 50,
       "fuel": "unleaded91",
       "type": "motorcycle",
-      "category": "moto_125"
+      "category": "moto_125",
+      "tankL": 4.2
     },
     {
       "make": "Yamaha",
@@ -491,7 +545,8 @@
       "kmL": 40,
       "fuel": "unleaded91",
       "type": "motorcycle",
-      "category": "moto_150"
+      "category": "moto_150",
+      "tankL": 7.1
     },
     {
       "make": "Yamaha",
@@ -499,7 +554,8 @@
       "kmL": 50,
       "fuel": "unleaded91",
       "type": "motorcycle",
-      "category": "moto_150"
+      "category": "moto_150",
+      "tankL": 4.5
     },
     {
       "make": "Yamaha",
@@ -507,7 +563,8 @@
       "kmL": 40,
       "fuel": "unleaded91",
       "type": "motorcycle",
-      "category": "moto_150"
+      "category": "moto_150",
+      "tankL": 5.5
     },
     {
       "make": "Suzuki",
@@ -515,7 +572,8 @@
       "kmL": 50,
       "fuel": "unleaded91",
       "type": "motorcycle",
-      "category": "moto_150"
+      "category": "moto_150",
+      "tankL": 4.3
     },
     {
       "make": "Suzuki",
@@ -531,7 +589,8 @@
       "kmL": 45,
       "fuel": "unleaded91",
       "type": "motorcycle",
-      "category": "moto_125"
+      "category": "moto_125",
+      "tankL": 9.5
     },
     {
       "make": "Kawasaki",
@@ -548,7 +607,8 @@
       "fuel": "diesel",
       "type": "car",
       "category": "suv_diesel",
-      "variant": "diesel"
+      "variant": "diesel",
+      "tankL": 87
     },
     {
       "make": "Toyota",
@@ -557,7 +617,8 @@
       "fuel": "unleaded91",
       "type": "car",
       "category": "suv_gas",
-      "variant": "gas"
+      "variant": "gas",
+      "tankL": 87
     },
     {
       "make": "Toyota",
@@ -575,7 +636,8 @@
       "fuel": "diesel",
       "type": "van",
       "category": "van_diesel",
-      "variant": "diesel"
+      "variant": "diesel",
+      "tankL": 70
     },
     {
       "make": "Toyota",
@@ -591,7 +653,8 @@
       "kmL": 18.0,
       "fuel": "premium95",
       "type": "car",
-      "category": "suv_gas"
+      "category": "suv_gas",
+      "tankL": 40
     },
     {
       "make": "Toyota",
@@ -599,7 +662,8 @@
       "kmL": 16.5,
       "fuel": "unleaded91",
       "type": "car",
-      "category": "mpv"
+      "category": "mpv",
+      "tankL": 45
     },
     {
       "make": "Honda",
@@ -608,7 +672,8 @@
       "fuel": "diesel",
       "type": "car",
       "category": "suv_diesel",
-      "variant": "diesel"
+      "variant": "diesel",
+      "tankL": 57
     },
     {
       "make": "Honda",
@@ -617,7 +682,8 @@
       "fuel": "unleaded91",
       "type": "car",
       "category": "suv_gas",
-      "variant": "gas"
+      "variant": "gas",
+      "tankL": 57
     },
     {
       "make": "Honda",
@@ -634,7 +700,8 @@
       "fuel": "diesel",
       "type": "truck",
       "category": "pickup_diesel",
-      "variant": "diesel"
+      "variant": "diesel",
+      "tankL": 75
     },
     {
       "make": "Mitsubishi",
@@ -676,7 +743,8 @@
       "fuel": "diesel",
       "type": "van",
       "category": "van_diesel",
-      "variant": "diesel"
+      "variant": "diesel",
+      "tankL": 65
     },
     {
       "make": "Ford",
@@ -684,7 +752,8 @@
       "kmL": 14.5,
       "fuel": "premium95",
       "type": "car",
-      "category": "suv_gas"
+      "category": "suv_gas",
+      "tankL": 53
     },
     {
       "make": "Ford",
@@ -709,7 +778,8 @@
       "fuel": "unleaded91",
       "type": "car",
       "category": "suv_gas",
-      "variant": "gas"
+      "variant": "gas",
+      "tankL": 54
     },
     {
       "make": "Hyundai",
@@ -718,7 +788,8 @@
       "fuel": "diesel",
       "type": "van",
       "category": "van_diesel",
-      "variant": "diesel"
+      "variant": "diesel",
+      "tankL": 75
     },
     {
       "make": "Hyundai",
@@ -735,7 +806,8 @@
       "kmL": 16.0,
       "fuel": "unleaded91",
       "type": "car",
-      "category": "suv_gas"
+      "category": "suv_gas",
+      "tankL": 50
     },
     {
       "make": "Kia",
@@ -744,7 +816,8 @@
       "fuel": "diesel",
       "type": "van",
       "category": "van_diesel",
-      "variant": "diesel"
+      "variant": "diesel",
+      "tankL": 72
     },
     {
       "make": "Kia",
@@ -753,7 +826,8 @@
       "fuel": "diesel",
       "type": "car",
       "category": "suv_diesel",
-      "variant": "diesel"
+      "variant": "diesel",
+      "tankL": 67
     },
     {
       "make": "Kia",
@@ -770,7 +844,8 @@
       "fuel": "diesel",
       "type": "car",
       "category": "suv_diesel",
-      "variant": "diesel"
+      "variant": "diesel",
+      "tankL": 55
     },
     {
       "make": "Geely",
@@ -830,7 +905,8 @@
       "fuel": "diesel",
       "type": "car",
       "category": "suv_diesel",
-      "variant": "GX diesel"
+      "variant": "GX diesel",
+      "tankL": 87
     },
     {
       "make": "Toyota",
@@ -839,7 +915,8 @@
       "fuel": "diesel",
       "type": "van",
       "category": "van_diesel",
-      "variant": "GL Grandia"
+      "variant": "GL Grandia",
+      "tankL": 70
     },
     {
       "make": "Toyota",
@@ -848,7 +925,8 @@
       "fuel": "diesel",
       "type": "van",
       "category": "van_diesel",
-      "variant": "Super Grandia"
+      "variant": "Super Grandia",
+      "tankL": 70
     },
     {
       "make": "Toyota",
@@ -884,7 +962,8 @@
       "fuel": "premium95",
       "type": "car",
       "category": "sedan_large",
-      "variant": "hybrid"
+      "variant": "hybrid",
+      "tankL": 60
     },
     {
       "make": "Toyota",
@@ -919,7 +998,8 @@
       "fuel": "premium95",
       "type": "car",
       "category": "sedan_large",
-      "variant": "RS turbo"
+      "variant": "RS turbo",
+      "tankL": 47
     },
     {
       "make": "Honda",
@@ -977,7 +1057,8 @@
       "fuel": "diesel",
       "type": "van",
       "category": "van_diesel",
-      "variant": "Versa Van"
+      "variant": "Versa Van",
+      "tankL": 50
     },
     {
       "make": "Nissan",
@@ -986,7 +1067,8 @@
       "fuel": "diesel",
       "type": "truck",
       "category": "pickup_diesel",
-      "variant": "Pro-4X"
+      "variant": "Pro-4X",
+      "tankL": 80
     },
     {
       "make": "Nissan",
@@ -1084,7 +1166,8 @@
       "kmL": 15.5,
       "fuel": "unleaded91",
       "type": "car",
-      "category": "suv_gas"
+      "category": "suv_gas",
+      "tankL": 50
     },
     {
       "make": "Kia",
@@ -1125,7 +1208,8 @@
       "fuel": "premium95",
       "type": "car",
       "category": "suv_gas",
-      "variant": "Sport"
+      "variant": "Sport",
+      "tankL": 45
     },
     {
       "make": "MG",
@@ -1142,7 +1226,8 @@
       "fuel": "premium95",
       "type": "car",
       "category": "suv_gas",
-      "variant": "1.5 gas"
+      "variant": "1.5 gas",
+      "tankL": 47
     },
     {
       "make": "MG",
@@ -1150,7 +1235,8 @@
       "kmL": 15.5,
       "fuel": "premium95",
       "type": "car",
-      "category": "sedan_large"
+      "category": "sedan_large",
+      "tankL": 53
     },
     {
       "make": "MG",
@@ -1184,7 +1270,8 @@
       "fuel": "premium95",
       "type": "car",
       "category": "suv_gas",
-      "variant": "gas"
+      "variant": "gas",
+      "tankL": 56
     },
     {
       "make": "Mazda",

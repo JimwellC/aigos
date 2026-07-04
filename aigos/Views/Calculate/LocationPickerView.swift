@@ -283,14 +283,23 @@ struct RoutePreview: View {
     let origin: GeoPoint
     let destination: GeoPoint
     var precise: Bool = false
+    /// The actual road polyline from MKDirections (online). When present it's drawn
+    /// solid; otherwise a straight dashed line between the two points (offline).
+    var routeCoordinates: [CLLocationCoordinate2D]? = nil
 
     var body: some View {
         Map(initialPosition: .region(region), interactionModes: []) {
             Marker("From", systemImage: "location.fill", coordinate: origin.clCoordinate).tint(.green)
             Marker("To", systemImage: "mappin", coordinate: destination.clCoordinate).tint(.red)
-            MapPolyline(coordinates: [origin.clCoordinate, destination.clCoordinate])
-                .stroke(Color.aigosAmber,
-                        style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: precise ? [] : [6, 6]))
+            if let coords = routeCoordinates, coords.count >= 2 {
+                MapPolyline(coordinates: coords)
+                    .stroke(Color.aigosAmber,
+                            style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
+            } else {
+                MapPolyline(coordinates: [origin.clCoordinate, destination.clCoordinate])
+                    .stroke(Color.aigosAmber,
+                            style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: precise ? [] : [6, 6]))
+            }
         }
         .mapStyle(.standard(elevation: .flat))
     }
@@ -302,5 +311,16 @@ struct RoutePreview: View {
         let span = MKCoordinateSpan(latitudeDelta: max((maxLat - minLat) * 1.6, 0.06),
                                     longitudeDelta: max((maxLon - minLon) * 1.6, 0.06))
         return MKCoordinateRegion(center: center, span: span)
+    }
+}
+
+extension MKPolyline {
+    /// The polyline's points as an array of coordinates (for drawing the route
+    /// with SwiftUI's `MapPolyline`).
+    var coordinates: [CLLocationCoordinate2D] {
+        var coords = [CLLocationCoordinate2D](repeating: kCLLocationCoordinate2DInvalid,
+                                              count: pointCount)
+        getCoordinates(&coords, range: NSRange(location: 0, length: pointCount))
+        return coords
     }
 }

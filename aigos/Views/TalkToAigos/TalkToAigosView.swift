@@ -191,6 +191,16 @@ struct TalkToAigosView: View {
             return ChatMessage(role: .aigos, text: smalltalk)
         }
 
+        // "Will I make it to X on one tank?" — trip fuel vs tank capacity. Checked
+        // before the trip/knowledge intents (it names a trip but isn't a cost query).
+        if let oneTank = oneTankReply(text) {
+            return ChatMessage(role: .aigos, text: oneTank)
+        }
+        // "How big is my Vios tank?" — tank capacity + full-tank cost.
+        if let tank = tankSizeReply(text) {
+            return ChatMessage(role: .aigos, text: tank)
+        }
+
         // Knowledge base — fuel-economy tips, troubleshooting, culture, routes,
         // drive-vs-bus, CO2, best time to travel. Checked before trip parsing
         // because many of these questions also name a place.
@@ -250,10 +260,88 @@ struct TalkToAigosView: View {
 
     /// Match a vehicle named anywhere in the text (for "same trip in my truck").
     private func matchedVehicleName(in text: String) -> String? {
+        ownedVehicle(in: text)?.name
+    }
+
+    /// A vehicle the user owns, named anywhere in the text.
+    private func ownedVehicle(in text: String) -> VehicleProfile? {
         let lower = text.lowercased()
         return vehicles.first { v in
             v.name.lowercased().split(separator: " ").contains { $0.count >= 3 && lower.contains($0) }
-        }?.name
+        }
+    }
+
+    // MARK: - Tank questions
+
+    /// "How big is my Vios tank?" → tank capacity + full-tank cost. Resolves the
+    /// vehicle from the text (owned vehicle → database model → default vehicle).
+    private func tankSizeReply(_ text: String) -> String? {
+        let q = text.lowercased()
+        guard q.contains("tank") else { return nil }
+        let cues = ["how big", "how large", "size", "capacity", "how many liter", "how many litre",
+                    "how much fuel", "how much gas", "full tank", "liters", "litres", "gas tank", "fuel tank"]
+        guard cues.contains(where: { q.contains($0) }) else { return nil }
+
+        if let owned = ownedVehicle(in: text) {
+            return tankBlurb(name: owned.name, tankL: owned.tankCapacityL, fuel: owned.fuelType)
+        }
+        if let entry = VehicleDatabase.find(text), !entry.isElectric {
+            return tankBlurb(name: entry.displayName, tankL: entry.tankCapacityL, fuel: entry.fuelType)
+        }
+        if let v = vehicles.first(where: \.isDefault) ?? vehicles.first {
+            return tankBlurb(name: v.name, tankL: v.tankCapacityL, fuel: v.fuelType)
+        }
+        return nil
+    }
+
+    private func tankBlurb(name: String, tankL: Double, fuel: FuelType) -> String {
+        let price = PriceService.price(for: fuel, in: context)
+        let cost = tankL * price
+        return "The \(name) has a \(tankL.clean)-liter fuel tank. At current prices (PHP \(price.clean)/L), a full tank costs \(cost.phpString)."
+    }
+
+    /// "Will I make it to Baguio on one tank?" → compares the trip's fuel need to
+    /// the vehicle's tank capacity (assuming a full tank at the start).
+    private func oneTankReply(_ text: String) -> String? {
+        let q = text.lowercased()
+        let cues = ["one tank", "single tank", "1 tank", "on a full tank", "without refuel",
+                    "without refueling", "without stopping", "without a stop", "enough fuel",
+                    "enough gas", "run out of gas", "run out of fuel"]
+        guard cues.contains(where: { q.contains($0) }) else { return nil }
+
+        // Resolve the trip: a full parse of this message, else the last trip.
+        let query = TripQueryParser.parse(text, vehicles: vehicles, personalPlaces: personalPlaces)
+        let originName = query?.origin ?? lastQuery?.origin
+        let destName = query?.destination ?? lastQuery?.destination
+        guard let originName, let destName,
+              let route = PlaceResolver.route(from: originName, to: destName, personalPlaces: personalPlaces) else {
+            return "Tell me the trip too — like “Manila to Baguio on one tank” — and I'll check if you can make it without refueling."
+        }
+
+        guard let vehicle = query?.vehicleName.flatMap({ n in vehicles.first { $0.name == n } })
+                ?? ownedVehicle(in: text)
+                ?? vehicles.first(where: \.isDefault) ?? vehicles.first else {
+            return "Add a vehicle first and I'll check if you can make the trip on one tank."
+        }
+
+        let profile = vehicle.drivingProfile
+        let est = CalculationEngine.estimate(
+            distanceKm: route.distanceKm, baseEfficiencyKmL: vehicle.efficiencyKmL,
+            fuelPricePerLitre: PriceService.price(for: vehicle.fuelType, in: context),
+            avgHighwaySpeedKmh: profile?.avgHighwaySpeedKmh ?? 90,
+            avgCitySpeedKmh: profile?.avgCitySpeedKmh ?? 40,
+            acInUse: profile?.usesACByDefault ?? true, roadType: profile?.defaultRoadType ?? .highway,
+            ageYears: vehicle.ageYears(), maintenance: vehicle.maintenanceStatus)
+
+        let needed = est.adjustedLitres
+        let tank = vehicle.tankCapacityL
+        let routeLabel = "\(originName.capitalized) to \(destName.capitalized)"
+        if needed <= tank {
+            let spare = tank - needed
+            return "Your \(vehicle.name) needs ~\(needed.oneDecimal)L for \(routeLabel). Your \(tank.clean)L tank can handle it with ~\(spare.oneDecimal)L to spare. No refuel stop needed! ✅"
+        } else {
+            return "\(routeLabel) needs ~\(needed.oneDecimal)L, but your \(vehicle.name)'s tank only holds \(tank.clean)L. You'll need a refuel stop along the way. ⛽"
+        }
     }
 
     private func estimate(for query: TripQuery) -> ChatMessage {
@@ -410,6 +498,7 @@ private struct ChatBubble: View {
         VehicleDraft(
             name: s.suggestedName ?? "My Car",
             efficiencyKmL: useEfficiency ? s.efficiencyKmL : nil,
+            tankCapacityL: s.tankCapacityL,
             fuelType: s.fuelType ?? .unleaded91,
             vehicleType: s.vehicleType ?? .car
         )

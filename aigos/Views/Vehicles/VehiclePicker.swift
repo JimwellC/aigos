@@ -124,7 +124,7 @@ struct VehiclePicker: View {
                 Text(vehicle.name)
                     .rounded(16, weight: .semibold)
                     .foregroundStyle(.white)
-                Text("\(vehicle.fuelType.label) · \(fuelUnit.format(kmL: vehicle.efficiencyKmL))")
+                Text("\(vehicle.fuelType.label) · \(fuelUnit.format(kmL: vehicle.efficiencyKmL)) · \(vehicle.tankCapacityL.clean)L tank")
                     .rounded(13)
                     .foregroundStyle(Color.aigosTextSecondary)
             }

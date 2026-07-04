@@ -57,6 +57,8 @@ struct CalculateView: View {
     // Precise road distance (MKDirections, online only)
     @State private var preciseDistanceKm: Double?
     @State private var routeIsPrecise = false
+    @State private var routeCoordinates: [CLLocationCoordinate2D]?   // actual road polyline
+    @State private var detectedRoad: RouteAnalyzer.Suggestion?       // auto-detected road type
 
     private var selectedVehicle: VehicleProfile? {
         vehicles.first { $0.id == selectedVehicleID } ?? vehicles.first
@@ -139,7 +141,7 @@ struct CalculateView: View {
                     estimate: estimate,
                     finalCost: estimate.estimatedCost,
                     confidence: confidenceText,
-                    tankLiters: selectedVehicle?.type.typicalTankLiters,
+                    tankLiters: selectedVehicle?.tankCapacityL,
                     routeTitle: resultRouteTitle,
                     vehicleName: resultVehicleName,
                     saved: $savedThisRoute,
@@ -173,20 +175,41 @@ struct CalculateView: View {
     private func updatePreciseDistance() {
         preciseDistanceKm = nil
         routeIsPrecise = false
+        routeCoordinates = nil
+        detectedRoad = nil
         guard let a = originPoint, let b = destinationPoint else { return }
         let request = MKDirections.Request()
         request.source = MKMapItem(placemark: MKPlacemark(coordinate: a.clCoordinate))
         request.destination = MKMapItem(placemark: MKPlacemark(coordinate: b.clCoordinate))
         request.transportType = .automobile
         MKDirections(request: request).calculate { response, _ in
-            guard let metres = response?.routes.first?.distance, metres.isFinite else { return }
-            // Hop back to the main actor before touching @State — the completion
-            // is a @Sendable closure and may run off-main (Swift 6 / iOS 26).
+            guard let route = response?.routes.first, route.distance.isFinite else { return }
+            // Capture route data off the actor, then hop to the main actor before
+            // touching @State — the completion is @Sendable (Swift 6 / iOS 26).
+            let metres = route.distance
+            let coords = route.polyline.coordinates
+            let steps = route.steps.map(\.instructions).filter { !$0.isEmpty }
+            let name = route.name
             Task { @MainActor in
                 preciseDistanceKm = metres / 1000.0
                 routeIsPrecise = true
+                routeCoordinates = coords
+                applyRouteDetection(stepTexts: steps, routeName: name)
             }
         }
+    }
+
+    /// Auto-detect the road type from the online route and pre-select it. The user
+    /// can still override in the "How you'll drive" sheet.
+    private func applyRouteDetection(stepTexts: [String], routeName: String) {
+        let oProv = GazetteerRouteResolver.entry(for: origin)?.subtitle
+        let dProv = GazetteerRouteResolver.entry(for: destination)?.subtitle
+        guard let result = RouteAnalyzer.detect(
+            stepTexts: stepTexts, routeName: routeName,
+            origin: origin, destination: destination,
+            originProvince: oProv, destinationProvince: dProv) else { return }
+        detectedRoad = result
+        roadType = result.roadType
     }
 
     private var calculateButton: some View {
@@ -325,7 +348,8 @@ struct CalculateView: View {
                 .zIndex(1)
 
             if let distanceKm, let a = originPoint, let b = destinationPoint {
-                RoutePreview(origin: a, destination: b, precise: routeIsPrecise)
+                RoutePreview(origin: a, destination: b, precise: routeIsPrecise,
+                             routeCoordinates: routeCoordinates)
                     .frame(height: 150)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(.white.opacity(0.2), lineWidth: 1))
@@ -338,6 +362,10 @@ struct CalculateView: View {
                 }
                 .rounded(14, weight: .semibold)
                 .foregroundStyle(.white.opacity(0.9))
+
+                if let detected = detectedRoad {
+                    routeDetectionBanner(detected)
+                }
             } else if distanceKm != nil {
                 Label("≈ \(distanceKm!.oneDecimal) km (estimated)", systemImage: "map")
                     .rounded(14, weight: .semibold)
@@ -350,6 +378,25 @@ struct CalculateView: View {
         }
         .padding(Space.md)
         .glassCard()
+    }
+
+    /// Banner shown when the online route auto-selected a road type. The user can
+    /// still override it in the "How you'll drive" sheet.
+    private func routeDetectionBanner(_ s: RouteAnalyzer.Suggestion) -> some View {
+        HStack(spacing: Space.sm) {
+            Image(systemName: s.roadType == .mountain ? "mountain.2.fill"
+                            : s.roadType == .city ? "building.2.fill" : "road.lanes")
+                .foregroundStyle(.white)
+            Text("Route detected: \(s.label) — using \(s.roadType.label.lowercased()) factors")
+                .rounded(13, weight: .medium)
+                .foregroundStyle(.white)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .padding(Space.sm)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.aigosAmber.opacity(0.22), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Color.aigosAmber.opacity(0.5), lineWidth: 1))
     }
 
     // MARK: - Driving
@@ -485,7 +532,7 @@ struct CalculateView: View {
     /// Litres currently in the tank, used only for the low-fuel warning.
     private var availableFuelLitres: Double? {
         guard let vehicle = selectedVehicle else { return nil }
-        return fuelLevel.fraction * vehicle.type.typicalTankLiters
+        return fuelLevel.fraction * vehicle.tankCapacityL
     }
 
     /// Kick off a calculation: show the loading state, compute immediately, then

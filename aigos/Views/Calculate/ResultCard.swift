@@ -218,14 +218,18 @@ struct ResultCard: View {
         let safeTank = tank.isFinite && tank > 0 ? tank : 1
         let litres = estimate.adjustedLitres.isFinite ? estimate.adjustedLitres : 0
         let fraction = min(max(litres / safeTank, 0), 1.0)
-        return VStack(alignment: .leading, spacing: 6) {
+        // Assumes a full tank at the start of the trip.
+        let remaining = max(safeTank - litres, 0)
+        let effKmL = estimate.adjustedEfficiencyKmL.isFinite ? estimate.adjustedEfficiencyKmL : 0
+        let rangeKm = remaining * effKmL
+        return VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("FUEL GAUGE")
                     .font(.system(size: 11, weight: .semibold, design: .rounded))
                     .kerning(1.5)
                     .foregroundStyle(Color.white.opacity(0.55))
                 Spacer()
-                Text("\(litres.oneDecimal) L of ~\(Int(safeTank)) L tank")
+                Text("\(litres.oneDecimal) L of ~\(safeTank.clean) L tank")
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
                     .foregroundStyle(Color.white.opacity(0.7))
             }
@@ -239,7 +243,34 @@ struct ResultCard: View {
                 }
             }
             .frame(height: 12)
+
+            // Capacity-based guidance (assumes starting from a full tank).
+            if litres > safeTank {
+                tankNote("⛽ You'll need to refuel during this trip", strong: true)
+            } else {
+                Text("After this trip: ~\(remaining.oneDecimal) L remaining (~\(Int(rangeKm.rounded())) km range)")
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundStyle(Color.white.opacity(0.7))
+                if litres > 0.8 * safeTank {
+                    tankNote("⚠️ Long trip — consider filling up first", strong: false)
+                }
+            }
         }
+    }
+
+    /// A capacity-warning line under the fuel gauge. `strong` = refuel-during
+    /// (deep amber), else a softer long-trip caution.
+    private func tankNote(_ text: String, strong: Bool) -> some View {
+        Text(text)
+            .font(.system(size: 13, weight: .semibold, design: .rounded))
+            .foregroundStyle(.white)
+            .padding(.horizontal, Space.sm)
+            .padding(.vertical, 6)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                (strong ? Color.aigosAmberDeep.opacity(0.9) : Color.white.opacity(0.12)),
+                in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+            )
     }
 
     private var refuelWarning: some View {

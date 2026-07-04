@@ -53,6 +53,7 @@ struct CalculatorDraft: Equatable {
 struct VehicleDraft: Equatable {
     var name: String
     var efficiencyKmL: Double?
+    var tankCapacityL: Double? = nil
     var fuelType: FuelType
     var vehicleType: VehicleType
 }

@@ -16,6 +16,10 @@ final class VehicleProfile {
     var type: VehicleType = VehicleType.car
     var fuelType: FuelType = FuelType.premium95
     var efficiencyKmL: Double = 12.0 // manufacturer km/L rating
+    /// Fuel-tank capacity in litres. Auto-filled from the vehicle database when a
+    /// model is picked, editable in Add/Edit. 45 L is the unknown-vehicle fallback
+    /// (a typical compact-car tank; matches `VehicleType.car.typicalTankLiters`).
+    var tankCapacityL: Double = 45.0
     var isDefault: Bool = false
     var createdAt: Date = Date()
 
@@ -37,6 +41,7 @@ final class VehicleProfile {
         type: VehicleType,
         fuelType: FuelType,
         efficiencyKmL: Double,
+        tankCapacityL: Double = 45.0,
         isDefault: Bool = false,
         manufacturingYear: Int? = nil,
         maintenanceStatus: MaintenanceStatus = .average,
@@ -47,6 +52,7 @@ final class VehicleProfile {
         self.type = type
         self.fuelType = fuelType
         self.efficiencyKmL = efficiencyKmL
+        self.tankCapacityL = tankCapacityL
         self.isDefault = isDefault
         self.manufacturingYear = manufacturingYear
         self.maintenanceStatus = maintenanceStatus
