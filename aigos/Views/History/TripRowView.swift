@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct TripRowView: View {
+    @AppStorage("fuelUnit") private var fuelUnit: FuelUnit = .kmPerL
     let trip: TripRecord
 
     private var efficiency: Double {
@@ -41,7 +42,7 @@ struct TripRowView: View {
         HStack(spacing: 3) {
             Image(systemName: "leaf.fill").font(.system(size: 9, weight: .bold))
                 .foregroundStyle(.white.opacity(0.9))
-            Text("\(efficiency.oneDecimal) km/L")
+            Text(fuelUnit.format(kmL: efficiency))
                 .font(.system(size: 11, weight: .semibold, design: .rounded))
                 .foregroundStyle(.white)
         }

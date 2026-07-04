@@ -38,6 +38,31 @@ final class FuelUnitTests: XCTestCase {
         XCTAssertEqual(FuelUnit.lPer100km.format(kmL: 14.5), "6.9 L/100km")   // 100/14.5 = 6.90
     }
 
+    func testEdgeCases() {
+        // Zero is guarded — no divide-by-zero / NaN in either direction.
+        XCTAssertEqual(FuelUnit.lPer100km.displayValue(fromKmL: 0), 0)
+        XCTAssertEqual(FuelUnit.lPer100km.kmL(fromDisplay: 0), 0)
+        XCTAssertFalse(FuelUnit.lPer100km.displayValue(fromKmL: 0).isNaN)
+        // Very small and very large efficiencies convert cleanly.
+        XCTAssertEqual(FuelUnit.lPer100km.displayValue(fromKmL: 0.5), 200, accuracy: 0.0001)  // 100/0.5
+        XCTAssertEqual(FuelUnit.lPer100km.displayValue(fromKmL: 100), 1, accuracy: 0.0001)    // 100/100
+        XCTAssertEqual(FuelUnit.lPer100km.kmL(fromDisplay: 200), 0.5, accuracy: 0.0001)
+    }
+
+    func testSpecConversions() {
+        XCTAssertEqual(FuelUnit.lPer100km.format(kmL: 14.5), "6.9 L/100km")
+        XCTAssertEqual(FuelUnit.lPer100km.format(kmL: 12.0), "8.3 L/100km")
+        XCTAssertEqual(FuelUnit.lPer100km.format(kmL: 14.7), "6.8 L/100km")   // a Vios
+    }
+
+    func testRawValuePersistenceRoundTrip() {
+        // @AppStorage persists the rawValue; it must survive an encode/decode
+        // (i.e. an app restart) losslessly.
+        for unit in FuelUnit.allCases {
+            XCTAssertEqual(FuelUnit(rawValue: unit.rawValue), unit)
+        }
+    }
+
     func testDefaultInputsAreValidAndSimilar() {
         for unit in FuelUnit.allCases {
             let value = Double(unit.defaultInput)

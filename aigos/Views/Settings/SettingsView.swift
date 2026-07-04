@@ -87,6 +87,11 @@ struct SettingsView: View {
                     }
                 }
             }
+            Text("All values convert automatically. 14.5 km/L = 6.9 L/100km.")
+                .rounded(12)
+                .foregroundStyle(Color.white.opacity(0.5))
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, Space.sm)
         }
     }
 

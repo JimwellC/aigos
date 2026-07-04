@@ -18,6 +18,7 @@ struct TalkToAigosView: View {
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \VehicleProfile.createdAt) private var vehicles: [VehicleProfile]
     @Query private var personalPlaces: [PersonalPlace]
+    @AppStorage("fuelUnit") private var fuelUnit: FuelUnit = .kmPerL
 
     @State private var messages: [ChatMessage] = []
     @State private var input = ""
@@ -212,9 +213,13 @@ struct TalkToAigosView: View {
                 return estimate(for: merged)
             }
         }
+        // "What's my mileage?" → the default vehicle's efficiency in the user's unit.
+        if let mine = myMileageReply(text) {
+            return ChatMessage(role: .aigos, text: mine)
+        }
         // Vehicle knowledge base — "what's the km/L of Vios?", "my car is a SUV",
-        // "what SUVs are fuel efficient?".
-        if let answer = VehicleDatabase.answer(for: text) {
+        // "what SUVs are fuel efficient?". Efficiency figures follow the user's unit.
+        if let answer = VehicleDatabase.answer(for: text, unit: fuelUnit) {
             let suggestion = (answer.efficiencyKmL != nil || answer.offersAddVehicle) ? answer : nil
             return ChatMessage(role: .aigos, text: answer.text, vehicleSuggestion: suggestion)
         }
@@ -228,6 +233,19 @@ struct TalkToAigosView: View {
         return KnowledgeBase.Vehicle(
             name: v.name, efficiencyKmL: v.efficiencyKmL, fuelType: v.fuelType,
             pricePerLitre: PriceService.price(for: v.fuelType, in: context))
+    }
+
+    /// "What's my mileage / efficiency (in L/100km)?" → the default vehicle's
+    /// stored efficiency, shown in the user's current unit.
+    private func myMileageReply(_ text: String) -> String? {
+        let q = text.lowercased()
+        let cues = ["my mileage", "my efficiency", "my km/l", "my kml", "my fuel economy",
+                    "my consumption", "my fuel efficiency", "my car's efficiency", "my car's mileage"]
+        guard cues.contains(where: { q.contains($0) }) else { return nil }
+        guard let v = vehicles.first(where: \.isDefault) ?? vehicles.first else {
+            return "Add a vehicle first and I'll show its efficiency."
+        }
+        return "Your \(v.name) is set to \(fuelUnit.format(kmL: v.efficiencyKmL))."
     }
 
     /// Match a vehicle named anywhere in the text (for "same trip in my truck").

@@ -57,7 +57,8 @@ enum VehicleDatabase {
 
     /// Classify a Talk message as a vehicle question and answer it. Returns nil
     /// when the message isn't about a vehicle (so Talk falls through to trips).
-    static func answer(for text: String, entries: [VehicleEntry] = VehicleDatabase.entries) -> VehicleAnswer? {
+    static func answer(for text: String, entries: [VehicleEntry] = VehicleDatabase.entries,
+                       unit: FuelUnit = .kmPerL) -> VehicleAnswer? {
         let q = text.lowercased()
 
         // 1. "Is Premium 95 worth it?"
@@ -72,8 +73,8 @@ enum VehicleDatabase {
         }
 
         // 2b. "What SUVs are fuel efficient?" / "Best car for long drives?" /
-        //     "Cheapest to run motorcycle?" → rank the top few by km/L.
-        if let ranking = categoryBest(q, entries: entries) { return ranking }
+        //     "Cheapest to run motorcycle?" → rank the top few by efficiency.
+        if let ranking = categoryBest(q, entries: entries, unit: unit) { return ranking }
 
         let entry = find(text, entries: entries)
         let age = extractAge(text)
@@ -88,7 +89,7 @@ enum VehicleDatabase {
         if let stated = statedCategory(in: q), let entry {
             let (label, range) = correctionBlurb(for: entry, stated: stated)
             return VehicleAnswer(
-                text: "Got it! The \(entry.makeModel) is \(label). Based on its category, it typically gets around \(range). Want me to use about \(fmt(entry.kmL)) km/L for your calculation?",
+                text: "Got it! The \(entry.makeModel) is \(label). Based on its category, it typically gets around \(range). Want me to use about \(unit.format(kmL: entry.kmL)) for your calculation?",
                 efficiencyKmL: entry.kmL, fuelType: entry.fuelType,
                 vehicleType: entry.vehicleType, suggestedName: entry.makeModel)
         }
@@ -101,9 +102,9 @@ enum VehicleDatabase {
                 let pct = Int(round((1 - factor) * 100))
                 let text: String
                 if let age {
-                    text = "Based on typical wear for a \(age)-year-old vehicle, I'm adjusting efficiency by −\(pct)%. Your effective km/L is about \(fmt(realistic)) instead of \(fmt(entry.kmL))."
+                    text = "Based on typical wear for a \(age)-year-old vehicle, I'm adjusting efficiency by −\(pct)%. Your effective efficiency is about \(unit.format(kmL: realistic)) instead of \(unit.format(kmL: entry.kmL))."
                 } else {
-                    text = "Older cars typically get 10–20% less than rated due to engine wear. The \(entry.displayName) is rated \(fmt(entry.kmL)) km/L, so I'd use about \(fmt(realistic)) km/L as a realistic estimate."
+                    text = "Older cars typically get 10–20% less than rated due to engine wear. The \(entry.displayName) is rated \(unit.format(kmL: entry.kmL)), so I'd use about \(unit.format(kmL: realistic)) as a realistic estimate."
                 }
                 return VehicleAnswer(
                     text: text, efficiencyKmL: realistic, fuelType: entry.fuelType,
@@ -120,10 +121,10 @@ enum VehicleDatabase {
                 vehicleType: entry.vehicleType, suggestedName: entry.displayName)
         }
 
-        // 5. Found a model → give its rated km/L + offer to use it.
+        // 5. Found a model → give its rated efficiency + offer to use it.
         if let entry {
             return VehicleAnswer(
-                text: "The \(entry.displayName) gets about \(fmt(entry.kmL)) km/L in typical Philippine driving. Want me to use this?",
+                text: "The \(entry.displayName) gets about \(unit.format(kmL: entry.kmL)) in typical Philippine driving. Want me to use this?",
                 efficiencyKmL: entry.kmL, fuelType: entry.fuelType,
                 vehicleType: entry.vehicleType, suggestedName: entry.displayName)
         }
@@ -243,7 +244,7 @@ enum VehicleDatabase {
 
     // MARK: - "Most fuel-efficient X" rankings
 
-    private static func categoryBest(_ q: String, entries: [VehicleEntry]) -> VehicleAnswer? {
+    private static func categoryBest(_ q: String, entries: [VehicleEntry], unit: FuelUnit = .kmPerL) -> VehicleAnswer? {
         let intent = ["efficient", "best", "cheapest", "economical", "most km",
                       "save gas", "save on gas", "matipid", "sulit", "longest range"]
         guard intent.contains(where: { q.contains($0) }) else { return nil }
@@ -269,7 +270,7 @@ enum VehicleDatabase {
 
         let top = topEfficient(matching: filter, entries: entries, limit: 3)
         guard top.count >= 2 else { return nil }
-        let lines = top.map { "• \($0.makeModel) — \(fmt($0.kmL)) km/L" }.joined(separator: "\n")
+        let lines = top.map { "• \($0.makeModel) — \(unit.format(kmL: $0.kmL))" }.joined(separator: "\n")
         return VehicleAnswer(text: "Here are the most fuel-efficient \(label) in my list:\n\(lines)\n\nAsk me to estimate a trip with any of them!")
     }
 

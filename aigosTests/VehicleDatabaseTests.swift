@@ -101,6 +101,18 @@ final class VehicleDatabaseTests: XCTestCase {
         XCTAssertEqual(a!.vehicleType, .motorcycle)
     }
 
+    // Efficiency figures follow the user's unit preference.
+    func testAnswerRespectsUnit() {
+        let kmL = VehicleDatabase.answer(for: "What is the km/L of Vios?", unit: .kmPerL)
+        XCTAssertNotNil(kmL)
+        XCTAssertTrue(kmL!.text.contains("14.7 km/L"), kmL!.text)
+
+        let l100 = VehicleDatabase.answer(for: "What is the km/L of Vios?", unit: .lPer100km)
+        XCTAssertNotNil(l100)
+        XCTAssertTrue(l100!.text.contains("6.8 L/100km"), l100!.text)   // 100/14.7 = 6.8
+        XCTAssertFalse(l100!.text.contains("14.7 km/L"), l100!.text)
+    }
+
     // A plain trip question must NOT be treated as a vehicle query.
     func testTripQueryIgnored() {
         XCTAssertNil(VehicleDatabase.answer(for: "How much to drive Manila to Batangas?"))
