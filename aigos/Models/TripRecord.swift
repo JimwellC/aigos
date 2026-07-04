@@ -43,6 +43,7 @@ final class TripRecord {
 
     var calculatedAt: Date = Date()
     var isFavorite: Bool = false
+    var isTracked: Bool = false          // a GPS-tracked drive exists for this trip
 
     init(
         origin: String,

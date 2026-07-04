@@ -288,6 +288,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "aigos uses your location to set your starting point. Never stored or shared.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "aigos tracks your trip to compare estimated vs actual fuel cost. Location is stored on your iPhone only and is never shared.";
+				INFOPLIST_KEY_UIBackgroundModes = location;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
@@ -318,6 +320,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "aigos uses your location to set your starting point. Never stored or shared.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "aigos tracks your trip to compare estimated vs actual fuel cost. Location is stored on your iPhone only and is never shared.";
+				INFOPLIST_KEY_UIBackgroundModes = location;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;

@@ -26,6 +26,8 @@ struct aigosApp: App {
             SavedRoute.self,
             FuelPriceCache.self,
             PersonalPlace.self,
+            TrackedTrip.self,
+            FuelLog.self,
         ])
         container = Self.makeContainer(for: schema)
 
