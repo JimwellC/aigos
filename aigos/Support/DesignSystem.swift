@@ -407,4 +407,8 @@ enum Haptics {
     @MainActor static func tap(_ style: UIImpactFeedbackGenerator.FeedbackStyle = .medium) {
         UIImpactFeedbackGenerator(style: style).impactOccurred()
     }
+
+    @MainActor static func success() {
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+    }
 }

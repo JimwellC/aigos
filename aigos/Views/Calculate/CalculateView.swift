@@ -186,8 +186,10 @@ struct CalculateView: View {
     }
 
     private var calculateButton: some View {
-        // Glow is live whenever the button is actionable or mid-calc.
+        // `live` = actionable or mid-calc; the glow only pulses when it's idle and
+        // ready to tap (draws the eye), and holds steady while calculating.
         let live = canCalculate || isCalculating
+        let idlePulse = canCalculate && !isCalculating
         return Button {
             if isCalculating { return }
             if canCalculate {
@@ -209,28 +211,29 @@ struct CalculateView: View {
                     Text("Calculate")
                 }
             }
-            .rounded(18, weight: .bold)
+            .font(.system(size: 18, weight: .bold, design: .rounded))
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 17)
+            .frame(height: 56)
+            // Deep brown pill so white text/icon pop against the amber background.
             .background(
                 Capsule().fill(
-                    LinearGradient(
-                        colors: live
-                            ? [Color.aigosAmberLight, Color.aigosAmber, Color.aigosAmberDeep]
-                            : [Color.aigosAmber.opacity(0.4), Color.aigosAmberDeep.opacity(0.4)],
-                        startPoint: .topLeading, endPoint: .bottomTrailing
-                    )
+                    LinearGradient(colors: [Color(hex: "#8A4E24"), Color(hex: "#6B3A1A")],
+                                   startPoint: .top, endPoint: .bottom)
                 )
             )
-            // Amber glow; pulses harder while calculating for a "working" feel.
-            .shadow(color: Color.aigosAmber.opacity(live ? (glowPulse ? (isCalculating ? 0.85 : 0.6) : 0.5) : 0),
-                    radius: live ? (glowPulse ? (isCalculating ? 30 : 24) : 20) : 0, x: 0, y: 8)
+            .overlay(Capsule().strokeBorder(Color.aigosAmberLight.opacity(0.5), lineWidth: 1.5))
+            .clipShape(Capsule())
+            // Warm amber glow beneath; pulses outward when idle + ready.
+            .shadow(color: Color(hex: "#C4793A").opacity(live ? 0.6 : 0),
+                    radius: !live ? 0 : (idlePulse ? (glowPulse ? 30 : 18) : 22),
+                    x: 0, y: 8)
+            .opacity(live ? 1.0 : 0.45)
         }
-        .buttonStyle(PressableStyle())
+        .buttonStyle(PressableStyle())     // scales to 0.96 with spring on press
         .disabled(isCalculating)
         .onAppear {
-            withAnimation(.easeInOut(duration: isCalculating ? 0.7 : 1.6).repeatForever(autoreverses: true)) { glowPulse = true }
+            withAnimation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true)) { glowPulse = true }
         }
     }
 
@@ -434,6 +437,7 @@ struct CalculateView: View {
             updatePreciseDistance()
         }
         if DebugSupport.lowFuel { fuelLevel = .low }
+        if DebugSupport.vehiclesPicker { DispatchQueue.main.async { showingVehiclePicker = true } }
         if let q = DebugSupport.searchDemo {
             origin = q
             DispatchQueue.main.async { demoSearchOpen = true }
@@ -484,7 +488,7 @@ struct CalculateView: View {
     /// reveal the result sheet after a minimum 1.2s so it feels considered.
     private func startCalculate() {
         guard canCalculate, !isCalculating else { return }
-        Haptics.tap(.light)
+        Haptics.tap(.medium)   // medium impact on press
         submitAttempted = false
         withAnimation(.easeInOut(duration: 0.25)) { isCalculating = true }
 

@@ -56,6 +56,11 @@ enum DebugSupport {
         ProcessInfo.processInfo.arguments.contains("-placeMap")
     }
 
+    /// Auto-present the Vehicles picker/garage (screenshots/QA).
+    static var vehiclesPicker: Bool {
+        ProcessInfo.processInfo.arguments.contains("-vehicles")
+    }
+
     /// Prefill Manila → Batangas (no auto-calc) so the route mini-map shows.
     static var routePreview: Bool {
         ProcessInfo.processInfo.arguments.contains("-routePreview")
@@ -139,6 +144,16 @@ enum DebugSupport {
         vehicle.drivingProfile = profile
         context.insert(vehicle)
         context.insert(profile)
+
+        // A second (non-default) vehicle so the garage shows both indicators.
+        let bike = VehicleProfile(
+            name: "Delivery Bike", type: .motorcycle, fuelType: .unleaded91,
+            efficiencyKmL: 45, isDefault: false, manufacturingYear: 2021
+        )
+        let bikeProfile = DrivingProfile(vehicleId: bike.id)
+        bike.drivingProfile = bikeProfile
+        context.insert(bike)
+        context.insert(bikeProfile)
 
         let cal = Calendar.current
         let now = Date()

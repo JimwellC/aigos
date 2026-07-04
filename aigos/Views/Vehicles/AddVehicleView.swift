@@ -17,6 +17,7 @@ struct AddVehicleView: View {
 
     @Binding var selectedVehicleID: UUID?
     var prefill: VehicleDraft? = nil
+    var editing: VehicleProfile? = nil     // when set, edit this vehicle in place
 
     @State private var name = "My Car"
     @State private var type: VehicleType = .car
@@ -24,6 +25,10 @@ struct AddVehicleView: View {
     @State private var efficiencyText = ""
     @State private var yearText = ""
     @State private var maintenance: MaintenanceStatus = .average
+    @State private var makeDefault = false
+    @State private var didLoad = false
+
+    private var isEditing: Bool { editing != nil }
 
     private var efficiency: Double? {
         Double(efficiencyText.trimmingCharacters(in: .whitespaces))
@@ -70,13 +75,23 @@ struct AddVehicleView: View {
 
                         FieldLabel("Maintenance")
                         SelectablePillFlow(items: MaintenanceStatus.allCases, selection: $maintenance) { "\($0.emoji) \($0.label)" }
+
+                        if isEditing || !vehicles.isEmpty {
+                            Toggle(isOn: $makeDefault) {
+                                Text("Set as default vehicle")
+                                    .rounded(15, weight: .medium)
+                                    .foregroundStyle(.white)
+                            }
+                            .tint(Color.aigosAmber)
+                            .padding(.top, Space.xs)
+                        }
                     }
                     .padding(.horizontal, Space.screen)
                     .padding(.vertical, Space.lg)
                 }
             }
-            .onAppear(perform: applyPrefill)
-            .navigationTitle("Add Vehicle")
+            .onAppear(perform: load)
+            .navigationTitle(isEditing ? "Edit Vehicle" : "Add Vehicle")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Color.aigosAmberDeep, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
@@ -85,45 +100,68 @@ struct AddVehicleView: View {
                     Button("Cancel") { dismiss() }.tint(.white)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: save).disabled(!canSave).tint(.white)
+                    Button(isEditing ? "Save changes" : "Save", action: save)
+                        .disabled(!canSave).tint(.white)
                 }
             }
         }
     }
 
-    /// Seed fields from a Talk to aigos suggestion (once, on first appear).
-    private func applyPrefill() {
-        if let p = prefill {
+    /// Seed fields once — from the vehicle being edited, else a Talk suggestion.
+    private func load() {
+        guard !didLoad else { return }
+        didLoad = true
+        if let v = editing {
+            name = v.name
+            type = v.type
+            fuelType = v.fuelType
+            efficiencyText = fuelUnit.displayValue(fromKmL: v.efficiencyKmL).oneDecimal
+            yearText = v.manufacturingYear.map(String.init) ?? ""
+            maintenance = v.maintenanceStatus
+            makeDefault = v.isDefault
+        } else if let p = prefill {
             name = p.name
             type = p.vehicleType
             fuelType = p.fuelType
-            if let kmL = p.efficiencyKmL, efficiencyText.isEmpty {
-                efficiencyText = fuelUnit.displayValue(fromKmL: kmL).oneDecimal
-            }
+            if let kmL = p.efficiencyKmL { efficiencyText = fuelUnit.displayValue(fromKmL: kmL).oneDecimal }
+            makeDefault = vehicles.isEmpty
+        } else {
+            makeDefault = vehicles.isEmpty
         }
         if efficiencyText.isEmpty { efficiencyText = fuelUnit.defaultInput }
     }
 
     private func save() {
         guard let efficiency else { return }
-        let isFirst = vehicles.isEmpty
-        let vehicle = VehicleProfile(
-            name: name.trimmingCharacters(in: .whitespaces),
-            type: type,
-            fuelType: fuelType,
-            efficiencyKmL: fuelUnit.kmL(fromDisplay: efficiency),   // store canonical km/L
-            isDefault: isFirst,
-            manufacturingYear: year,
-            maintenanceStatus: maintenance
-        )
-        let profile = DrivingProfile(vehicleId: vehicle.id)
-        vehicle.drivingProfile = profile
+        Haptics.success()
+        let kmL = fuelUnit.kmL(fromDisplay: efficiency)   // store canonical km/L
+        let trimmedName = name.trimmingCharacters(in: .whitespaces)
 
-        context.insert(vehicle)
-        context.insert(profile)
-        try? context.save()
-
-        selectedVehicleID = vehicle.id
+        if let v = editing {
+            v.name = trimmedName
+            v.type = type
+            v.fuelType = fuelType
+            v.efficiencyKmL = kmL
+            v.manufacturingYear = year
+            v.maintenanceStatus = maintenance
+            if makeDefault { for other in vehicles { other.isDefault = (other.id == v.id) } }
+            try? context.save()
+            selectedVehicleID = v.id
+        } else {
+            let isFirst = vehicles.isEmpty
+            let makeItDefault = makeDefault || isFirst
+            if makeItDefault { for other in vehicles { other.isDefault = false } }
+            let vehicle = VehicleProfile(
+                name: trimmedName, type: type, fuelType: fuelType, efficiencyKmL: kmL,
+                isDefault: makeItDefault, manufacturingYear: year, maintenanceStatus: maintenance
+            )
+            let profile = DrivingProfile(vehicleId: vehicle.id)
+            vehicle.drivingProfile = profile
+            context.insert(vehicle)
+            context.insert(profile)
+            try? context.save()
+            selectedVehicleID = vehicle.id
+        }
         dismiss()
     }
 }
