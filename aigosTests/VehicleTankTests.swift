@@ -7,9 +7,38 @@
 //
 
 import XCTest
+import SwiftData
 @testable import aigos
 
 final class VehicleTankTests: XCTestCase {
+
+    @MainActor
+    func testLegacyFlat45NormalizedByType() throws {
+        let schema = Schema([
+            VehicleProfile.self, DrivingProfile.self, TripRecord.self,
+            SavedRoute.self, FuelPriceCache.self, PersonalPlace.self,
+        ])
+        let ctx = ModelContext(try ModelContainer(
+            for: schema, configurations: ModelConfiguration(isStoredInMemoryOnly: true)))
+        // Simulate pre-tank-field vehicles migrated to the flat 45 L default.
+        let moto = VehicleProfile(name: "My motor", type: .motorcycle, fuelType: .unleaded91,
+                                  efficiencyKmL: 45, tankCapacityL: 45)
+        let van = VehicleProfile(name: "Van", type: .van, fuelType: .diesel,
+                                 efficiencyKmL: 10, tankCapacityL: 45)
+        let car = VehicleProfile(name: "Car", type: .car, fuelType: .premium95,
+                                 efficiencyKmL: 14, tankCapacityL: 45)
+        ctx.insert(moto); ctx.insert(van); ctx.insert(car)
+        try ctx.save()
+
+        UserDefaults.standard.removeObject(forKey: "tankCapacityNormalized_v1")
+        AppSeeder.normalizeTankCapacitiesIfNeeded(ctx)
+
+        XCTAssertEqual(moto.tankCapacityL, 5, "motorcycle at flat 45 → type default 5")
+        XCTAssertEqual(van.tankCapacityL, 65, "van at flat 45 → type default 65")
+        XCTAssertEqual(car.tankCapacityL, 45, "car at 45 is correct — unchanged")
+        UserDefaults.standard.removeObject(forKey: "tankCapacityNormalized_v1")
+    }
+
 
     func testKnownCarHasRealTank() {
         XCTAssertEqual(VehicleDatabase.find("Vios")?.tankCapacityL, 42)

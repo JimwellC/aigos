@@ -124,10 +124,11 @@ final class TrafficLoadFuelTests: XCTestCase {
     }
 
     func testTypicalTankLiters() {
-        // Fallback tank by type (known models use accurate DB values): car 45 L.
+        // Per-type fallback tank (known models use accurate DB values).
         XCTAssertEqual(VehicleType.car.typicalTankLiters, 45)
-        XCTAssertEqual(VehicleType.motorcycle.typicalTankLiters, 6)
-        XCTAssertGreaterThan(VehicleType.truck.typicalTankLiters, VehicleType.van.typicalTankLiters)
+        XCTAssertEqual(VehicleType.motorcycle.typicalTankLiters, 5)
+        XCTAssertEqual(VehicleType.truck.typicalTankLiters, 75)
+        XCTAssertEqual(VehicleType.van.typicalTankLiters, 65)
     }
 
     // MARK: - NL detection

@@ -25,6 +25,7 @@ struct ContentView: View {
             .task {
                 AppSeeder.seedPricesIfNeeded(context)
                 AppSeeder.seedPersonalPlacesIfNeeded(context)
+                AppSeeder.normalizeTankCapacitiesIfNeeded(context)
             }
             .fullScreenCover(isPresented: Binding(
                 get: { !hasOnboarded },

@@ -55,6 +55,27 @@ enum AppSeeder {
         return formatter.date(from: string)
     }
 
+    // MARK: - Tank-size normalization
+
+    /// One-time fix for vehicles created before the per-vehicle tank field existed:
+    /// they were all migrated to the flat 45 L model default, which is wrong for
+    /// non-cars (a motorcycle is ~5 L). Reset any motorcycle/truck/van still sitting
+    /// at exactly 45 L to its type's typical tank. Cars at 45 L are already correct,
+    /// and no pre-tank vehicle ever had a user-set value, so nothing real is lost.
+    /// Idempotent + guarded so it runs at most once.
+    static func normalizeTankCapacitiesIfNeeded(_ context: ModelContext) {
+        let key = "tankCapacityNormalized_v1"
+        guard !UserDefaults.standard.bool(forKey: key) else { return }
+        let vehicles = (try? context.fetch(FetchDescriptor<VehicleProfile>())) ?? []
+        var changed = false
+        for v in vehicles where v.type != .car && v.tankCapacityL == 45.0 {
+            v.tankCapacityL = v.type.typicalTankLiters
+            changed = true
+        }
+        if changed { try? context.save() }
+        UserDefaults.standard.set(true, forKey: key)
+    }
+
     // MARK: - Personal places
 
     /// Seed the common shortcut labels on first launch — empty until the user
