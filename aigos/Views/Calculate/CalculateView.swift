@@ -60,6 +60,17 @@ struct CalculateView: View {
     @State private var routeCoordinates: [CLLocationCoordinate2D]?   // actual road polyline
     @State private var detectedRoad: RouteAnalyzer.Suggestion?       // auto-detected road type
 
+    // GPS trip tracking (v1.1)
+    @State private var tracker = TripTracker.shared
+    @State private var lastTrip: TripRecord?
+    @State private var lastSummary: TripSummary?
+    @State private var showingComparison = false
+    @State private var showingTrackDenied = false
+    @State private var trackEstDistance: Double = 0
+    @State private var trackEstFuel: Double = 0
+    @State private var trackEstCost: Double = 0
+    @State private var trackRatedKmL: Double = 12
+
     private var selectedVehicle: VehicleProfile? {
         vehicles.first { $0.id == selectedVehicleID } ?? vehicles.first
     }
@@ -100,11 +111,12 @@ struct CalculateView: View {
     }
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
             AigosBackground(mascotPeek: CGSize(width: 60, height: -70))
 
             ScrollView {
                 VStack(spacing: Space.lg) {
+                    Color.clear.frame(height: tracker.isTracking ? 220 : 0)   // room for the banner
                     header
                     vehicleCard
                     routeCard
@@ -116,6 +128,30 @@ struct CalculateView: View {
                 .padding(.bottom, Space.xxl)
             }
             .scrollDismissesKeyboard(.interactively)
+
+            if tracker.isTracking {
+                TripTrackingBanner(tracker: tracker, onEnd: endTracking)
+                    .padding(.horizontal, Space.screen)
+                    .padding(.top, Space.md)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .animation(.spring(response: 0.4), value: tracker.isTracking)
+        .sheet(isPresented: $showingComparison) {
+            if let s = lastSummary {
+                TripComparisonView(
+                    summary: s,
+                    estDistanceKm: trackEstDistance,
+                    estFuelL: trackEstFuel, estCostPHP: trackEstCost,
+                    vehicleName: tracker.vehicleName,
+                    ratedKmL: trackRatedKmL,
+                    onUpdateProfile: updateEfficiency, onKeep: {})
+            }
+        }
+        .alert("Location needed", isPresented: $showingTrackDenied) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Allow \u{201C}Always\u{201D} location in Settings to track your trip, or just drop pins as usual.")
         }
         .sheet(isPresented: $showingVehiclePicker) {
             VehiclePicker(selectedVehicleID: $selectedVehicleID)
@@ -154,6 +190,7 @@ struct CalculateView: View {
                     vehicleName: resultVehicleName,
                     saved: $savedThisRoute,
                     onSave: saveRoute,
+                    onTrack: startTracking,
                     onDone: { showingResult = false }
                 )
                 .presentationDetents([.large])
@@ -646,9 +683,70 @@ struct CalculateView: View {
             fuelLevel: fuelLevel
         )
         context.insert(trip)
+        lastTrip = trip                      // reference for "Track This Trip"
         if let profile = vehicle.drivingProfile {
             ProfileLearningEngine.updateProfile(profile, with: trip)
         }
+        try? context.save()
+    }
+
+    // MARK: - GPS trip tracking (v1.1)
+
+    private func startTracking() {
+        guard let vehicle = selectedVehicle, let trip = lastTrip, let est = estimate else { return }
+        trackEstDistance = est.distanceKm
+        trackEstFuel = est.adjustedLitres
+        trackEstCost = est.estimatedCost
+        trackRatedKmL = vehicle.efficiencyKmL
+        let destCoord = destinationPoint.map {
+            CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon)
+        }
+        tracker.start(
+            tripRecordId: trip.id,
+            origin: origin.isEmpty ? "Start" : origin,
+            destination: destination.isEmpty ? "Destination" : destination,
+            vehicleName: vehicle.name,
+            efficiencyKmL: vehicle.efficiencyKmL,
+            pricePerLitre: est.fuelPricePerLitre,
+            estDistanceKm: est.distanceKm,
+            destinationCoord: destCoord)
+        showingResult = false
+        if tracker.status == .denied { showingTrackDenied = true }
+    }
+
+    private func endTracking() {
+        guard tracker.isTracking else { return }
+        let summary = tracker.finish()
+        Haptics.tap(.medium)
+        if let trip = lastTrip {
+            let tracked = TrackedTrip(
+                tripRecordId: trip.id, estimatedDistanceKm: trackEstDistance,
+                estimatedFuelL: trackEstFuel, estimatedCostPHP: trackEstCost,
+                vehicleName: tracker.vehicleName, origin: tracker.origin, destination: tracker.destination)
+            tracked.routeCoordinates = summary.routeFlat
+            tracked.actualDistanceKm = summary.actualDistanceKm
+            tracked.actualDurationSeconds = summary.actualDurationSeconds
+            tracked.actualAvgSpeedKmh = summary.actualAvgSpeedKmh
+            tracked.actualFuelL = summary.actualFuelL
+            tracked.actualCostPHP = summary.actualCostPHP
+            tracked.accuracyPercent = summary.accuracyPercent
+            tracked.startedAt = summary.startedAt
+            tracked.endedAt = summary.endedAt
+            tracked.isCompleted = true
+            trip.isTracked = true
+            context.insert(tracked)
+            try? context.save()
+        }
+        lastSummary = summary
+        showingComparison = true
+    }
+
+    /// Self-correct the vehicle's efficiency toward the value implied by the tracked
+    /// drive (the comparison view already moderated/clamped it).
+    private func updateEfficiency(_ newKmL: Double) {
+        guard let vehicle = selectedVehicle else { return }
+        vehicle.efficiencyKmL = newKmL
+        vehicle.drivingProfile?.lastUpdated = Date()
         try? context.save()
     }
 

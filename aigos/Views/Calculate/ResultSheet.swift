@@ -18,6 +18,7 @@ struct ResultSheet: View {
     let vehicleName: String
     @Binding var saved: Bool
     let onSave: () -> Void
+    let onTrack: () -> Void
     let onDone: () -> Void
 
     @State private var heroCost: Double = 0
@@ -48,6 +49,20 @@ struct ResultSheet: View {
                         action: onSave
                     )
                     .disabled(saved)
+
+                    // Track the actual drive to compare estimate vs reality (v1.1).
+                    Button(action: onTrack) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "location.fill")
+                            Text("Track This Trip")
+                        }
+                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.aigosAmberDeep)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Color.aigosAmber, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
 
                     PrimaryButton(title: "Done", action: onDone)
                 }
