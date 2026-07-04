@@ -385,6 +385,107 @@ enum GazetteerData {
             ("Enchanted Kingdom", 14.3200, 121.0670, ["enchanted kingdom", "ek"]),
         ])
 
+        // ── Local coverage: Central/Northern Luzon (verified via MKLocalSearch) ──
+        g("Pampanga", [
+            ("SM Pampanga", 15.05269, 120.69709, ["sm pampanga", "sm san fernando", "sm sf"]),
+            ("SM Clark", 15.16892, 120.58014, ["sm clark", "sm city clark"]),
+            ("Marquee Mall", 15.16280, 120.60984, ["marquee", "marquee mall"]),
+            ("Nepo Mall", 15.13505, 120.58855, ["nepo", "nepo mall"]),
+            ("Robinsons Starmills", 15.04863, 120.69843, ["starmills", "robinsons starmills"]),
+            ("Dau Bus Terminal", 15.17902, 120.58906, ["dau", "dau terminal", "dau mabalacat"]),
+            ("Clark Freeport Zone", 15.17896, 120.52901, ["clark", "clark freeport", "clark zone"]),
+            ("Angeles City Hall", 15.16554, 120.60802, ["angeles city hall"]),
+            ("Holy Angel University", 15.13328, 120.59002, ["hau", "holy angel"]),
+            ("Angeles University Foundation", 15.14499, 120.59432, ["auf", "angeles university"]),
+            ("Laus Group Event Center", 15.04803, 120.68821, ["laus group", "lgec"]),
+            ("Puregold Angeles", 15.16060, 120.59142, ["puregold angeles"]),
+            ("Waltermart Pampanga", 15.04835, 120.66860, ["waltermart pampanga", "waltermart san fernando"]),
+            ("Jenra Mall", 15.13644, 120.58790, ["jenra", "jenra mall"]),
+            ("Fields Avenue", 15.16651, 120.58339, ["fields", "fields avenue"]),
+            ("Balibago", 15.16258, 120.59125, ["balibago"]),
+            ("Magalang", 15.21393, 120.66186, []),
+            ("Mexico", 15.06443, 120.71885, ["mexico pampanga"]),
+            ("Arayat", 15.15047, 120.77119, []),
+            ("Porac", 15.07305, 120.54085, []),
+            ("Floridablanca", 14.97541, 120.52856, []),
+            ("Guagua", 14.96188, 120.63108, []),
+            ("Lubao", 14.90939, 120.54987, []),
+            ("Sasmuan", 14.93657, 120.62230, []),
+            ("Bacolor", 14.99798, 120.65206, []),
+            ("Candaba", 15.09253, 120.82728, []),
+            ("Apalit", 14.95289, 120.77227, []),
+        ])
+        g("Bulacan", [
+            ("SM Marilao", 14.75394, 120.95567, ["sm marilao"]),
+            ("SM Baliwag", 14.96039, 120.89053, ["sm baliwag", "sm baliuag"]),
+            ("Robinsons Malolos", 14.84997, 120.82363, ["robinsons malolos"]),
+            ("Malolos City Hall", 14.86075, 120.81022, ["malolos city hall"]),
+            ("Malolos Cathedral", 14.84245, 120.81158, ["malolos cathedral"]),
+            ("Barasoain Church", 14.84637, 120.81232, ["barasoain"]),
+            ("Marilao", 14.76033, 120.96233, []),
+            ("Bocaue", 14.79948, 120.92063, []),
+            ("Guiguinto", 14.84134, 120.86697, []),
+            ("Plaridel", 14.88608, 120.85681, ["plaridel bulacan"]),
+            ("Pulilan", 14.90356, 120.84576, []),
+            ("Calumpit", 14.91577, 120.76717, []),
+            ("Bulacan Provincial Capitol", 14.85627, 120.81495, ["bulacan capitol"]),
+        ])
+        g("Tarlac", [
+            ("SM Tarlac", 15.47705, 120.59464, ["sm tarlac"]),
+            ("Robinsons Tarlac", 15.43125, 120.59942, ["robinsons tarlac", "robinsons luisita"]),
+            ("Paniqui", 15.66780, 120.58099, []),
+            ("La Paz Tarlac", 15.44188, 120.72852, []),
+            ("Camiling", 15.68557, 120.41232, []),
+            ("Tarlac Provincial Capitol", 15.48028, 120.58800, ["tarlac capitol"]),
+        ])
+        g("Nueva Ecija", [
+            ("SM Cabanatuan", 15.46715, 120.95499, ["sm cabanatuan"]),
+            ("Robinsons Cabanatuan", 15.45986, 120.94986, ["robinsons cabanatuan"]),
+            ("Palayan City", 15.54550, 121.08710, ["palayan"]),
+            ("San Jose City", 15.79026, 120.98925, ["san jose nueva ecija"]),
+            ("Nueva Ecija Provincial Capitol", 15.55646, 121.09476, ["nueva ecija capitol"]),
+        ])
+        g("Zambales", [
+            ("Subic Bay Freeport Zone", 14.78899, 120.27987, ["sbma", "subic freeport", "subic bay"]),
+            ("San Antonio Zambales", 14.94971, 120.08859, []),
+            ("San Narciso Zambales", 15.01565, 120.08192, []),
+            ("Harbor Point", 14.82505, 120.28033, ["harbor point", "harbour point"]),
+        ])
+        g("Bataan", [
+            ("SM City Bataan", 14.68328, 120.53723, ["sm bataan"]),
+            ("Orion", 14.61976, 120.57789, []),
+            ("Limay", 14.56143, 120.59547, []),
+            ("Dinalupihan", 14.86890, 120.46390, []),
+        ])
+        g("Pangasinan", [
+            ("SM Dagupan", 16.04435, 120.34354, ["sm dagupan", "sm center dagupan"]),
+            ("Robinsons Pangasinan", 16.02281, 120.35882, ["robinsons pangasinan", "robinsons calasiao"]),
+            ("San Carlos City Pangasinan", 15.92679, 120.34575, []),
+            ("Mangaldan", 16.07021, 120.40258, []),
+            ("Binalonan", 16.04534, 120.59431, []),
+            ("Calasiao", 16.00967, 120.35423, []),
+        ])
+        g("La Union", [
+            ("CSI City Mall La Union", 16.62930, 120.32262, ["csi mall", "csi la union", "sm san fernando la union"]),
+            ("Bauang", 16.52879, 120.32886, []),
+            ("San Juan La Union", 16.67135, 120.33688, ["san juan surf", "elyu"]),
+        ])
+        g("Benguet", [
+            ("SM Baguio", 16.40897, 120.59939, ["sm baguio"]),
+            ("Session Road", 16.40636, 120.60107, ["session road"]),
+            ("Burnham Park", 16.41107, 120.59540, ["burnham"]),
+            ("Camp John Hay", 16.39670, 120.61600, ["john hay"]),
+            ("The Mansion", 16.41239, 120.62149, ["mansion house"]),
+            ("Mines View Park", 16.42288, 120.62368, ["mines view"]),
+            ("Wright Park", 16.41514, 120.61859, []),
+            ("Baguio Cathedral", 16.41278, 120.59854, []),
+            ("Abanao Square", 16.41402, 120.59414, ["abanao"]),
+            ("Porta Vaga Mall", 16.41197, 120.59859, ["porta vaga"]),
+            ("Baguio General Hospital", 16.40110, 120.59613, ["bghmc", "baguio general"]),
+            ("Philippine Military Academy", 16.36074, 120.61882, ["pma", "pma baguio"]),
+            ("UP Baguio", 16.40591, 120.59830, ["up baguio"]),
+        ])
+
         return out
     }
 }
