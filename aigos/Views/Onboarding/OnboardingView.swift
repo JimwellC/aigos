@@ -3,8 +3,9 @@
 //  aigos
 //
 //  First-launch flow (Section 12) — goal: first calculation in under 90 seconds.
-//  Welcome → Add vehicle → Driving style → Prices. No account, no email, no cloud.
-//  Creates the first VehicleProfile + DrivingProfile, then flips `hasOnboarded`.
+//  Welcome → Feature highlights → Add vehicle → Driving style → Prices. No account,
+//  no email, no cloud. Creates the first VehicleProfile + DrivingProfile, then
+//  flips `hasOnboarded`. (5 screens; the progress bar tracks steps 1–4.)
 //
 
 import SwiftUI
@@ -25,8 +26,8 @@ struct OnboardingView: View {
         #if DEBUG
         if let s = DebugSupport.onboardingStep {
             _step = State(initialValue: s)
-            // Debug screenshots of the vehicle step expect the form, not search.
-            if s == 1 { _vehicleSearching = State(initialValue: false) }
+            // Debug screenshots of the vehicle step (now step 2) expect the form.
+            if s == 2 { _vehicleSearching = State(initialValue: false) }
         }
         #endif
     }
@@ -71,9 +72,10 @@ struct OnboardingView: View {
 
             VStack(spacing: Space.md) {
                 // The welcome hero (step 0) is full-bleed with no progress bar;
-                // the progress bar tracks the three form steps that follow.
+                // the progress bar tracks the four steps that follow (features →
+                // vehicle → driving → prices).
                 if step > 0 {
-                    ProgressBar(progress: Double(step) / 3)
+                    ProgressBar(progress: Double(step) / 4)
                         .padding(.top, Space.xl)
                         .padding(.horizontal, Space.lg)
                 }
@@ -81,8 +83,9 @@ struct OnboardingView: View {
                 Group {
                     switch step {
                     case 0: welcome
-                    case 1: addVehicle
-                    case 2: drivingStyle
+                    case 1: featureHighlights
+                    case 2: addVehicle
+                    case 3: drivingStyle
                     default: pricesIntro
                     }
                 }
@@ -118,8 +121,9 @@ struct OnboardingView: View {
     private var bgSymbol: String {
         switch step {
         case 0: "hand.wave.fill"
-        case 1: "car.fill"
-        case 2: "steeringwheel"
+        case 1: "sparkles"
+        case 2: "car.fill"
+        case 3: "steeringwheel"
         default: "fuelpump.fill"
         }
     }
@@ -161,7 +165,53 @@ struct OnboardingView: View {
     }
 
 
-    // MARK: - Screen 1 — Add vehicle
+    // MARK: - Screen 1 — Feature highlights
+
+    /// A quick showcase of what aigos does, to build excitement before setup.
+    private var featureHighlights: some View {
+        screen(cta: "Continue  →", action: advance) {
+            title("What aigos can do for you", subtitle: "Everything works offline — no login, no cloud.")
+
+            VStack(spacing: Space.md) {
+                featureCard(
+                    index: 0, icon: "fuelpump.fill", title: "Smart Fuel Calculator",
+                    desc: "Physics-based estimates using your speed, AC, traffic, road type, and vehicle age.")
+                featureCard(
+                    index: 1, icon: "location.fill", title: "GPS Trip Tracking",
+                    desc: "Track your actual drive and compare estimated vs real fuel cost.")
+                featureCard(
+                    index: 2, icon: "bubble.left.and.bubble.right.fill", title: "Talk to aigos",
+                    desc: "Ask in plain English or Tagalog — “Magkano gas papuntang Baguio?”")
+                featureCard(
+                    index: 3, icon: "car.fill", title: "Knows Your Car",
+                    desc: "100+ Philippine vehicles with real km/L. Find yours in one tap.")
+            }
+        }
+    }
+
+    private func featureCard(index: Int, icon: String, title: String, desc: String) -> some View {
+        HStack(alignment: .top, spacing: Space.md) {
+            Image(systemName: icon)
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundStyle(Color.aigosAmber)
+                .frame(width: 46, height: 46)
+                .background(Color.white.opacity(0.10), in: Circle())
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .rounded(17, weight: .bold).foregroundStyle(.white)
+                Text(desc)
+                    .rounded(13).foregroundStyle(Color.aigosTextSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(Space.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassCard()
+        .staggeredAppear(index: index)   // fade + gentle rise, staggered 0.05s
+    }
+
+    // MARK: - Screen 2 — Add vehicle
 
     @ViewBuilder
     private var addVehicle: some View {
@@ -252,7 +302,7 @@ struct OnboardingView: View {
         tankText = ""
     }
 
-    // MARK: - Screen 2 — Driving style
+    // MARK: - Screen 3 — Driving style
 
     private var drivingStyle: some View {
         screen(cta: "Looks good!", action: advance) {
@@ -275,7 +325,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - Screen 3 — Prices
+    // MARK: - Screen 4 — Prices
 
     private var pricesIntro: some View {
         screen(cta: "Start calculating", action: finish) {
