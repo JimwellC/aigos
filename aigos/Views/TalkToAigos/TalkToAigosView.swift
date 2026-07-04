@@ -18,6 +18,9 @@ struct TalkToAigosView: View {
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \VehicleProfile.createdAt) private var vehicles: [VehicleProfile]
     @Query private var personalPlaces: [PersonalPlace]
+    @Query(sort: \TripRecord.calculatedAt, order: .reverse) private var tripRecords: [TripRecord]
+    @Query private var fuelLogs: [FuelLog]
+    @Query private var trackedTrips: [TrackedTrip]
     @AppStorage("fuelUnit") private var fuelUnit: FuelUnit = .kmPerL
 
     @State private var messages: [ChatMessage] = []
@@ -27,9 +30,10 @@ struct TalkToAigosView: View {
 
     private let suggestions = [
         "Manila to Batangas",
-        "Pampanga to Manila with heavy traffic",
+        "I just filled up",
+        "Show my monthly report",
+        "How accurate were my estimates?",
         "What's the km/L of a Vios?",
-        "My car is a Honda City",
     ]
 
     var body: some View {
@@ -191,6 +195,11 @@ struct TalkToAigosView: View {
             return ChatMessage(role: .aigos, text: smalltalk)
         }
 
+        // v1.1 intents: log a fill-up, monthly report, estimate accuracy.
+        if let fuel = fuelLogReply(text) { return ChatMessage(role: .aigos, text: fuel) }
+        if let report = reportReply(text) { return ChatMessage(role: .aigos, text: report) }
+        if let acc = accuracyReply(text) { return ChatMessage(role: .aigos, text: acc) }
+
         // "Will I make it to X on one tank?" — trip fuel vs tank capacity. Checked
         // before the trip/knowledge intents (it names a trip but isn't a cost query).
         if let oneTank = oneTankReply(text) {
@@ -276,6 +285,58 @@ struct TalkToAigosView: View {
         return vehicles.first { v in
             v.name.lowercased().split(separator: " ").contains { $0.count >= 3 && lower.contains($0) }
         }
+    }
+
+    // MARK: - v1.1 intents (fuel log / report / accuracy)
+
+    /// "I just filled up 35 L at Shell for 2,520" → parse + save a FuelLog + confirm.
+    private func fuelLogReply(_ text: String) -> String? {
+        guard let draft = FuelLogParser.parse(text) else { return nil }
+        guard let v = vehicles.first(where: \.isDefault) ?? vehicles.first else {
+            return "Add a vehicle first, then tell me about your fill-up."
+        }
+        let liters = draft.liters ?? 0
+        let cost = draft.totalCost ?? 0
+        guard liters > 0 || cost > 0 else {
+            return "Got it — how many litres and how much did it cost? e.g. “filled up 35 L at Shell for 2,520”."
+        }
+        let price = (liters > 0 && cost > 0) ? cost / liters : PriceService.price(for: v.fuelType, in: context)
+        let log = FuelLog(vehicleId: v.id, vehicleName: v.name, fuelType: v.fuelType,
+                          litersPurchased: liters, totalCostPHP: cost, pricePerLiter: price,
+                          isFullTank: true, stationName: draft.stationName)
+        context.insert(log)
+        try? context.save()
+        let station = draft.stationName.map { " at \($0)" } ?? ""
+        return "Got it! Logged \(liters.clean) L\(station) for \(cost.phpString) (≈ PHP \(price.clean)/L) — full tank. ✅ Add the odometer in History → Fuel Log to unlock your real km/L."
+    }
+
+    /// "Show my monthly report" → a text summary (full report + share is in History).
+    private func reportReply(_ text: String) -> String? {
+        let q = text.lowercased()
+        guard q.contains("report") && (q.contains("month") || q.contains("my ") || q.contains("fuel")) else { return nil }
+        let r = FuelReport.monthly(for: Date(), trips: tripRecords, logs: fuelLogs)
+        guard !r.isEmpty else {
+            return "No trips yet this month. Calculate a trip and I'll start your \(r.monthLabel) report."
+        }
+        var s = "Your \(r.monthLabel): \(r.tripCount) trips, \(Int(r.totalDistanceKm)) km, \(r.totalSpentPHP.phpString) total (avg \(r.avgTripCostPHP.phpString)/trip, \(r.avgKmL.oneDecimal) km/L)."
+        if let e = r.mostExpensive { s += "\nPriciest: \(e.title) (\(e.cost.phpString))." }
+        return s + "\nOpen History → Report to view and share it. 📊"
+    }
+
+    /// "How accurate were my estimates?" → tracked-trip accuracy summary.
+    private func accuracyReply(_ text: String) -> String? {
+        let q = text.lowercased()
+        guard q.contains("accurate") || q.contains("accuracy") ||
+              (q.contains("estimate") && (q.contains("how") || q.contains("actual") || q.contains("real"))) else { return nil }
+        let done = trackedTrips.filter { $0.isCompleted }
+        guard !done.isEmpty else {
+            return "You haven't tracked a trip yet. After a calculation, tap “Track This Trip” and drive — I'll compare the estimate to your actual distance."
+        }
+        let avg = done.reduce(0) { $0 + $1.accuracyPercent } / Double(done.count)
+        let last = done.max { $0.endedAt < $1.endedAt }
+        var s = "Across \(done.count) tracked trip\(done.count == 1 ? "" : "s"), your estimates averaged \(Int(avg.rounded()))% accurate."
+        if let last { s += " Your last (\(last.origin) → \(last.destination)) was \(Int(last.accuracyPercent.rounded()))%." }
+        return s
     }
 
     // MARK: - Tank questions
