@@ -99,11 +99,7 @@ struct TalkToAigosView: View {
                             dismiss()
                         })
                         .id(message.id)
-                        .transition(.asymmetric(
-                            insertion: .move(edge: message.role == .user ? .trailing : .leading)
-                                .combined(with: .opacity),
-                            removal: .opacity
-                        ))
+                        .transition(.opacity)   // simple calm fade — no slide
                     }
 
                     if messages.count <= 1 {
@@ -202,7 +198,7 @@ struct TalkToAigosView: View {
         guard !trimmed.isEmpty else { return }
         input = ""
         let response = reply(to: trimmed)
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+        withAnimation(.easeOut(duration: 0.2)) {
             messages.append(ChatMessage(role: .user, text: trimmed))
             messages.append(response)
         }

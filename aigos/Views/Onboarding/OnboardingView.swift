@@ -330,7 +330,7 @@ struct OnboardingView: View {
     }
 
     private func advance() {
-        withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) { step += 1 }
+        withAnimation(.easeInOut(duration: 0.25)) { step += 1 }
     }
 
     private func finish() {
@@ -378,7 +378,7 @@ private struct ProgressBar: View {
             }
         }
         .frame(height: 6)
-        .animation(.spring(response: 0.5, dampingFraction: 0.8), value: progress)
+        .animation(.easeOut(duration: 0.25), value: progress)
     }
 }
 
@@ -456,7 +456,7 @@ private struct MascotBubble: View {
         .opacity(shown ? 1 : 0)
         .offset(x: shown ? 0 : -70)
         .onAppear {
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) { shown = true }
+            withAnimation(.easeOut(duration: 0.25)) { shown = true }
         }
     }
 }

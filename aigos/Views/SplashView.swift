@@ -65,7 +65,7 @@ struct SplashView: View {
     }
 
     private func animate() {
-        withAnimation(.spring(response: 0.6, dampingFraction: 0.6)) { mascotIn = true }
+        withAnimation(.easeOut(duration: 0.35)) { mascotIn = true }
         withAnimation(.easeOut(duration: 0.4).delay(0.3)) { titleIn = true }
         withAnimation(.easeOut(duration: 0.4).delay(0.6)) { taglineIn = true }
         if isFirstLaunch {

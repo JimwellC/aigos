@@ -130,10 +130,10 @@ struct CalculateView: View {
                     vehicleCard
                     if let s = topSuggestion {
                         SuggestionCard(suggestion: s) {
-                            withAnimation { dismissedSuggestions.insert(s.id) }
+                            withAnimation(.easeOut(duration: 0.2)) { dismissedSuggestions.insert(s.id) }
                             SuggestionLog.record([s])   // mark shown so it rotates out
                         }
-                        .transition(.opacity.combined(with: .move(edge: .top)))
+                        .transition(.opacity)
                     }
                     routeCard
                     drivingCard

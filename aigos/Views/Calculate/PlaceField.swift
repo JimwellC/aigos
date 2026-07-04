@@ -57,7 +57,7 @@ struct PlaceField: View {
             field
             if showDropdown {
                 dropdown
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+                    .transition(.opacity)
             }
         }
         .animation(.easeOut(duration: 0.2), value: showDropdown)

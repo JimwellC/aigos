@@ -107,7 +107,7 @@ struct SettingsView: View {
                         // pill is reliably tappable and switches on every tap.
                         Button {
                             guard fuelUnit != unit else { return }
-                            withAnimation(.spring(response: 0.3)) { fuelUnit = unit }
+                            withAnimation(.easeOut(duration: 0.15)) { fuelUnit = unit }
                         } label: {
                             Text(unit.label)
                                 .font(.system(size: 13, weight: selected ? .bold : .semibold, design: .rounded))

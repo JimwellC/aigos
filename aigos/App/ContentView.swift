@@ -10,6 +10,19 @@
 import SwiftUI
 import SwiftData
 
+/// All data the comparison sheet needs — presented via `.sheet(item:)` so the
+/// content is guaranteed non-nil the moment the sheet appears (no first-present
+/// race that showed a black sheet).
+private struct ComparisonData: Identifiable {
+    let id = UUID()
+    let summary: TripSummary
+    let estDistanceKm: Double
+    let estFuelL: Double
+    let estCostPHP: Double
+    let ratedKmL: Double
+    let vehicleName: String
+}
+
 struct ContentView: View {
     @Environment(\.modelContext) private var context
     @State private var appState = AppState()
@@ -19,17 +32,14 @@ struct ContentView: View {
     @State private var tracker = TripTracker.shared
     @State private var expanded = false
     @State private var showingEndConfirm = false
-    @State private var showingComparison = false
-    @State private var lastSummary: TripSummary?
-    // Estimate context captured at end time, for the comparison sheet.
-    @State private var compEstDistance = 0.0
-    @State private var compEstFuel = 0.0
-    @State private var compEstCost = 0.0
-    @State private var compRatedKmL = 0.0
-    @State private var compVehicleName = ""
+    @State private var comparison: ComparisonData?   // non-nil → comparison sheet shows
+    @State private var showingTooShort = false
 
     var body: some View {
         currentScreen
+            .id(appState.selectedTab)               // simple crossfade between tabs
+            .transition(.opacity)
+            .animation(.easeOut(duration: 0.15), value: appState.selectedTab)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             // Expanded dashboard = a bottom sheet FLOATING over content (doesn't push
             // it, never touches the header). Anchored just above the mini bar / tab bar.
@@ -39,14 +49,13 @@ struct ContentView: View {
                         tracker: tracker,
                         onCollapse: collapse,
                         onEnd: endTracking)
-                        // Expand: spring up. Collapse: ease down (driven by withAnimation).
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .transition(.opacity)   // fade in/out — calm, no slide
                 }
             }
             // The compact bar sits in the bottom inset directly above the tab bar —
-            // it only reserves ~56pt, so the header is never pushed. It slides up when
-            // tracking starts and down when it ends; it stays perfectly still (no
-            // animation) on tab switches, since neither isLive nor expanded changes.
+            // it only reserves ~56pt, so the header is never pushed. It fades in when
+            // tracking starts and out when it ends, and stays perfectly still on tab
+            // switches (neither isLive nor expanded changes).
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 VStack(spacing: 8) {
                     if tracker.isLive && !expanded {
@@ -54,11 +63,11 @@ struct ContentView: View {
                             tracker: tracker,
                             onTap: expand,
                             onLongPressEnd: { showingEndConfirm = true })
-                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                            .transition(.opacity)
                     }
                     AigosTabBar(selected: $appState.selectedTab)
                 }
-                .animation(.spring(response: 0.35, dampingFraction: 0.85), value: tracker.isLive)
+                .animation(.easeOut(duration: 0.2), value: tracker.isLive)
             }
             .environment(appState)
             .task {
@@ -72,21 +81,26 @@ struct ContentView: View {
             )) {
                 OnboardingView(hasOnboarded: $hasOnboarded)
             }
-            .sheet(isPresented: $showingComparison) {
-                if let s = lastSummary {
-                    TripComparisonView(
-                        summary: s,
-                        estDistanceKm: compEstDistance, estFuelL: compEstFuel, estCostPHP: compEstCost,
-                        vehicleName: compVehicleName, ratedKmL: compRatedKmL,
-                        onUpdateProfile: updateEfficiency, onKeep: {})
-                        .presentationDetents([.large])
-                        .presentationDragIndicator(.visible)
-                        .presentationBackground { AigosBackground() }
-                }
+            // .sheet(item:) — the data is passed to the closure directly, so it's
+            // always present when the sheet renders (fixes the first-end black screen).
+            .sheet(item: $comparison) { data in
+                TripComparisonView(
+                    summary: data.summary,
+                    estDistanceKm: data.estDistanceKm, estFuelL: data.estFuelL, estCostPHP: data.estCostPHP,
+                    vehicleName: data.vehicleName, ratedKmL: data.ratedKmL,
+                    onUpdateProfile: { updateEfficiency($0, vehicleName: data.vehicleName) }, onKeep: {})
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
+                    .presentationBackground { AigosBackground() }
             }
             .confirmationDialog("End this trip?", isPresented: $showingEndConfirm, titleVisibility: .visible) {
                 Button("End Trip", role: .destructive, action: endTracking)
                 Button("Cancel", role: .cancel) {}
+            }
+            .alert("Trip too short to compare", isPresented: $showingTooShort) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Drive at least 1 km for tracking to give useful results.")
             }
             // Tracking always starts MINIMIZED — the full dashboard only appears when
             // the user taps the bar. Reset on end, and minimize when switching tabs.
@@ -98,9 +112,9 @@ struct ContentView: View {
             }
     }
 
-    // Minimize → Expand: spring up. Expand → Minimize: ease down.
-    private func expand() { withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { expanded = true } }
-    private func collapse() { withAnimation(.easeOut(duration: 0.25)) { expanded = false } }
+    // Expand: ease up (0.25s). Collapse: ease down (0.2s). No spring, no bounce.
+    private func expand() { withAnimation(.easeOut(duration: 0.25)) { expanded = true } }
+    private func collapse() { withAnimation(.easeOut(duration: 0.2)) { expanded = false } }
 
     @ViewBuilder
     private var currentScreen: some View {
@@ -117,18 +131,21 @@ struct ContentView: View {
 
     private func endTracking() {
         guard tracker.isLive else { return }
-        // Capture the estimate context for the comparison before finishing.
-        compEstDistance = tracker.estDistanceKm
-        compEstFuel = tracker.estFuelL
-        compEstCost = tracker.estCostPHP
-        compRatedKmL = tracker.ratedKmL
-        compVehicleName = tracker.vehicleName
         let tripId = tracker.tripRecordId
         let origin = tracker.origin, destination = tracker.destination, vname = tracker.vehicleName
-        let estDist = tracker.estDistanceKm, estFuel = tracker.estFuelL, estCost = tracker.estCostPHP
+        let estDist = tracker.estDistanceKm, estFuel = tracker.estFuelL
+        let estCost = tracker.estCostPHP, rated = tracker.ratedKmL
 
         let summary = tracker.finish()
         Haptics.success()   // End Trip confirmation
+        collapse()          // fade the bar out (isLive is now false → bar removes)
+
+        // Too short to compare (tapped Track then End, or no GPS points recorded).
+        // Don't save a junk 0-km trip and don't present a blank sheet.
+        guard summary.actualDistanceKm >= 0.5 else {
+            showingTooShort = true
+            return
+        }
 
         let tracked = TrackedTrip(
             tripRecordId: tripId ?? UUID(), estimatedDistanceKm: estDist,
@@ -152,17 +169,15 @@ struct ContentView: View {
         }
         try? context.save()
 
-        // Collapse the bar, then present the comparison as a bottom sheet next
-        // runloop so the two animations read as one connected motion rather than a
-        // dismiss fighting a present.
-        collapse()
-        lastSummary = summary
-        DispatchQueue.main.async { showingComparison = true }
+        // Present the comparison. .sheet(item:) → fully-initialized data, no black
+        // screen and no dismiss/present race.
+        comparison = ComparisonData(
+            summary: summary, estDistanceKm: estDist, estFuelL: estFuel,
+            estCostPHP: estCost, ratedKmL: rated, vehicleName: vname)
     }
 
     /// Self-correct the tracked vehicle's efficiency (comparison already clamped it).
-    private func updateEfficiency(_ newKmL: Double) {
-        let name = compVehicleName
+    private func updateEfficiency(_ newKmL: Double, vehicleName name: String) {
         let d = FetchDescriptor<VehicleProfile>(predicate: #Predicate { $0.name == name })
         if let v = try? context.fetch(d).first {
             v.efficiencyKmL = newKmL
@@ -172,30 +187,27 @@ struct ContentView: View {
     }
 }
 
-/// Floating pill tab bar — icon-only, with an amber indicator circle that springs
-/// between tabs. Attached via `.safeAreaInset(.bottom)` so content never hides
-/// behind it.
+/// Floating pill tab bar — icon-only. The amber indicator circle simply appears
+/// under the selected tab (no matched-geometry slide, no bounce — calm and fast).
+/// Attached via `.safeAreaInset(.bottom)` so content never hides behind it.
 struct AigosTabBar: View {
     @Binding var selected: Tab
-    @Namespace private var ns
 
     var body: some View {
         HStack(spacing: 0) {
             ForEach(Tab.allCases) { tab in
                 Button {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { selected = tab }
+                    selected = tab
                 } label: {
                     ZStack {
                         if selected == tab {
                             Circle()
                                 .fill(Color.aigosAmber)
                                 .frame(width: 44, height: 44)
-                                .matchedGeometryEffect(id: "tabIndicator", in: ns)
                         }
                         Image(systemName: tab.icon)
                             .font(.system(size: 20, weight: .semibold))
                             .foregroundStyle(selected == tab ? .white : .white.opacity(0.45))
-                            .symbolEffect(.bounce, value: selected == tab)
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: 64)

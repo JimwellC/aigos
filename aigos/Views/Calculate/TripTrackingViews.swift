@@ -87,19 +87,16 @@ struct TrackingExpandedSheet: View {
                 Text(formatElapsed(tracker.elapsedSeconds))
                     .font(.system(size: 15, weight: .bold, design: .monospaced)).foregroundStyle(.white)
             }
-            .staggeredAppear(index: 0)
 
             HStack(spacing: Space.md) {
                 metric("Distance", "\(tracker.distanceKm.oneDecimal) km", "map.fill")
                 metric("Fuel", "\(tracker.fuelL.oneDecimal) L", "fuelpump.fill")
                 metric("Cost", tracker.costPHP.phpString, "pesosign.circle.fill")
             }
-            .staggeredAppear(index: 1)
             HStack(spacing: Space.md) {
                 metric("Speed", "\(Int(tracker.currentSpeedKmh)) km/h", "speedometer")
                 metric("Elapsed", formatElapsed(tracker.elapsedSeconds), "clock.fill")
             }
-            .staggeredAppear(index: 2)
 
             if tracker.status == .arrived {
                 Text("Looks like you've arrived 🎉")
@@ -112,7 +109,6 @@ struct TrackingExpandedSheet: View {
             Text("📱 Keep aigos open while driving to track your trip.")
                 .rounded(11, weight: .medium).foregroundStyle(.white.opacity(0.6))
                 .multilineTextAlignment(.center)
-                .staggeredAppear(index: 3)
 
             Button(action: onEnd) {
                 HStack(spacing: 6) { Image(systemName: "stop.fill"); Text("End Trip") }
@@ -121,7 +117,6 @@ struct TrackingExpandedSheet: View {
                     .background(Color(hex: "#C0392B"), in: Capsule())
             }
             .buttonStyle(.plain)
-            .staggeredAppear(index: 4)   // End Trip slides up last
         }
         .padding(.horizontal, Space.lg)
         .padding(.bottom, Space.lg)
