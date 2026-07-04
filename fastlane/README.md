@@ -15,6 +15,14 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 ## iOS
 
+### ios verify
+
+```sh
+[bundle exec] fastlane ios verify
+```
+
+Read-only App Store Connect auth check (no upload, no mutation)
+
 ### ios test
 
 ```sh
