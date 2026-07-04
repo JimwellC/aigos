@@ -157,7 +157,7 @@ struct AddVehicleView: View {
                 name: trimmedName, type: type, fuelType: fuelType, efficiencyKmL: kmL,
                 isDefault: false, manufacturingYear: year, maintenanceStatus: maintenance
             )
-            let profile = DrivingProfile(vehicleId: vehicle.id)
+            let profile = DrivingProfile()
             vehicle.drivingProfile = profile
             context.insert(vehicle)
             context.insert(profile)

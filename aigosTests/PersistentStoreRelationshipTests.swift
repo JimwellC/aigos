@@ -27,6 +27,9 @@ final class PersistentStoreRelationshipTests: XCTestCase {
         let dir = FileManager.default.temporaryDirectory
             .appendingPathComponent("aigos-test-\(UUID().uuidString)")
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        // Delete the on-disk store (and its -wal/-shm sidecars) after the test so
+        // repeated `xcodebuild test` runs don't accumulate temp SQLite stores.
+        addTeardownBlock { try? FileManager.default.removeItem(at: dir) }
         let config = ModelConfiguration(schema: schema, url: dir.appendingPathComponent("store.sqlite"))
         return ModelContext(try ModelContainer(for: schema, configurations: [config]))
     }
@@ -36,7 +39,7 @@ final class PersistentStoreRelationshipTests: XCTestCase {
         let v = VehicleProfile(name: name, type: .car, fuelType: .premium95,
                                efficiencyKmL: 14, isDefault: isDefault,
                                manufacturingYear: 2020, maintenanceStatus: .average)
-        v.drivingProfile = DrivingProfile(vehicleId: v.id)   // sets the inverse automatically
+        v.drivingProfile = DrivingProfile()   // sets the inverse automatically
         return v
     }
 

@@ -27,21 +27,7 @@ struct aigosApp: App {
             FuelPriceCache.self,
             PersonalPlace.self,
         ])
-        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-        do {
-            container = try ModelContainer(for: schema, configurations: [config])
-        } catch {
-            // A persistent-store failure (e.g. a migration/format issue on a new OS)
-            // must NOT hard-crash at launch. Log the cause, then fall back to an
-            // in-memory container so the app still opens and the user can retry.
-            CrashReporter.record("ModelContainer(persistent) failed: \(error)")
-            do {
-                let memory = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
-                container = try ModelContainer(for: schema, configurations: [memory])
-            } catch {
-                fatalError("Could not create ModelContainer (even in-memory): \(error)")
-            }
-        }
+        container = Self.makeContainer(for: schema)
 
         #if DEBUG
         if DebugSupport.isSeedDemo {
@@ -50,6 +36,46 @@ struct aigosApp: App {
             DebugSupport.seedEmpty(container.mainContext)
         }
         #endif
+    }
+
+    /// Open the on-disk store, recovering from an unopenable one instead of looping
+    /// forever in a volatile in-memory store. If the store can't be opened (e.g. a
+    /// schema migration this version can't perform), DELETE it, reset onboarding,
+    /// and recreate a clean persistent store — a one-time reset the user recovers
+    /// from by re-onboarding, rather than permanent, silent data loss on every
+    /// launch. v1.0 App Store users are all fresh installs, so this only guards
+    /// future updates.
+    private static func makeContainer(for schema: Schema) -> ModelContainer {
+        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        do {
+            return try ModelContainer(for: schema, configurations: [config])
+        } catch {
+            CrashReporter.record("ModelContainer(persistent) failed — resetting store: \(error)")
+            destroyStore(at: config.url)
+            UserDefaults.standard.set(false, forKey: "hasOnboarded")   // re-run onboarding on the clean store
+            if let fresh = try? ModelContainer(
+                for: schema,
+                configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)]) {
+                return fresh
+            }
+            // Absolute last resort so the app still opens (should be unreachable now
+            // that the on-disk store was cleared).
+            CrashReporter.record("ModelContainer still failing after store reset — using in-memory")
+            if let memory = try? ModelContainer(
+                for: schema,
+                configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)]) {
+                return memory
+            }
+            fatalError("Could not create ModelContainer: \(error)")
+        }
+    }
+
+    /// Delete a SwiftData store file and its SQLite sidecars (-wal, -shm).
+    private static func destroyStore(at url: URL) {
+        let fm = FileManager.default
+        for path in [url.path, url.path + "-wal", url.path + "-shm"] {
+            try? fm.removeItem(atPath: path)
+        }
     }
 
     var body: some Scene {

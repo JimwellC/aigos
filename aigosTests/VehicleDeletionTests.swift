@@ -40,7 +40,7 @@ final class VehicleDeletionTests: XCTestCase {
 
         let vehicle = VehicleProfile(name: "My Vios", type: .car, fuelType: .unleaded91,
                                      efficiencyKmL: 14.5, isDefault: true)
-        let profile = DrivingProfile(vehicleId: vehicle.id)
+        let profile = DrivingProfile()
         vehicle.drivingProfile = profile
         ctx.insert(vehicle)
         ctx.insert(profile)

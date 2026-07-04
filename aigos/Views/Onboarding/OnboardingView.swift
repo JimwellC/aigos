@@ -287,7 +287,7 @@ struct OnboardingView: View {
             isDefault: true,
             manufacturingYear: year
         )
-        let profile = DrivingProfile(vehicleId: vehicle.id)
+        let profile = DrivingProfile()
         profile.avgHighwaySpeedKmh = highwaySpeeds[highwayChoice]
         profile.usesACByDefault = acChoice < 2   // "almost always" or "sometimes" -> on
         profile.defaultRoadType = roadChoice

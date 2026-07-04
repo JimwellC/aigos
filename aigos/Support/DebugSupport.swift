@@ -134,7 +134,7 @@ enum DebugSupport {
             name: "My Vios", type: .car, fuelType: .premium95, efficiencyKmL: 14.5, isDefault: true,
             manufacturingYear: 2016, maintenanceStatus: .wellMaintained
         )
-        let profile = DrivingProfile(vehicleId: vehicle.id)
+        let profile = DrivingProfile()
         profile.avgHighwaySpeedKmh = 110
         profile.avgCitySpeedKmh = 40
         profile.tripCount = 8
@@ -150,7 +150,7 @@ enum DebugSupport {
             name: "Delivery Bike", type: .motorcycle, fuelType: .unleaded91,
             efficiencyKmL: 45, isDefault: false, manufacturingYear: 2021
         )
-        let bikeProfile = DrivingProfile(vehicleId: bike.id)
+        let bikeProfile = DrivingProfile()
         bike.drivingProfile = bikeProfile
         context.insert(bike)
         context.insert(bikeProfile)

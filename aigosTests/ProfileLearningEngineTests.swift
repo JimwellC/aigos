@@ -21,7 +21,7 @@ final class ProfileLearningEngineTests: XCTestCase {
     }
 
     func testFirstTripSeedsLearnedAverages() {
-        let profile = DrivingProfile(vehicleId: UUID())
+        let profile = DrivingProfile()
         let trip = makeTrip(highway: 120, city: 30, acOn: true)
 
         ProfileLearningEngine.updateProfile(profile, with: trip)
@@ -33,7 +33,7 @@ final class ProfileLearningEngineTests: XCTestCase {
     }
 
     func testACUsageRate() {
-        let profile = DrivingProfile(vehicleId: UUID())
+        let profile = DrivingProfile()
         ProfileLearningEngine.updateProfile(profile, with: makeTrip(highway: 100, city: 40, acOn: true))
         XCTAssertEqual(profile.acUsageRate, 1.0, accuracy: 0.0001)     // 1/1
         ProfileLearningEngine.updateProfile(profile, with: makeTrip(highway: 100, city: 40, acOn: false))
@@ -43,7 +43,7 @@ final class ProfileLearningEngineTests: XCTestCase {
     }
 
     func testConfidenceProgression() {
-        let profile = DrivingProfile(vehicleId: UUID())
+        let profile = DrivingProfile()
         for _ in 0..<4 { ProfileLearningEngine.updateProfile(profile, with: makeTrip(highway: 100, city: 40, acOn: true)) }
         XCTAssertEqual(profile.confidenceLevel, .new)            // 4 trips
         ProfileLearningEngine.updateProfile(profile, with: makeTrip(highway: 100, city: 40, acOn: true))
@@ -53,7 +53,7 @@ final class ProfileLearningEngineTests: XCTestCase {
     }
 
     func testRollingAverageConvergesTowardRecent() {
-        let profile = DrivingProfile(vehicleId: UUID())
+        let profile = DrivingProfile()
         // Seed with slow trips, then repeatedly log fast ones — average should climb.
         for _ in 0..<10 { ProfileLearningEngine.updateProfile(profile, with: makeTrip(highway: 80, city: 40, acOn: true)) }
         let before = profile.avgActualHighwaySpeed ?? 0
