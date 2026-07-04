@@ -15,11 +15,45 @@ struct ContentView: View {
     @State private var appState = AppState()
     @AppStorage("hasOnboarded") private var hasOnboarded = false
 
+    // Global GPS-tracking UI (visible on every tab, above the floating tab bar).
+    @State private var tracker = TripTracker.shared
+    @State private var expanded = false
+    @State private var showingEndConfirm = false
+    @State private var showingComparison = false
+    @State private var lastSummary: TripSummary?
+    // Estimate context captured at end time, for the comparison sheet.
+    @State private var compEstDistance = 0.0
+    @State private var compEstFuel = 0.0
+    @State private var compEstCost = 0.0
+    @State private var compRatedKmL = 0.0
+    @State private var compVehicleName = ""
+
     var body: some View {
         currentScreen
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                AigosTabBar(selected: $appState.selectedTab)
+                // The tracker bar/sheet sits directly above the tab bar and pushes
+                // content up (via the safe-area inset) so it never covers anything.
+                VStack(spacing: 8) {
+                    if tracker.isLive {
+                        Group {
+                            if expanded {
+                                TrackingExpandedSheet(
+                                    tracker: tracker,
+                                    onCollapse: { withAnimation(.easeOut(duration: 0.3)) { expanded = false } },
+                                    onEnd: endTracking)
+                            } else {
+                                TrackingMiniBar(
+                                    tracker: tracker,
+                                    onTap: { withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) { expanded = true } },
+                                    onLongPressEnd: { showingEndConfirm = true })
+                            }
+                        }
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                    AigosTabBar(selected: $appState.selectedTab)
+                }
+                .animation(.spring(response: 0.35, dampingFraction: 0.85), value: tracker.isLive)
             }
             .environment(appState)
             .task {
@@ -33,6 +67,31 @@ struct ContentView: View {
             )) {
                 OnboardingView(hasOnboarded: $hasOnboarded)
             }
+            .sheet(isPresented: $showingComparison) {
+                if let s = lastSummary {
+                    TripComparisonView(
+                        summary: s,
+                        estDistanceKm: compEstDistance, estFuelL: compEstFuel, estCostPHP: compEstCost,
+                        vehicleName: compVehicleName, ratedKmL: compRatedKmL,
+                        onUpdateProfile: updateEfficiency, onKeep: {})
+                }
+            }
+            .confirmationDialog("End this trip?", isPresented: $showingEndConfirm, titleVisibility: .visible) {
+                Button("End Trip", role: .destructive, action: endTracking)
+                Button("Cancel", role: .cancel) {}
+            }
+            // Calculate shows the expanded sheet by default; other tabs minimize.
+            .onChange(of: tracker.isLive) { _, live in
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+                    expanded = live && appState.selectedTab == .calculate
+                }
+            }
+            .onChange(of: appState.selectedTab) { _, tab in
+                guard tracker.isLive else { return }
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+                    expanded = (tab == .calculate)
+                }
+            }
     }
 
     @ViewBuilder
@@ -43,6 +102,61 @@ struct ContentView: View {
         case .saved: SavedRoutesView()
         case .prices: PricesView()
         case .settings: SettingsView()
+        }
+    }
+
+    // MARK: - End tracking (works from any tab)
+
+    private func endTracking() {
+        guard tracker.isLive else { return }
+        // Capture the estimate context for the comparison before finishing.
+        compEstDistance = tracker.estDistanceKm
+        compEstFuel = tracker.estFuelL
+        compEstCost = tracker.estCostPHP
+        compRatedKmL = tracker.ratedKmL
+        compVehicleName = tracker.vehicleName
+        let tripId = tracker.tripRecordId
+        let origin = tracker.origin, destination = tracker.destination, vname = tracker.vehicleName
+        let estDist = tracker.estDistanceKm, estFuel = tracker.estFuelL, estCost = tracker.estCostPHP
+
+        let summary = tracker.finish()
+        Haptics.success()   // End Trip confirmation
+
+        let tracked = TrackedTrip(
+            tripRecordId: tripId ?? UUID(), estimatedDistanceKm: estDist,
+            estimatedFuelL: estFuel, estimatedCostPHP: estCost,
+            vehicleName: vname, origin: origin, destination: destination)
+        tracked.routeCoordinates = summary.routeFlat
+        tracked.actualDistanceKm = summary.actualDistanceKm
+        tracked.actualDurationSeconds = summary.actualDurationSeconds
+        tracked.actualAvgSpeedKmh = summary.actualAvgSpeedKmh
+        tracked.actualFuelL = summary.actualFuelL
+        tracked.actualCostPHP = summary.actualCostPHP
+        tracked.accuracyPercent = summary.accuracyPercent
+        tracked.startedAt = summary.startedAt
+        tracked.endedAt = summary.endedAt
+        tracked.isCompleted = true
+        context.insert(tracked)
+
+        if let tripId {
+            let d = FetchDescriptor<TripRecord>(predicate: #Predicate { $0.id == tripId })
+            if let trip = try? context.fetch(d).first { trip.isTracked = true }
+        }
+        try? context.save()
+
+        withAnimation(.easeOut(duration: 0.3)) { expanded = false }
+        lastSummary = summary
+        showingComparison = true
+    }
+
+    /// Self-correct the tracked vehicle's efficiency (comparison already clamped it).
+    private func updateEfficiency(_ newKmL: Double) {
+        let name = compVehicleName
+        let d = FetchDescriptor<VehicleProfile>(predicate: #Predicate { $0.name == name })
+        if let v = try? context.fetch(d).first {
+            v.efficiencyKmL = newKmL
+            v.drivingProfile?.lastUpdated = Date()
+            try? context.save()
         }
     }
 }

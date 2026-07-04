@@ -45,6 +45,9 @@ final class TripTracker: NSObject, CLLocationManagerDelegate, @unchecked Sendabl
     private(set) var destination = ""
     private(set) var vehicleName = ""
     private(set) var estDistanceKm: Double = 0
+    private(set) var estFuelL: Double = 0       // estimate context for the end-of-trip comparison
+    private(set) var estCostPHP: Double = 0
+    private(set) var ratedKmL: Double = 12
     private var efficiencyKmL: Double = 12
     private var pricePerLitre: Double = 0
     private var destCoord: CLLocationCoordinate2D?
@@ -83,6 +86,7 @@ final class TripTracker: NSObject, CLLocationManagerDelegate, @unchecked Sendabl
 
     func start(tripRecordId: UUID, origin: String, destination: String, vehicleName: String,
                efficiencyKmL: Double, pricePerLitre: Double, estDistanceKm: Double,
+               estFuelL: Double, estCostPHP: Double,
                destinationCoord: CLLocationCoordinate2D?) {
         reset()
         self.tripRecordId = tripRecordId
@@ -90,8 +94,11 @@ final class TripTracker: NSObject, CLLocationManagerDelegate, @unchecked Sendabl
         self.destination = destination
         self.vehicleName = vehicleName
         self.efficiencyKmL = max(efficiencyKmL, 0.1)
+        self.ratedKmL = efficiencyKmL
         self.pricePerLitre = pricePerLitre
         self.estDistanceKm = estDistanceKm
+        self.estFuelL = estFuelL
+        self.estCostPHP = estCostPHP
         self.destCoord = destinationCoord
         self.startDate = Date()
         status = .requesting

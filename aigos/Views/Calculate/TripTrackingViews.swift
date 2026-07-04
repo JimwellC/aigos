@@ -14,20 +14,75 @@ func formatElapsed(_ s: Int) -> String {
     return h > 0 ? String(format: "%d:%02d:%02d", h, m, sec) : String(format: "%02d:%02d", m, sec)
 }
 
-// MARK: - Live banner + dashboard
+// MARK: - Pulsing red "recording" dot
 
-struct TripTrackingBanner: View {
+private struct PulsingDot: View {
+    var size: CGFloat = 10
+    @State private var pulse = false
+    var body: some View {
+        Circle().fill(.red).frame(width: size, height: size)
+            .opacity(pulse ? 0.5 : 1.0)
+            .onAppear { withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) { pulse = true } }
+    }
+}
+
+private let trackingBrown = Color(hex: "#2C1A0E")
+
+// MARK: - Minimized bar (FoodPanda/Grab style)
+
+/// A compact 56pt bar that sits just above the floating tab bar while tracking.
+/// Tap to expand, long-press to end. Visible on every tab.
+struct TrackingMiniBar: View {
     var tracker: TripTracker
-    @AppStorage("fuelUnit") private var fuelUnit: FuelUnit = .kmPerL
+    let onTap: () -> Void
+    let onLongPressEnd: () -> Void
+
+    var body: some View {
+        HStack(spacing: Space.sm) {
+            PulsingDot(size: 10)
+            Text("\(tracker.origin) → \(tracker.destination)")
+                .rounded(14, weight: .bold).foregroundStyle(.white).lineLimit(1)
+            Spacer(minLength: Space.sm)
+            Text("\(tracker.distanceKm.oneDecimal) km")
+                .rounded(13, weight: .semibold).foregroundStyle(.white.opacity(0.9))
+            Text(tracker.costPHP.phpString)
+                .rounded(13, weight: .bold).foregroundStyle(Color.aigosAmber)
+            Image(systemName: "chevron.up")
+                .font(.system(size: 12, weight: .bold)).foregroundStyle(.white.opacity(0.6))
+        }
+        .padding(.horizontal, Space.md)
+        .frame(height: 56)
+        .frame(maxWidth: .infinity)
+        .background {
+            let shape = UnevenRoundedRectangle(topLeadingRadius: 16, topTrailingRadius: 16)
+            ZStack {
+                shape.fill(.ultraThinMaterial)
+                shape.fill(trackingBrown.opacity(0.95))
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onTap)
+        .onLongPressGesture(minimumDuration: 0.4, perform: onLongPressEnd)
+    }
+}
+
+// MARK: - Expanded sheet
+
+/// The expanded tracking panel — slides up from the bar with the full dashboard.
+struct TrackingExpandedSheet: View {
+    var tracker: TripTracker
+    let onCollapse: () -> Void
     let onEnd: () -> Void
-    @State private var blink = false
+    @State private var dragOffset: CGFloat = 0
 
     var body: some View {
         VStack(spacing: Space.md) {
+            Capsule().fill(.white.opacity(0.35)).frame(width: 40, height: 5).padding(.top, 8)
+
             HStack(spacing: Space.sm) {
-                Circle().fill(.red).frame(width: 11, height: 11).opacity(blink ? 0.3 : 1)
+                PulsingDot(size: 11)
                 Text("TRACKING: \(tracker.origin) → \(tracker.destination)")
-                    .rounded(14, weight: .bold).foregroundStyle(.white).lineLimit(1)
+                    .rounded(15, weight: .bold).foregroundStyle(.white).lineLimit(1)
                 Spacer(minLength: Space.sm)
                 Text(formatElapsed(tracker.elapsedSeconds))
                     .font(.system(size: 15, weight: .bold, design: .monospaced)).foregroundStyle(.white)
@@ -63,10 +118,25 @@ struct TripTrackingBanner: View {
             }
             .buttonStyle(.plain)
         }
-        .padding(Space.md)
-        .background(Color.black.opacity(0.72), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(.red.opacity(0.5), lineWidth: 1.5))
-        .onAppear { withAnimation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true)) { blink = true } }
+        .padding(.horizontal, Space.lg)
+        .padding(.bottom, Space.lg)
+        .frame(maxWidth: .infinity)
+        .background {
+            let shape = UnevenRoundedRectangle(topLeadingRadius: 22, topTrailingRadius: 22)
+            ZStack {
+                shape.fill(.ultraThinMaterial)
+                shape.fill(trackingBrown.opacity(0.96))
+            }
+        }
+        .offset(y: max(0, dragOffset))
+        .gesture(
+            DragGesture()
+                .onChanged { dragOffset = $0.translation.height }
+                .onEnded { value in
+                    if value.translation.height > 60 { onCollapse() }
+                    withAnimation(.easeOut(duration: 0.2)) { dragOffset = 0 }
+                }
+        )
     }
 
     private func metric(_ label: String, _ value: String, _ icon: String) -> some View {

@@ -63,16 +63,11 @@ struct CalculateView: View {
     @State private var routeCoordinates: [CLLocationCoordinate2D]?   // actual road polyline
     @State private var detectedRoad: RouteAnalyzer.Suggestion?       // auto-detected road type
 
-    // GPS trip tracking (v1.1)
+    // GPS trip tracking (v1.1) — the live UI + end/comparison live globally in
+    // ContentView now (visible on every tab). CalculateView only kicks it off.
     @State private var tracker = TripTracker.shared
     @State private var lastTrip: TripRecord?
-    @State private var lastSummary: TripSummary?
-    @State private var showingComparison = false
     @State private var showingTrackDenied = false
-    @State private var trackEstDistance: Double = 0
-    @State private var trackEstFuel: Double = 0
-    @State private var trackEstCost: Double = 0
-    @State private var trackRatedKmL: Double = 12
 
     private var selectedVehicle: VehicleProfile? {
         vehicles.first { $0.id == selectedVehicleID } ?? vehicles.first
@@ -131,7 +126,6 @@ struct CalculateView: View {
 
             ScrollView {
                 VStack(spacing: Space.lg) {
-                    Color.clear.frame(height: tracker.isLive ? 220 : 0)   // room for the banner
                     header
                     vehicleCard
                     if let s = topSuggestion {
@@ -150,25 +144,6 @@ struct CalculateView: View {
                 .padding(.bottom, Space.xxl)
             }
             .scrollDismissesKeyboard(.interactively)
-
-            if tracker.isLive {
-                TripTrackingBanner(tracker: tracker, onEnd: endTracking)
-                    .padding(.horizontal, Space.screen)
-                    .padding(.top, Space.md)
-                    .transition(.move(edge: .top).combined(with: .opacity))
-            }
-        }
-        .animation(.spring(response: 0.4), value: tracker.isLive)
-        .sheet(isPresented: $showingComparison) {
-            if let s = lastSummary {
-                TripComparisonView(
-                    summary: s,
-                    estDistanceKm: trackEstDistance,
-                    estFuelL: trackEstFuel, estCostPHP: trackEstCost,
-                    vehicleName: tracker.vehicleName,
-                    ratedKmL: trackRatedKmL,
-                    onUpdateProfile: updateEfficiency, onKeep: {})
-            }
         }
         .alert("Location needed", isPresented: $showingTrackDenied) {
             Button("OK", role: .cancel) {}
@@ -714,10 +689,6 @@ struct CalculateView: View {
         guard !tracker.isLive else { return }
         guard let vehicle = selectedVehicle, let trip = lastTrip, let est = estimate else { return }
         Haptics.tap(.medium)   // "Track This Trip" start
-        trackEstDistance = est.distanceKm
-        trackEstFuel = est.adjustedLitres
-        trackEstCost = est.estimatedCost
-        trackRatedKmL = vehicle.efficiencyKmL
         let destCoord = destinationPoint.map {
             CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon)
         }
@@ -729,45 +700,11 @@ struct CalculateView: View {
             efficiencyKmL: vehicle.efficiencyKmL,
             pricePerLitre: est.fuelPricePerLitre,
             estDistanceKm: est.distanceKm,
+            estFuelL: est.adjustedLitres,
+            estCostPHP: est.estimatedCost,
             destinationCoord: destCoord)
         showingResult = false
         if tracker.status == .denied { showingTrackDenied = true }
-    }
-
-    private func endTracking() {
-        guard tracker.isLive else { return }
-        let summary = tracker.finish()
-        Haptics.success()   // End Trip confirmation
-        if let trip = lastTrip {
-            let tracked = TrackedTrip(
-                tripRecordId: trip.id, estimatedDistanceKm: trackEstDistance,
-                estimatedFuelL: trackEstFuel, estimatedCostPHP: trackEstCost,
-                vehicleName: tracker.vehicleName, origin: tracker.origin, destination: tracker.destination)
-            tracked.routeCoordinates = summary.routeFlat
-            tracked.actualDistanceKm = summary.actualDistanceKm
-            tracked.actualDurationSeconds = summary.actualDurationSeconds
-            tracked.actualAvgSpeedKmh = summary.actualAvgSpeedKmh
-            tracked.actualFuelL = summary.actualFuelL
-            tracked.actualCostPHP = summary.actualCostPHP
-            tracked.accuracyPercent = summary.accuracyPercent
-            tracked.startedAt = summary.startedAt
-            tracked.endedAt = summary.endedAt
-            tracked.isCompleted = true
-            trip.isTracked = true
-            context.insert(tracked)
-            try? context.save()
-        }
-        lastSummary = summary
-        showingComparison = true
-    }
-
-    /// Self-correct the vehicle's efficiency toward the value implied by the tracked
-    /// drive (the comparison view already moderated/clamped it).
-    private func updateEfficiency(_ newKmL: Double) {
-        guard let vehicle = selectedVehicle else { return }
-        vehicle.efficiencyKmL = newKmL
-        vehicle.drivingProfile?.lastUpdated = Date()
-        try? context.save()
     }
 
     private func saveRoute() {
