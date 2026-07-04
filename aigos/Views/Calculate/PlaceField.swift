@@ -32,6 +32,14 @@ struct PlaceField: View {
     private var isValid: Bool { selectedKey != nil }
     private var trimmed: String { text.trimmingCharacters(in: .whitespaces) }
 
+    /// The confirmed place's coordinate (map-pin or gazetteer/personal), so
+    /// reopening the map centres on it instead of resetting to the PH view.
+    private var existingCoordinate: CLLocationCoordinate2D? {
+        guard let key = selectedKey,
+              let p = PlaceResolver.point(for: key, personalPlaces: personalPlaces) else { return nil }
+        return CLLocationCoordinate2D(latitude: p.lat, longitude: p.lon)
+    }
+
     /// Gazetteer first, then any Apple Maps results not already shown (max 6).
     private var displayed: [PlaceSuggestion] {
         var out = suggestions
@@ -94,7 +102,9 @@ struct PlaceField: View {
             }
         }
         .sheet(isPresented: $showingMap) {
-            LocationPickerView(title: placeholder, personalPlaces: personalPlaces) { picked in
+            LocationPickerView(title: placeholder, personalPlaces: personalPlaces,
+                               initialCoordinate: existingCoordinate,
+                               initialName: isValid ? text : nil) { picked in
                 applyPicked(picked)
             }
         }

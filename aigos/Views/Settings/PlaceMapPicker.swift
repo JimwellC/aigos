@@ -51,6 +51,16 @@ struct PlaceMapPicker: View {
 
                 VStack(spacing: Space.sm) {
                     searchBar
+                    if let msg = locator.errorMessage {
+                        HStack(spacing: 6) {
+                            Image(systemName: "location.slash.fill")
+                            Text(msg).font(.system(size: 12, weight: .medium, design: .rounded))
+                            Spacer(minLength: 0)
+                        }
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, Space.md).padding(.vertical, 8)
+                        .background(Color.aigosAmberDeep.opacity(0.9), in: Capsule())
+                    }
                     if searchFocused && !results.isEmpty { resultsList }
                     Spacer()
                     confirmBar
@@ -127,8 +137,14 @@ struct PlaceMapPicker: View {
                 .autocorrectionDisabled()
                 .focused($searchFocused)
             Button { locator.request() } label: {
-                Image(systemName: "location.fill").foregroundStyle(Color.aigosAmber)
+                if locator.isLocating {
+                    ProgressView().tint(Color.aigosAmber).frame(width: 20, height: 20)
+                } else {
+                    Image(systemName: "location.fill").foregroundStyle(Color.aigosAmber)
+                }
             }
+            .disabled(locator.isLocating)
+            .accessibilityLabel("Use my location")
         }
         .padding(.horizontal, Space.md)
         .padding(.vertical, 12)

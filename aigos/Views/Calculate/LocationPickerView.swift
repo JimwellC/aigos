@@ -15,6 +15,10 @@ import CoreLocation
 struct LocationPickerView: View {
     let title: String
     let personalPlaces: [PersonalPlace]
+    /// Existing confirmed location (if the field already has one) — reopening
+    /// centres here and shows the pin, instead of resetting to the PH map.
+    var initialCoordinate: CLLocationCoordinate2D? = nil
+    var initialName: String? = nil
     let onConfirm: (PickedPlace) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -41,6 +45,7 @@ struct LocationPickerView: View {
 
                 VStack(spacing: Space.sm) {
                     searchBar
+                    if let msg = locator.errorMessage { locationMessage(msg) }
                     if searchFocused && !results.isEmpty { resultsList }
                     Spacer()
                     if pinCoord != nil { confirmBar }
@@ -59,6 +64,23 @@ struct LocationPickerView: View {
         }
         .onChange(of: query) { _, _ in runSearch() }
         .onChange(of: locator.point) { _, p in if let p { drop(CLLocationCoordinate2D(latitude: p.lat, longitude: p.lon), name: "My location") } }
+        .onAppear {
+            // Reopening a field that already has a location: centre + show its pin.
+            guard let c = initialCoordinate, pinCoord == nil else { return }
+            camera = .region(MKCoordinateRegion(center: c, span: MKCoordinateSpan(latitudeDelta: 0.04, longitudeDelta: 0.04)))
+            drop(c, name: initialName)
+        }
+    }
+
+    private func locationMessage(_ text: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: "location.slash.fill")
+            Text(text).font(.system(size: 12, weight: .medium, design: .rounded))
+            Spacer(minLength: 0)
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, Space.md).padding(.vertical, 8)
+        .background(Color.aigosAmberDeep.opacity(0.9), in: Capsule())
     }
 
     // MARK: - Map
@@ -108,8 +130,14 @@ struct LocationPickerView: View {
             Button {
                 locator.request()
             } label: {
-                Image(systemName: "location.fill").foregroundStyle(Color.aigosAmber)
+                if locator.isLocating {
+                    ProgressView().tint(Color.aigosAmber).frame(width: 20, height: 20)
+                } else {
+                    Image(systemName: "location.fill").foregroundStyle(Color.aigosAmber)
+                }
             }
+            .disabled(locator.isLocating)
+            .accessibilityLabel("Use my location")
         }
         .padding(.horizontal, Space.md)
         .padding(.vertical, 12)
@@ -240,33 +268,91 @@ struct PickerResult: Identifiable, Equatable {
     static func == (a: PickerResult, b: PickerResult) -> Bool { a.id == b.id }
 }
 
-/// Minimal one-shot location request. Prompts for permission only when called.
+/// One-shot location with fast accuracy, caching, a loading flag, and a timeout.
+/// Prompts for permission only when tapped, and asks for a fix only AFTER it's
+/// granted (asking simultaneously is what made the button feel frozen). Once a
+/// location is known it's cached across map sessions so later taps are instant.
+/// `@unchecked Sendable`: all state is touched on the main thread (delegate
+/// callbacks + the main-queue timeout).
 @Observable
-final class LocationHelper: NSObject, CLLocationManagerDelegate {
+final class LocationHelper: NSObject, CLLocationManagerDelegate, @unchecked Sendable {
     var point: GeoPoint?
+    private(set) var isLocating = false
+    private(set) var errorMessage: String?
+
     private let manager = CLLocationManager()
+    private var generation = 0
+    // Persists across map opens so a second "my location" tap is instant.
+    nonisolated(unsafe) private static var cached: GeoPoint?
 
     override init() {
         super.init()
         manager.delegate = self
+        // Fuel estimates only need a rough start point — 100 m acquires far faster
+        // than kCLLocationAccuracyBest, which is what made the first fix so slow.
+        manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
     }
 
     func request() {
-        manager.requestWhenInUseAuthorization()
-        manager.requestLocation()
+        errorMessage = nil
+        // Serve any cached location immediately (still refresh in the background).
+        if let c = Self.cached { point = c }
+
+        switch manager.authorizationStatus {
+        case .notDetermined:
+            beginLocating()
+            manager.requestWhenInUseAuthorization()   // requestLocation() runs after grant
+        case .authorizedWhenInUse, .authorizedAlways:
+            beginLocating()
+            manager.requestLocation()                 // already granted → no prompt, fast
+        case .denied, .restricted:
+            fail("Location access is off. Turn it on in Settings, or drop a pin on the map.")
+        @unknown default:
+            fail("Unable to get location. Try dropping a pin on the map.")
+        }
+    }
+
+    private func beginLocating() {
+        isLocating = true
+        generation += 1
+        let gen = generation
+        // 5-second timeout so the button never feels frozen.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
+            guard let self, self.generation == gen, self.isLocating else { return }
+            self.fail("Unable to get location. Try moving to an open area.")
+        }
+    }
+
+    private func fail(_ message: String) {
+        isLocating = false
+        if point == nil { errorMessage = message }   // keep any cached point silently
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        if manager.authorizationStatus == .authorizedWhenInUse || manager.authorizationStatus == .authorizedAlways {
-            manager.requestLocation()
+        switch manager.authorizationStatus {
+        case .authorizedWhenInUse, .authorizedAlways:
+            if isLocating { manager.requestLocation() }
+        case .denied, .restricted:
+            fail("Location access is off. Turn it on in Settings, or drop a pin on the map.")
+        default:
+            break
         }
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        if let c = locations.last?.coordinate { point = GeoPoint(lat: c.latitude, lon: c.longitude) }
+        guard let c = locations.last?.coordinate else { return }
+        generation += 1   // invalidate any pending timeout
+        let p = GeoPoint(lat: c.latitude, lon: c.longitude)
+        Self.cached = p
+        point = p
+        isLocating = false
+        errorMessage = nil
     }
 
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {}
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        generation += 1
+        fail("Unable to get location. Try moving to an open area.")
+    }
 }
 
 extension GazetteerEntry {
