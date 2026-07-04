@@ -80,7 +80,15 @@ struct CalculateView: View {
     }
 
     private var canCalculate: Bool {
-        selectedVehicle != nil && distanceKm != nil
+        selectedVehicle != nil && distanceKm != nil && !crossIsland
+    }
+
+    /// True when the two picked places are on different islands (a sea/air trip)
+    /// — a continuous land distance would be meaningless. Only meaningful once
+    /// both places are chosen from the gazetteer.
+    private var crossIsland: Bool {
+        guard originKey != nil, destinationKey != nil else { return false }
+        return IslandResolver.isCrossIsland(origin, destination)
     }
 
     private var mapPickerDebug: Bool {
@@ -347,7 +355,9 @@ struct CalculateView: View {
                        showError: submitAttempted)
                 .zIndex(1)
 
-            if let distanceKm, let a = originPoint, let b = destinationPoint {
+            if crossIsland {
+                crossIslandBanner
+            } else if let distanceKm, let a = originPoint, let b = destinationPoint {
                 RoutePreview(origin: a, destination: b, precise: routeIsPrecise,
                              routeCoordinates: routeCoordinates)
                     .frame(height: 150)
@@ -378,6 +388,41 @@ struct CalculateView: View {
         }
         .padding(Space.md)
         .glassCard()
+    }
+
+    /// Shown when the two places are on different islands — a land distance would
+    /// be meaningless, so we block Calculate and point to the sea/air breakdown.
+    private var crossIslandBanner: some View {
+        VStack(alignment: .leading, spacing: Space.sm) {
+            HStack(spacing: Space.sm) {
+                Image(systemName: "ferry.fill").foregroundStyle(.white)
+                Text("Sea or air travel required")
+                    .rounded(16, weight: .bold)
+                    .foregroundStyle(.white)
+            }
+            Text("\(destination) is on a separate island — this isn't a direct land route. Ask aigos for the land portion plus typical flight and ferry costs.")
+                .rounded(13)
+                .foregroundStyle(.white.opacity(0.9))
+                .fixedSize(horizontal: false, vertical: true)
+            Button {
+                Haptics.tap(.light)
+                showingTalk = true
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "bubble.left.and.text.bubble.right.fill")
+                    Text("See sea / air options")
+                }
+                .rounded(14, weight: .semibold)
+                .foregroundStyle(Color.aigosAmberDeep)
+                .padding(.horizontal, Space.md)
+                .padding(.vertical, 10)
+                .background(.white, in: Capsule())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(Space.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.aigosAmberDeep.opacity(0.92), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
     /// Banner shown when the online route auto-selected a road type. The user can

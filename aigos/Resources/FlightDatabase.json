@@ -1,0 +1,183 @@
+{
+  "airlines": [
+    "Philippine Airlines",
+    "Cebu Pacific",
+    "AirAsia Philippines",
+    "PAL Express",
+    "Cebgo"
+  ],
+  "operatorSites": {
+    "Cebu Pacific": "cebupacificair.com",
+    "Philippine Airlines": "philippineairlines.com"
+  },
+  "routes": [
+    {
+      "from": "Manila",
+      "to": "Cebu City",
+      "hours": 1.5,
+      "minPHP": 1500,
+      "maxPHP": 8000
+    },
+    {
+      "from": "Manila",
+      "to": "Davao City",
+      "hours": 2,
+      "minPHP": 2000,
+      "maxPHP": 10000
+    },
+    {
+      "from": "Manila",
+      "to": "Puerto Princesa",
+      "hours": 1.5,
+      "minPHP": 2000,
+      "maxPHP": 7000
+    },
+    {
+      "from": "Manila",
+      "to": "Bacolod",
+      "hours": 1,
+      "minPHP": 1500,
+      "maxPHP": 5000
+    },
+    {
+      "from": "Manila",
+      "to": "Iloilo",
+      "hours": 1,
+      "minPHP": 1500,
+      "maxPHP": 5000
+    },
+    {
+      "from": "Manila",
+      "to": "Cagayan de Oro",
+      "hours": 1.5,
+      "minPHP": 2000,
+      "maxPHP": 6000
+    },
+    {
+      "from": "Manila",
+      "to": "Zamboanga City",
+      "hours": 2,
+      "minPHP": 2500,
+      "maxPHP": 8000
+    },
+    {
+      "from": "Manila",
+      "to": "General Santos",
+      "hours": 2,
+      "minPHP": 2500,
+      "maxPHP": 7000
+    },
+    {
+      "from": "Manila",
+      "to": "Kalibo",
+      "hours": 1,
+      "minPHP": 1500,
+      "maxPHP": 5000
+    },
+    {
+      "from": "Manila",
+      "to": "Caticlan",
+      "hours": 1,
+      "minPHP": 1800,
+      "maxPHP": 6000
+    },
+    {
+      "from": "Manila",
+      "to": "Tacloban",
+      "hours": 1.5,
+      "minPHP": 2000,
+      "maxPHP": 6000
+    },
+    {
+      "from": "Manila",
+      "to": "Butuan",
+      "hours": 2,
+      "minPHP": 2000,
+      "maxPHP": 7000
+    },
+    {
+      "from": "Manila",
+      "to": "Siargao",
+      "hours": 3,
+      "minPHP": 2500,
+      "maxPHP": 9000
+    },
+    {
+      "from": "Manila",
+      "to": "Tagbilaran",
+      "hours": 1.5,
+      "minPHP": 2000,
+      "maxPHP": 6000
+    },
+    {
+      "from": "Manila",
+      "to": "Legazpi",
+      "hours": 1,
+      "minPHP": 1500,
+      "maxPHP": 5000
+    },
+    {
+      "from": "Manila",
+      "to": "Dumaguete",
+      "hours": 1.5,
+      "minPHP": 2000,
+      "maxPHP": 6000
+    },
+    {
+      "from": "Manila",
+      "to": "Basco",
+      "hours": 1.5,
+      "minPHP": 4500,
+      "maxPHP": 15000
+    },
+    {
+      "from": "Clark",
+      "to": "Cebu City",
+      "hours": 1.5,
+      "minPHP": 2000,
+      "maxPHP": 6000
+    },
+    {
+      "from": "Clark",
+      "to": "Caticlan",
+      "hours": 1,
+      "minPHP": 1800,
+      "maxPHP": 5000
+    },
+    {
+      "from": "Clark",
+      "to": "Puerto Princesa",
+      "hours": 1.5,
+      "minPHP": 2500,
+      "maxPHP": 7000
+    },
+    {
+      "from": "Cebu City",
+      "to": "Davao City",
+      "hours": 1,
+      "minPHP": 1500,
+      "maxPHP": 5000
+    },
+    {
+      "from": "Cebu City",
+      "to": "Iloilo",
+      "hours": 0.75,
+      "minPHP": 1200,
+      "maxPHP": 4000
+    },
+    {
+      "from": "Cebu City",
+      "to": "Cagayan de Oro",
+      "hours": 0.75,
+      "minPHP": 1500,
+      "maxPHP": 4000
+    },
+    {
+      "from": "Cebu City",
+      "to": "Bacolod",
+      "hours": 0.75,
+      "minPHP": 1200,
+      "maxPHP": 4000
+    }
+  ]
+}

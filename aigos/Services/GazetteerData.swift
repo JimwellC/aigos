@@ -240,6 +240,151 @@ enum GazetteerData {
         g("Sulu", [("Jolo", 6.0520, 121.0020, ["sulu"])])
         g("Tawi-Tawi", [("Bongao", 5.0290, 119.7730, ["tawi-tawi"])])
 
+        // ── Metro Manila — malls, landmarks, universities, hospitals, hubs ──
+        g("Metro Manila", [
+            ("SM Mall of Asia", 14.5352, 120.9822, ["moa", "mall of asia", "sm moa"]),
+            ("SM Megamall", 14.5847, 121.0567, ["megamall"]),
+            ("SM North EDSA", 14.6567, 121.0300, ["sm north", "sm north edsa"]),
+            ("SM City Manila", 14.5896, 120.9822, ["sm manila"]),
+            ("SM Fairview", 14.7340, 121.0590, []),
+            ("SM Southmall", 14.4290, 121.0000, ["sm southmall"]),
+            ("Glorietta", 14.5527, 121.0246, []),
+            ("Greenbelt", 14.5520, 121.0210, ["greenbelt makati"]),
+            ("Trinoma", 14.6535, 121.0330, ["trinoma mall"]),
+            ("Ayala Vertis North", 14.6540, 121.0400, ["vertis north"]),
+            ("Robinsons Galleria", 14.5920, 121.0570, ["robinsons galleria"]),
+            ("Robinsons Place Manila", 14.5770, 120.9850, ["robinsons manila", "robinsons ermita"]),
+            ("Gateway Mall", 14.6220, 121.0530, ["gateway araneta", "araneta city", "araneta"]),
+            ("Uptown Mall BGC", 14.5540, 121.0500, ["uptown bgc", "uptown mall"]),
+            ("Bonifacio High Street", 14.5500, 121.0480, ["high street", "bgc high street"]),
+            ("Market! Market!", 14.5490, 121.0560, ["market market"]),
+            ("Shangri-La Plaza", 14.5820, 121.0560, ["shangri-la plaza", "shang"]),
+            ("The Podium", 14.5850, 121.0590, ["podium"]),
+            ("Ayala Malls Manila Bay", 14.5230, 120.9930, ["manila bay mall"]),
+            ("Alabang Town Center", 14.4230, 121.0290, ["atc", "alabang town center"]),
+            ("Festival Mall", 14.4180, 121.0410, ["festival mall"]),
+            ("Venice Grand Canal Mall", 14.5390, 121.0560, ["venice mall", "venice grand canal", "mckinley"]),
+            ("Power Plant Mall", 14.5650, 121.0360, ["rockwell", "power plant"]),
+            ("Ayala Malls Circuit", 14.5720, 121.0130, ["circuit makati"]),
+            ("Fisher Mall", 14.6300, 121.0000, ["fisher mall"]),
+            ("Lucky Chinatown", 14.6030, 120.9740, ["lucky chinatown"]),
+            ("Intramuros", 14.5900, 120.9750, []),
+            ("Rizal Park", 14.5825, 120.9797, ["luneta"]),
+            ("Manila Ocean Park", 14.5790, 120.9730, ["ocean park"]),
+            ("National Museum", 14.5870, 120.9810, []),
+            ("Divisoria", 14.6030, 120.9700, ["divisoria market"]),
+            ("Binondo", 14.6000, 120.9750, ["chinatown"]),
+            ("Quiapo", 14.5980, 120.9840, ["quiapo church"]),
+            ("Star City", 14.5540, 120.9880, []),
+            ("Cultural Center", 14.5540, 120.9800, ["ccp", "cultural center of the philippines"]),
+            ("Maginhawa", 14.6450, 121.0620, ["maginhawa street"]),
+            ("Tomas Morato", 14.6320, 121.0350, []),
+            ("Timog Avenue", 14.6350, 121.0330, ["timog"]),
+            ("Quezon Memorial Circle", 14.6510, 121.0490, ["qc circle", "quezon circle"]),
+            ("Shaw Boulevard", 14.5810, 121.0530, ["shaw", "shaw blvd"]),
+            ("Guadalupe", 14.5670, 121.0440, ["guadalupe makati"]),
+            ("Magallanes", 14.5420, 121.0160, []),
+            ("UP Diliman", 14.6540, 121.0680, ["up diliman", "university of the philippines"]),
+            ("Ateneo de Manila", 14.6400, 121.0770, ["ateneo", "admu"]),
+            ("De La Salle University", 14.5645, 120.9930, ["dlsu", "la salle", "de la salle"]),
+            ("University of Santo Tomas", 14.6100, 120.9890, ["ust", "ust manila"]),
+            ("Far Eastern University", 14.6030, 120.9880, ["feu"]),
+            ("PUP Manila", 14.5980, 121.0110, ["pup", "polytechnic university"]),
+            ("St. Luke's BGC", 14.5540, 121.0450, ["st lukes bgc", "st. luke's bgc", "st lukes global"]),
+            ("St. Luke's QC", 14.6230, 121.0230, ["st lukes qc", "st. luke's qc"]),
+            ("Makati Medical Center", 14.5610, 121.0180, ["makati med", "makatimed"]),
+            ("The Medical City", 14.5890, 121.0680, ["medical city"]),
+            ("Philippine General Hospital", 14.5780, 120.9860, ["pgh"]),
+            ("Cardinal Santos Medical Center", 14.6010, 121.0490, ["cardinal santos"]),
+            ("PITX", 14.5090, 120.9930, ["pitx", "paranaque integrated terminal"]),
+            ("Malacañang Palace", 14.5940, 120.9940, ["malacanang", "malacañang"]),
+            ("LTO East Avenue", 14.6480, 121.0500, ["lto main", "lto east ave"]),
+            ("DFA Aseana", 14.5290, 120.9910, ["dfa", "dfa aseana"]),
+            ("NAIA Terminal 3", 14.5090, 121.0170, ["naia", "naia t3", "naia terminal 3", "airport", "manila airport"]),
+            ("Manila North Harbor", 14.6080, 120.9640, ["north harbor", "pier 4", "manila pier"]),
+            ("Manila South Harbor", 14.5870, 120.9670, ["south harbor"]),
+        ])
+
+        // ── Airports & seaports (province subtitles → correct island mapping) ──
+        g("Pampanga", [
+            ("Clark International Airport", 15.1860, 120.5600, ["clark airport", "clark international", "dmia"]),
+        ])
+        g("Cebu", [
+            ("Mactan-Cebu International Airport", 10.3075, 123.9790, ["mactan airport", "cebu airport", "mactan-cebu"]),
+            ("Cebu Port", 10.2980, 123.9110, ["cebu port", "cebu pier", "cebu pier 1"]),
+        ])
+        g("Davao City", [
+            ("Davao International Airport", 7.1255, 125.6460, ["davao airport", "francisco bangoy"]),
+            ("Davao Port", 7.1150, 125.6560, ["davao port", "sasa port"]),
+        ])
+        g("Iloilo", [
+            ("Iloilo International Airport", 10.8330, 122.4930, ["iloilo airport"]),
+            ("Iloilo Port", 10.6960, 122.5810, ["iloilo port"]),
+        ])
+        g("Negros Occidental", [
+            ("Bacolod-Silay Airport", 10.7760, 123.0150, ["bacolod airport", "silay airport"]),
+            ("Bacolod Port", 10.6100, 122.9600, ["bacolod port"]),
+        ])
+        g("Negros Oriental", [
+            ("Dumaguete Airport", 9.3340, 123.3000, ["dumaguete airport"]),
+            ("Dumaguete Port", 9.3070, 123.3080, ["dumaguete port"]),
+        ])
+        g("Aklan", [
+            ("Kalibo International Airport", 11.6790, 122.3760, ["kalibo airport"]),
+            ("Caticlan Airport", 11.9245, 121.9540, ["caticlan airport", "boracay airport"]),
+            ("Caticlan Jetty Port", 11.9300, 121.9560, ["caticlan", "caticlan jetty", "caticlan port"]),
+            ("Boracay", 11.9670, 121.9240, ["boracay island"]),
+        ])
+        g("Palawan", [
+            ("Puerto Princesa Airport", 9.7420, 118.7590, ["puerto princesa airport"]),
+            ("Puerto Princesa Port", 9.7390, 118.7480, ["puerto princesa port"]),
+        ])
+        g("Leyte", [
+            ("Tacloban Airport", 11.2280, 125.0280, ["tacloban airport"]),
+            ("Ormoc Port", 11.0060, 124.6070, ["ormoc port"]),
+        ])
+        g("Bohol", [
+            ("Bohol-Panglao Airport", 9.5570, 123.7700, ["panglao airport", "bohol airport", "tagbilaran airport"]),
+            ("Tagbilaran Port", 9.6470, 123.8560, ["tagbilaran port"]),
+        ])
+        g("Zamboanga City", [
+            ("Zamboanga Airport", 6.9220, 122.0600, ["zamboanga airport"]),
+        ])
+        g("South Cotabato", [
+            ("General Santos Airport", 6.0580, 125.0960, ["gensan airport", "general santos airport"]),
+        ])
+        g("Albay", [
+            ("Legazpi Airport", 13.1580, 123.7350, ["legazpi airport"]),
+        ])
+        g("Agusan del Norte", [
+            ("Butuan Airport", 8.9510, 125.4790, ["butuan airport", "bancasi"]),
+        ])
+        g("Batanes", [
+            ("Basco Airport", 20.4510, 121.9800, ["basco airport"]),
+        ])
+        g("Surigao del Norte", [
+            ("Sayak Airport (Siargao)", 9.8590, 126.0140, ["siargao airport", "sayak airport"]),
+            ("Lipata Port", 9.8250, 125.4500, ["lipata"]),
+        ])
+        g("Misamis Oriental", [
+            ("Cagayan de Oro Port", 8.5010, 124.6580, ["cdo port", "macabalan"]),
+        ])
+        g("Batangas", [
+            ("Batangas Port", 13.7560, 121.0480, ["batangas port", "batangas pier"]),
+        ])
+        g("Sorsogon", [
+            ("Matnog Port", 12.5870, 124.0850, ["matnog"]),
+        ])
+        g("Northern Samar", [
+            ("Allen Port", 12.5060, 124.2810, ["allen"]),
+        ])
+        g("Southern Leyte", [
+            ("Liloan Port", 10.3560, 125.1450, ["liloan port"]),
+        ])
+        g("Laguna", [
+            ("Enchanted Kingdom", 14.3200, 121.0670, ["enchanted kingdom", "ek"]),
+        ])
+
         return out
     }
 }

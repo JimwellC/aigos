@@ -201,6 +201,13 @@ struct TalkToAigosView: View {
             return ChatMessage(role: .aigos, text: tank)
         }
 
+        // Cross-island trips (Manila → Cebu, Angeles → Davao) can't be driven end
+        // to end — show the sea/air breakdown BEFORE the land-based intents so we
+        // never quote an impossible continuous distance.
+        if let cross = crossIslandReply(text) {
+            return cross
+        }
+
         // Knowledge base — fuel-economy tips, troubleshooting, culture, routes,
         // drive-vs-bus, CO2, best time to travel. Checked before trip parsing
         // because many of these questions also name a place.
@@ -344,7 +351,86 @@ struct TalkToAigosView: View {
         }
     }
 
+    // MARK: - Cross-island (multi-modal)
+
+    /// If the message is a trip whose endpoints are on different islands, answer
+    /// with the sea/air breakdown; else nil (a normal same-island trip).
+    private func crossIslandReply(_ text: String) -> ChatMessage? {
+        guard let query = TripQueryParser.parse(text, vehicles: vehicles, personalPlaces: personalPlaces) else { return nil }
+        return interIslandMessage(for: query)
+    }
+
+    /// The multi-modal breakdown: land portion(s) + typical flight/ferry estimates
+    /// + disclaimer. Returns nil when both endpoints are on the same landmass.
+    private func interIslandMessage(for query: TripQuery) -> ChatMessage? {
+        let o = query.origin, d = query.destination
+        guard let islandO = IslandResolver.island(forPlace: o),
+              let islandD = IslandResolver.island(forPlace: d),
+              islandO != islandD else { return nil }
+
+        let vehicle = vehicles.first { $0.name == query.vehicleName }
+            ?? vehicles.first(where: \.isDefault) ?? vehicles.first
+        let vehicleName = vehicle?.name ?? "your vehicle"
+
+        var lines = ["🚢 \(o.capitalized) → \(d.capitalized) isn't a direct land route — \(d.capitalized) is on \(islandD), separate from \(o.capitalized) (\(islandO)).", ""]
+
+        let hubO = IslandResolver.hub(for: islandO)
+        let hubD = IslandResolver.hub(for: islandD)
+        let fromHub = hubO ?? o.capitalized
+        let toHub = hubD ?? d.capitalized
+
+        // Land 1 — origin → departure hub (in the user's own vehicle).
+        if let hubO, hubO.lowercased() != o.lowercased(),
+           let land = PlaceResolver.route(from: o, to: hubO, personalPlaces: personalPlaces) {
+            lines.append("🚗 Land — \(o.capitalized) → \(hubO): ≈\(land.distanceKm.oneDecimal) km, about \(landFuel(distanceKm: land.distanceKm, vehicle: vehicle)) fuel in \(vehicleName).")
+        }
+
+        // Inter-island — flight and/or ferry between hubs.
+        if let flight = TravelRoutes.flight(from: fromHub, to: toHub) {
+            lines.append("✈️ Flight — \(fromHub) → \(toHub): ~\(hoursText(flight.hours)), \(rangeText(flight.minPHP, flight.maxPHP)) (\(TravelRoutes.airlines.prefix(3).joined(separator: ", "))).")
+        }
+        if let ferry = TravelRoutes.ferry(from: fromHub, to: toHub) {
+            var t = "🚢 Ferry — \(fromHub) → \(toHub): ~\(hoursText(ferry.hours)), \(rangeText(ferry.minPHP, ferry.maxPHP))"
+            if let op = ferry.operatorName { t += " (\(op))" }
+            if let car = ferry.withCarPHP { t += "; +PHP \(Int(car)) with a car (ro-ro)" }
+            lines.append(t + ".")
+        }
+        if TravelRoutes.flight(from: fromHub, to: toHub) == nil && TravelRoutes.ferry(from: fromHub, to: toHub) == nil {
+            lines.append("✈️/🚢 You'll need a flight or ferry between \(fromHub) and \(toHub) — check operator sites for schedules and fares.")
+        }
+
+        // Land 2 — arrival hub → destination (taxi/rental at destination).
+        if let hubD, hubD.lowercased() != d.lowercased(),
+           let land2 = PlaceResolver.route(from: hubD, to: d, personalPlaces: personalPlaces) {
+            lines.append("🚗 Land — \(hubD) → \(d.capitalized): ≈\(land2.distanceKm.oneDecimal) km (taxi or rental at destination).")
+        }
+
+        lines.append("")
+        lines.append(TravelRoutes.disclaimer)
+        return ChatMessage(role: .aigos, text: lines.joined(separator: "\n"))
+    }
+
+    private func landFuel(distanceKm: Double, vehicle: VehicleProfile?) -> String {
+        guard let vehicle else { return "—" }
+        let est = CalculationEngine.estimate(
+            distanceKm: distanceKm, baseEfficiencyKmL: vehicle.efficiencyKmL,
+            fuelPricePerLitre: PriceService.price(for: vehicle.fuelType, in: context),
+            avgHighwaySpeedKmh: 90, avgCitySpeedKmh: 40, acInUse: true, roadType: .highway)
+        return est.estimatedCost.phpString
+    }
+
+    private func hoursText(_ h: Double) -> String {
+        if h < 1 { return "\(Int((h * 60).rounded())) mins" }
+        return h == h.rounded() ? "\(Int(h)) hrs" : "\(h.oneDecimal) hrs"
+    }
+
+    private func rangeText(_ lo: Double, _ hi: Double) -> String {
+        "PHP \(Int(lo).formatted()) – \(Int(hi).formatted())"
+    }
+
     private func estimate(for query: TripQuery) -> ChatMessage {
+        // Cross-island endpoints can't be driven — hand off to the sea/air breakdown.
+        if let multi = interIslandMessage(for: query) { return multi }
         // Personal shortcuts (Home/Office/…) resolve before the gazetteer.
         guard let route = PlaceResolver.route(from: query.origin, to: query.destination, personalPlaces: personalPlaces) else {
             return ChatMessage(role: .aigos, text: "I don't know that location yet. Try typing it in the calculator and pick from the suggestions.")

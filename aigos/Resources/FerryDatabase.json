@@ -1,0 +1,174 @@
+{
+  "operators": {
+    "2GO Travel": "travel.2go.com.ph",
+    "OceanJet": "oceanjet.net",
+    "FastCat": "fastcat.com.ph",
+    "Montenegro Lines": "montenegrolines.com.ph",
+    "Starlite Ferries": "starliteferries.com"
+  },
+  "routes": [
+    {
+      "from": "Manila",
+      "to": "Cebu",
+      "hours": 22,
+      "minPHP": 1500,
+      "maxPHP": 4500,
+      "operator": "2GO Travel"
+    },
+    {
+      "from": "Manila",
+      "to": "Iloilo",
+      "hours": 24,
+      "minPHP": 1800,
+      "maxPHP": 4000,
+      "operator": "2GO Travel"
+    },
+    {
+      "from": "Manila",
+      "to": "Bacolod",
+      "hours": 22,
+      "minPHP": 1500,
+      "maxPHP": 4500,
+      "operator": "2GO Travel"
+    },
+    {
+      "from": "Manila",
+      "to": "Cagayan de Oro",
+      "hours": 32,
+      "minPHP": 2500,
+      "maxPHP": 6000,
+      "operator": "2GO Travel"
+    },
+    {
+      "from": "Manila",
+      "to": "Davao City",
+      "hours": 42,
+      "minPHP": 3500,
+      "maxPHP": 8000,
+      "operator": "2GO Travel"
+    },
+    {
+      "from": "Manila",
+      "to": "Zamboanga City",
+      "hours": 32,
+      "minPHP": 2800,
+      "maxPHP": 6500,
+      "operator": "2GO Travel"
+    },
+    {
+      "from": "Manila",
+      "to": "Puerto Princesa",
+      "hours": 26,
+      "minPHP": 2000,
+      "maxPHP": 5000,
+      "operator": "2GO Travel"
+    },
+    {
+      "from": "Cebu City",
+      "to": "Tagbilaran",
+      "hours": 2,
+      "minPHP": 500,
+      "maxPHP": 800,
+      "operator": "OceanJet"
+    },
+    {
+      "from": "Cebu City",
+      "to": "Ormoc",
+      "hours": 3,
+      "minPHP": 900,
+      "maxPHP": 1400,
+      "operator": "OceanJet"
+    },
+    {
+      "from": "Iloilo",
+      "to": "Bacolod",
+      "hours": 1,
+      "minPHP": 300,
+      "maxPHP": 500,
+      "operator": "OceanJet"
+    },
+    {
+      "from": "Dumaguete",
+      "to": "Siquijor",
+      "hours": 1,
+      "minPHP": 250,
+      "maxPHP": 400,
+      "operator": "OceanJet"
+    },
+    {
+      "from": "Batangas",
+      "to": "Puerto Galera",
+      "hours": 1.5,
+      "minPHP": 250,
+      "maxPHP": 450,
+      "operator": "FastCat"
+    },
+    {
+      "from": "Batangas",
+      "to": "Calapan",
+      "hours": 2.5,
+      "minPHP": 350,
+      "maxPHP": 500,
+      "operator": "FastCat"
+    },
+    {
+      "from": "Roxas",
+      "to": "Caticlan",
+      "hours": 4,
+      "minPHP": 500,
+      "maxPHP": 800,
+      "operator": "Montenegro Lines"
+    },
+    {
+      "from": "Batangas",
+      "to": "Odiongan",
+      "hours": 8,
+      "minPHP": 400,
+      "maxPHP": 600,
+      "operator": "Montenegro Lines"
+    },
+    {
+      "from": "Batangas",
+      "to": "Boac",
+      "hours": 6,
+      "minPHP": 400,
+      "maxPHP": 600,
+      "operator": "Starlite Ferries"
+    },
+    {
+      "from": "Caticlan",
+      "to": "Boracay",
+      "hours": 0.25,
+      "minPHP": 100,
+      "maxPHP": 200,
+      "operator": "Local boat"
+    },
+    {
+      "from": "Matnog",
+      "to": "Allen",
+      "hours": 1,
+      "minPHP": 200,
+      "maxPHP": 200,
+      "operator": "Ro-Ro",
+      "withCarPHP": 1500
+    },
+    {
+      "from": "Liloan",
+      "to": "Lipata",
+      "hours": 3,
+      "minPHP": 200,
+      "maxPHP": 200,
+      "operator": "Ro-Ro",
+      "withCarPHP": 2000
+    },
+    {
+      "from": "Roxas Mindoro",
+      "to": "Caticlan",
+      "hours": 4,
+      "minPHP": 500,
+      "maxPHP": 500,
+      "operator": "Ro-Ro",
+      "withCarPHP": 2500
+    }
+  ]
+}
