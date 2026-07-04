@@ -87,16 +87,19 @@ struct TrackingExpandedSheet: View {
                 Text(formatElapsed(tracker.elapsedSeconds))
                     .font(.system(size: 15, weight: .bold, design: .monospaced)).foregroundStyle(.white)
             }
+            .staggeredAppear(index: 0)
 
             HStack(spacing: Space.md) {
                 metric("Distance", "\(tracker.distanceKm.oneDecimal) km", "map.fill")
                 metric("Fuel", "\(tracker.fuelL.oneDecimal) L", "fuelpump.fill")
                 metric("Cost", tracker.costPHP.phpString, "pesosign.circle.fill")
             }
+            .staggeredAppear(index: 1)
             HStack(spacing: Space.md) {
                 metric("Speed", "\(Int(tracker.currentSpeedKmh)) km/h", "speedometer")
                 metric("Elapsed", formatElapsed(tracker.elapsedSeconds), "clock.fill")
             }
+            .staggeredAppear(index: 2)
 
             if tracker.status == .arrived {
                 Text("Looks like you've arrived 🎉")
@@ -109,6 +112,7 @@ struct TrackingExpandedSheet: View {
             Text("📱 Keep aigos open while driving to track your trip.")
                 .rounded(11, weight: .medium).foregroundStyle(.white.opacity(0.6))
                 .multilineTextAlignment(.center)
+                .staggeredAppear(index: 3)
 
             Button(action: onEnd) {
                 HStack(spacing: 6) { Image(systemName: "stop.fill"); Text("End Trip") }
@@ -117,6 +121,7 @@ struct TrackingExpandedSheet: View {
                     .background(Color(hex: "#C0392B"), in: Capsule())
             }
             .buttonStyle(.plain)
+            .staggeredAppear(index: 4)   // End Trip slides up last
         }
         .padding(.horizontal, Space.lg)
         .padding(.bottom, Space.lg)
@@ -174,57 +179,59 @@ struct TripComparisonView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: Space.lg) {
-                    Text("TRIP COMPLETE ✅")
-                        .rounded(22, weight: .black).foregroundStyle(.white)
+        // Plain ScrollView — the sheet supplies AigosBackground via
+        // .presentationBackground (same pattern as the working ResultSheet). No
+        // NavigationStack: its opaque default background rendered the sheet black.
+        ScrollView {
+            VStack(spacing: Space.lg) {
+                Text("TRIP COMPLETE ✅")
+                    .rounded(22, weight: .black).foregroundStyle(.white)
 
-                    VStack(spacing: 0) {
-                        headerRow
-                        DashedDivider().padding(.vertical, Space.sm)
-                        compareRow("Distance", est: "\(estDistanceKm.oneDecimal) km", act: "\(summary.actualDistanceKm.oneDecimal) km")
-                        compareRow("Fuel", est: "\(estFuelL.oneDecimal) L", act: "\(summary.actualFuelL.oneDecimal) L")
-                        compareRow("Cost", est: estCostPHP.phpString, act: summary.actualCostPHP.phpString)
-                    }
-                    .padding(Space.lg).glassCard(cornerRadius: Radius.lg)
-
-                    Text("📊 Your estimate was \(Int(summary.accuracyPercent.rounded()))% accurate.")
-                        .rounded(16, weight: .bold).foregroundStyle(.white)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                    Text("💡 Your \(vehicleName) worked out to about \(fmt(impliedKmL)) km/L on this route (rated: \(fmt(ratedKmL)) km/L).")
-                        .rounded(14).foregroundStyle(.white.opacity(0.85))
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                    VStack(spacing: Space.sm) {
-                        Button {
-                            onUpdateProfile(impliedKmL)
-                            dismiss()
-                        } label: {
-                            Text("Update my profile →")
-                                .rounded(17, weight: .bold).foregroundStyle(Color.aigosAmberDeep)
-                                .frame(maxWidth: .infinity).padding(.vertical, 16)
-                                .background(Color.aigosAmber, in: Capsule())
-                        }
-                        .buttonStyle(.plain)
-                        Button {
-                            onKeep(); dismiss()
-                        } label: {
-                            Text("Keep current")
-                                .rounded(16, weight: .semibold).foregroundStyle(.white)
-                                .frame(maxWidth: .infinity).padding(.vertical, 14)
-                                .background(Color.white.opacity(0.14), in: Capsule())
-                        }
-                        .buttonStyle(.plain)
-                    }
+                VStack(spacing: 0) {
+                    headerRow
+                    DashedDivider().padding(.vertical, Space.sm)
+                    compareRow("Distance", est: "\(estDistanceKm.oneDecimal) km", act: "\(summary.actualDistanceKm.oneDecimal) km")
+                    compareRow("Fuel", est: "\(estFuelL.oneDecimal) L", act: "\(summary.actualFuelL.oneDecimal) L")
+                    compareRow("Cost", est: estCostPHP.phpString, act: summary.actualCostPHP.phpString)
                 }
-                .padding(.horizontal, Space.screen).padding(.vertical, Space.lg)
+                .padding(Space.lg).glassCard(cornerRadius: Radius.lg)
+
+                Text("📊 Your estimate was \(Int(summary.accuracyPercent.rounded()))% accurate.")
+                    .rounded(16, weight: .bold).foregroundStyle(.white)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                Text("💡 Your \(vehicleName) worked out to about \(fmt(impliedKmL)) km/L on this route (rated: \(fmt(ratedKmL)) km/L).")
+                    .rounded(14).foregroundStyle(.white.opacity(0.85))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                VStack(spacing: Space.sm) {
+                    Button {
+                        onUpdateProfile(impliedKmL)
+                        dismiss()
+                    } label: {
+                        Text("Update my profile →")
+                            .rounded(17, weight: .bold).foregroundStyle(Color.aigosAmberDeep)
+                            .frame(maxWidth: .infinity).padding(.vertical, 16)
+                            .background(Color.aigosAmber, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    Button {
+                        onKeep(); dismiss()
+                    } label: {
+                        Text("Keep current")
+                            .rounded(16, weight: .semibold).foregroundStyle(.white)
+                            .frame(maxWidth: .infinity).padding(.vertical, 14)
+                            .background(Color.white.opacity(0.14), in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
             }
-            .background(AigosBackground())
-            .navigationBarTitleDisplayMode(.inline)
+            .padding(.horizontal, Space.screen)
+            .padding(.top, Space.xl)
+            .padding(.bottom, Space.xl)
         }
+        .scrollIndicators(.hidden)
     }
 
     private var headerRow: some View {
@@ -244,5 +251,5 @@ struct TripComparisonView: View {
         .padding(.vertical, 8)
     }
 
-    private func fmt(_ v: Double) -> String { String(format: "%.1f", v) }
+    private func fmt(_ v: Double) -> String { v.isFinite ? String(format: "%.1f", v) : "—" }
 }

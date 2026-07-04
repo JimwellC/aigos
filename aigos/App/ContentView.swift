@@ -37,27 +37,28 @@ struct ContentView: View {
                 if tracker.isLive && expanded {
                     TrackingExpandedSheet(
                         tracker: tracker,
-                        onCollapse: { withAnimation(.easeOut(duration: 0.3)) { expanded = false } },
+                        onCollapse: collapse,
                         onEnd: endTracking)
+                        // Expand: spring up. Collapse: ease down (driven by withAnimation).
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
-            .animation(.spring(response: 0.32, dampingFraction: 0.82), value: expanded)
             // The compact bar sits in the bottom inset directly above the tab bar —
-            // it only reserves ~56pt, so the header is never pushed.
+            // it only reserves ~56pt, so the header is never pushed. It slides up when
+            // tracking starts and down when it ends; it stays perfectly still (no
+            // animation) on tab switches, since neither isLive nor expanded changes.
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 VStack(spacing: 8) {
                     if tracker.isLive && !expanded {
                         TrackingMiniBar(
                             tracker: tracker,
-                            onTap: { withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) { expanded = true } },
+                            onTap: expand,
                             onLongPressEnd: { showingEndConfirm = true })
                             .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                     AigosTabBar(selected: $appState.selectedTab)
                 }
                 .animation(.spring(response: 0.35, dampingFraction: 0.85), value: tracker.isLive)
-                .animation(.spring(response: 0.32, dampingFraction: 0.82), value: expanded)
             }
             .environment(appState)
             .task {
@@ -78,6 +79,9 @@ struct ContentView: View {
                         estDistanceKm: compEstDistance, estFuelL: compEstFuel, estCostPHP: compEstCost,
                         vehicleName: compVehicleName, ratedKmL: compRatedKmL,
                         onUpdateProfile: updateEfficiency, onKeep: {})
+                        .presentationDetents([.large])
+                        .presentationDragIndicator(.visible)
+                        .presentationBackground { AigosBackground() }
                 }
             }
             .confirmationDialog("End this trip?", isPresented: $showingEndConfirm, titleVisibility: .visible) {
@@ -87,12 +91,16 @@ struct ContentView: View {
             // Tracking always starts MINIMIZED — the full dashboard only appears when
             // the user taps the bar. Reset on end, and minimize when switching tabs.
             .onChange(of: tracker.isLive) { _, live in
-                if !live { withAnimation(.easeOut(duration: 0.25)) { expanded = false } }
+                if !live { collapse() }
             }
             .onChange(of: appState.selectedTab) { _, _ in
-                if expanded { withAnimation(.easeOut(duration: 0.25)) { expanded = false } }
+                if expanded { collapse() }
             }
     }
+
+    // Minimize → Expand: spring up. Expand → Minimize: ease down.
+    private func expand() { withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { expanded = true } }
+    private func collapse() { withAnimation(.easeOut(duration: 0.25)) { expanded = false } }
 
     @ViewBuilder
     private var currentScreen: some View {
@@ -144,9 +152,12 @@ struct ContentView: View {
         }
         try? context.save()
 
-        withAnimation(.easeOut(duration: 0.3)) { expanded = false }
+        // Collapse the bar, then present the comparison as a bottom sheet next
+        // runloop so the two animations read as one connected motion rather than a
+        // dismiss fighting a present.
+        collapse()
         lastSummary = summary
-        showingComparison = true
+        DispatchQueue.main.async { showingComparison = true }
     }
 
     /// Self-correct the tracked vehicle's efficiency (comparison already clamped it).
