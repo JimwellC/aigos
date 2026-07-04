@@ -125,6 +125,11 @@ enum CalculationEngine {
         weather: WeatherCondition = .clear,
         roadSurface: RoadSurface = .smooth
     ) -> FuelEstimate {
+        // Defensive: a non-finite or negative distance/price would poison the persisted
+        // TripRecord with NaN/Inf and later trap in Int()/gauge rendering. Any caller
+        // that hands us garbage gets a clean zero rather than a corrupt estimate.
+        let distanceKm = distanceKm.isFinite ? max(0, distanceKm) : 0
+        let fuelPricePerLitre = fuelPricePerLitre.isFinite ? max(0, fuelPricePerLitre) : 0
         let safeEfficiency = max(baseEfficiencyKmL, 0.1)
 
         let speed = relevantSpeed(

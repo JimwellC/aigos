@@ -54,6 +54,25 @@ final class CalculationEngineTests: XCTestCase {
         XCTAssertEqual((e.adjustedLitres * 10).rounded() / 10 * 62.55, 450.36, accuracy: 0.01)
     }
 
+    /// Defensive hardening: garbage distance/price must never poison the estimate
+    /// with NaN/Infinity (which would corrupt the persisted TripRecord).
+    func testNonFiniteInputsProduceFiniteZero() {
+        for bad in [Double.infinity, -.infinity, .nan, -50] {
+            let e = CalculationEngine.estimate(
+                distanceKm: bad, baseEfficiencyKmL: 14.5, fuelPricePerLitre: 62.55,
+                avgHighwaySpeedKmh: 90, avgCitySpeedKmh: 40, acInUse: true, roadType: .highway)
+            XCTAssertTrue(e.estimatedCost.isFinite)
+            XCTAssertTrue(e.adjustedLitres.isFinite)
+            XCTAssertEqual(e.estimatedCost, 0, accuracy: 0.0001)
+        }
+        // A NaN price is likewise neutralized.
+        let e = CalculationEngine.estimate(
+            distanceKm: 100, baseEfficiencyKmL: 14.5, fuelPricePerLitre: .nan,
+            avgHighwaySpeedKmh: 90, avgCitySpeedKmh: 40, acInUse: true, roadType: .highway)
+        XCTAssertTrue(e.estimatedCost.isFinite)
+        XCTAssertEqual(e.estimatedCost, 0, accuracy: 0.0001)
+    }
+
     func testACAndRoadFactors() {
         let noAC = CalculationEngine.estimate(
             distanceKm: 100, baseEfficiencyKmL: 10, fuelPricePerLitre: 60,

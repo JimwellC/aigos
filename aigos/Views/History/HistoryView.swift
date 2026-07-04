@@ -274,7 +274,7 @@ struct MonthGroup: Identifiable {
         }
         return grouped
             .map { key, value in
-                MonthGroup(id: key, title: formatter.string(from: value.first!.calculatedAt), trips: value)
+                MonthGroup(id: key, title: formatter.string(from: value.first?.calculatedAt ?? Date()), trips: value)
             }
             .sorted { $0.id > $1.id }
     }

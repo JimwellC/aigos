@@ -432,8 +432,8 @@ struct CalculateView: View {
                 if let detected = detectedRoad {
                     routeDetectionBanner(detected)
                 }
-            } else if distanceKm != nil {
-                Label("≈ \(distanceKm!.oneDecimal) km (estimated)", systemImage: "map")
+            } else if let distanceKm {
+                Label("≈ \(distanceKm.oneDecimal) km (estimated)", systemImage: "map")
                     .rounded(14, weight: .semibold)
                     .foregroundStyle(.white.opacity(0.9))
             } else {
@@ -710,6 +710,8 @@ struct CalculateView: View {
     // MARK: - GPS trip tracking (v1.1)
 
     private func startTracking() {
+        // Don't abandon an in-progress track if the user re-opens a result and taps again.
+        guard !tracker.isLive else { return }
         guard let vehicle = selectedVehicle, let trip = lastTrip, let est = estimate else { return }
         Haptics.tap(.medium)   // "Track This Trip" start
         trackEstDistance = est.distanceKm

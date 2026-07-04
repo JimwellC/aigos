@@ -20,6 +20,7 @@ struct FuelLogFormView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \VehicleProfile.createdAt) private var vehicles: [VehicleProfile]
+    @Query(sort: \FuelLog.date, order: .reverse) private var allLogs: [FuelLog]
 
     var prefill: FuelLogDraft? = nil
 
@@ -38,8 +39,23 @@ struct FuelLogFormView: View {
     }
     private var liters: Double { Double(litersText.trimmingCharacters(in: .whitespaces)) ?? 0 }
     private var cost: Double { Double(costText.trimmingCharacters(in: .whitespaces)) ?? 0 }
+    private var odometer: Double? { Double(odometerText.trimmingCharacters(in: .whitespaces)) }
     private var pricePerL: Double { liters > 0 ? cost / liters : 0 }
-    private var canSave: Bool { vehicle != nil && liters > 0 && cost > 0 }
+
+    // Sane upper bounds so a stray "99999" can't poison the fuel report.
+    private var litersInRange: Bool { liters > 0 && liters <= 1000 }
+    private var costInRange: Bool { cost > 0 && cost <= 1_000_000 }
+    private var canSave: Bool { vehicle != nil && litersInRange && costInRange }
+
+    /// Most recent odometer logged for this vehicle (for a "backwards" sanity check).
+    private var lastOdometer: Double? {
+        guard let v = vehicle else { return nil }
+        return allLogs.first { $0.vehicleId == v.id && $0.odometerKm != nil }?.odometerKm
+    }
+    private var odometerGoesBackwards: Bool {
+        guard let entered = odometer, let last = lastOdometer else { return false }
+        return entered < last
+    }
 
     var body: some View {
         NavigationStack {
@@ -64,9 +80,11 @@ struct FuelLogFormView: View {
 
                         FieldLabel("Litres purchased")
                         GlassField(placeholder: "35", text: $litersText, keyboard: .decimalPad)
+                        if liters > 1000 { warning("That's a lot of fuel — please check the litres.") }
 
                         FieldLabel("Total cost (PHP)")
                         GlassField(placeholder: "2520", text: $costText, keyboard: .decimalPad)
+                        if cost > 1_000_000 { warning("That total looks too high — please check.") }
 
                         if pricePerL > 0 {
                             Text("≈ PHP \(pricePerL.oneDecimal)/L")
@@ -75,6 +93,9 @@ struct FuelLogFormView: View {
 
                         FieldLabel("Odometer (km, optional)")
                         GlassField(placeholder: "45680", text: $odometerText, keyboard: .decimalPad)
+                        if odometerGoesBackwards, let last = lastOdometer {
+                            warning("Lower than your last logged odometer (\(Int(last)) km). Double-check the reading.")
+                        }
                         Text("Add the odometer on full tanks to unlock your real km/L.")
                             .rounded(12).foregroundStyle(.white.opacity(0.5)).fixedSize(horizontal: false, vertical: true)
 
@@ -113,8 +134,16 @@ struct FuelLogFormView: View {
         }
     }
 
+    private func warning(_ text: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 12))
+            Text(text).rounded(12, weight: .medium).fixedSize(horizontal: false, vertical: true)
+        }
+        .foregroundStyle(Color.aigosAmberLight)
+    }
+
     private func save() {
-        guard let v = vehicle else { return }
+        guard let v = vehicle, canSave else { return }
         Haptics.tap(.light)   // fuel log saved
         let log = FuelLog(
             date: date, vehicleId: v.id, vehicleName: v.name, fuelType: v.fuelType,
