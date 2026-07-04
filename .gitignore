@@ -15,3 +15,11 @@ xcuserdata/
 
 # Claude Code local settings
 .claude/
+
+# Fastlane — secrets & generated output (keep Fastfile/Appfile/metadata)
+fastlane/.env
+**/*.p8
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output/

@@ -1,0 +1,1 @@
+gasolina,gas,petrol,diesel,price,mileage,km/l,calculator,trip,road,budget,commute,motor,consumption

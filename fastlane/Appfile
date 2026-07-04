@@ -1,0 +1,8 @@
+app_identifier("com.aigos.app")   # bundle ID (matches PRODUCT_BUNDLE_IDENTIFIER)
+team_id("MWJJ994KSX")              # Apple Developer portal team (DEVELOPMENT_TEAM)
+
+# Auth is via an App Store Connect API key (see fastlane/.env.template),
+# so an Apple ID / itc_team_id is NOT required here. Uncomment only if you
+# switch to Apple-ID auth and belong to multiple App Store Connect teams:
+# apple_id(ENV["APPLE_ID"])
+# itc_team_id("YOUR_ASC_TEAM_ID")

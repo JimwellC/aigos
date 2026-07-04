@@ -1,0 +1,9 @@
+Kumusta! This is aigos 1.0 — your offline fuel-trip calculator for Filipino roads.
+
+• Physics-based cost estimates (speed, aircon, road, traffic, load)
+• Talk to aigos — ask any trip in plain English
+• Built-in database of top PH cars & motorcycles
+• Map picker with a route preview
+• Save routes, track monthly spending — all on-device
+
+No login. No ads. No tracking. Salamat for driving with aigos. Ingat sa daan!
