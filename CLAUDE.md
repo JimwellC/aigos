@@ -12,13 +12,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Multi-modal / cross-island trips (fixes the "Angeles → Davao impossible land distance" bug):** `IslandResolver` maps a place to its drivable **landmass** via `Resources/IslandDatabase.json` (province → island, plus city overrides for separate islands inside a mainland province — Boracay/Siargao/Samal; bridged islands like Leyte↔Samar and Mactan↔Cebu count as one). `IslandResolver.isCrossIsland(a,b)` is true only when both resolve to *different* landmasses (unknown places never block). `TravelRoutes` loads `Resources/FerryDatabase.json` + `FlightDatabase.json` (typical domestic routes/fares as **reference estimates** — 2GO/OceanJet/FastCat ferries, PAL/Cebu Pacific/AirAsia flights) with a bundled `disclaimer`. **`CalculateView`** blocks Calculate when the two picked places are cross-island (`crossIsland`) and shows a "Sea or air travel required" banner → **`TalkToAigosView`**. Talk's `crossIslandReply`/`interIslandMessage` (checked before the land intents) returns the full breakdown: land portion to the departure hub (real fuel in the user's vehicle) + typical flight & ferry estimates between hubs + destination land note + disclaimer. Never quote a continuous land distance for a sea/air trip.
 
-## Where we left off (session end · 2026-07-04, session 3)
+## Where we left off (session end · 2026-07-04, session 4)
 
-**State:** builds warning-clean (Swift 6, iOS 17+), **221 tests passing**, everything committed + pushed to `github.com/JimwellC/aigos` (private, `main`).
+**State:** builds warning-clean (Swift 6, iOS 17+), **221 tests passing**, everything committed + pushed to `github.com/JimwellC/aigos` (private, `main`). **On TestFlight: build 73** (App ID `6787352080`). Build number = git commit count.
 
-**⚠️ BLOCKER for TestFlight / App Store upload — needs a toolchain update.** `fastlane beta` was run and got all the way through: **archive ✓, code-signing ✓** (distribution cert works — no cert/profile errors), **API-key auth ✓**, reached the App Store Connect app record (App ID `6787352080`). Apple then **rejected the upload with a 409 "SDK version" error**: apps must now be built with the **iOS 26 SDK (Xcode 26+)**. This Mac is on **Xcode 16.4 / iOS 18.5 SDK** (older macOS). **You must update to macOS 26 + Xcode 26 before `fastlane beta`/`release` can upload — no code changes are needed, only the toolchain.** After updating: `sudo xcode-select -s /Applications/Xcode.app` → `xcodebuild -version` (confirm 26.x) → re-run `fastlane beta`. Heads-up: on the iOS 26 SDK the `#if canImport(FoundationModels)` seam in `AIAvailability` flips to *active* (it's compiled out on 18.5) — after the first Xcode-26 build, confirm the Talk badge / `AIGateView` still read "On-device · works offline" with no Apple-Intelligence framing (the v1.0 decision).
+**Toolchain gate RESOLVED.** The Mac is now on **Xcode 26.6 / iOS 26.5 SDK**; `sudo xcode-select` points at `/Applications/Xcode.app`. The old iOS-26-SDK 409 rejection is gone — `fastlane beta` archives, signs, and uploads cleanly. Builds **60 → 73** have shipped to TestFlight. On the iOS 26 SDK the `#if canImport(FoundationModels)` seam in `AIAvailability` is *active* but harmless: `status`/`isAvailable` are **never called at runtime** (the Talk badge is static text), so the UI stays provider-neutral ("On-device · works offline"). Don't reintroduce Apple-Intelligence framing.
 
-**Fastlane — COMPLETE & WORKING** (only the SDK gate above blocks the actual upload). Installed via Homebrew (vendors its own Ruby; system Ruby 2.6 is too old). `fastlane/` has `Appfile` (bundle `com.aigos.app`, team `MWJJ994KSX`), `Fastfile` lanes — `test` / `build` / `beta` (TestFlight) / `release` (App Store, no auto-submit) / `metadata` / `verify` (read-only ASC auth check) — authed by an **App Store Connect API key configured in `fastlane/.env`** (gitignored; template in `.env.template`). Build number = git commit count injected at build time (`CURRENT_PROJECT_VERSION` via xcargs). `deliver` metadata is wired from `docs/app-store/` into `fastlane/metadata/`. `fastlane/SETUP.md` is the human guide; `fastlane/README.md` is auto-generated. Analytics opted out.
+**Device-QA arc (iPhone 11 / iOS 26.5.2) — all fixes shipped:**
+- **P0 SwiftData crash** on "set default" / "Calculate" was a `swift_dynamicCastFailure` from a **no-inverse** `VehicleProfile→DrivingProfile` relationship (found via build-60/63 `.ips` crash logs — symbolicated with the archive dSYM). Fixed by making the relationship **bidirectional** (`@Relationship(inverse:)` + `DrivingProfile.vehicle`), plus a **store-open recovery** in `aigosApp` that deletes an unopenable store and resets `hasOnboarded` instead of looping in a volatile in-memory store (builds 63/64).
+- **Tank sizes:** per-vehicle `VehicleProfile.tankCapacityL` + real values in `VehicleDatabase.json`; fuel-gauge remaining-range + long-trip/refuel warnings; per-type fallback (**car 45 / motorcycle 5 / truck 75 / van 65** = `VehicleType.typicalTankLiters`); `AppSeeder.normalizeTankCapacitiesIfNeeded` one-time fix for legacy motorcycles stuck at the flat 45 L (builds 65/71).
+- **Database-first vehicle add** (`VehicleSearchStep`: search + autocomplete + fuzzy/nicknames/category + "not listed" manual fallback), auto-fill, `UnlistedSearchLog` (private, local-only) (build 66).
+- **Hybrid online/offline place search:** `PlaceField` autocomplete now also queries **Apple Maps (MKLocalSearch)** when online (debounced), with a 🌐/📵 `NetworkMonitor` indicator + an offline "not found" message; offline stays gazetteer-only (build 70).
+- **Map-picker fixes:** `LocationHelper` rewrite — permission-first, `kCLLocationAccuracyHundredMeters`, cached fix, spinner, 5 s timeout; `LocationPickerView` remembers the last confirmed pin via `initialCoordinate` (build 72).
+
+**Local offline coverage (build 73):** the offline gazetteer now covers the developer's home region — **Central/Northern Luzon: Pampanga, Bulacan, Tarlac, Nueva Ecija, Zambales, Bataan, Pangasinan, La Union, Baguio (Benguet)** — with ~81 places whose coordinates were **verified via MKLocalSearch** (malls, bus terminals, universities, hospitals, landmarks) plus local aliases ("dau", "clark", "marquee", "nepo", "fields", "hau", "auf", "sbma", "burnham"). Everywhere else, online Apple Maps search fills the gaps. Expand further based on `UnlistedSearchLog` demand — see the v1.1 roadmap below.
+
+**Fastlane — COMPLETE & WORKING** (uploads cleanly on Xcode 26; run `fastlane beta` to push a build). Installed via Homebrew (vendors its own Ruby; system Ruby 2.6 is too old). `fastlane/` has `Appfile` (bundle `com.aigos.app`, team `MWJJ994KSX`), `Fastfile` lanes — `test` / `build` / `beta` (TestFlight) / `release` (App Store, no auto-submit) / `metadata` / `verify` (read-only ASC auth check) — authed by an **App Store Connect API key configured in `fastlane/.env`** (gitignored; template in `.env.template`). Build number = git commit count injected at build time (`CURRENT_PROJECT_VERSION` via xcargs). `deliver` metadata is wired from `docs/app-store/` into `fastlane/metadata/`. `fastlane/SETUP.md` is the human guide; `fastlane/README.md` is auto-generated. Analytics opted out.
 
 **App Store Connect:** the app record for **`com.aigos.app` exists (App ID `6787352080`)**; `fastlane metadata` has pushed the full listing (name/subtitle/description/keywords/promo/release notes/review notes). **Three temporary placeholders still live in the listing** and must be replaced before submit: `support_url` = a Facebook page, `privacy_url` = an `app.notion.com` link (**verify it opens without login — Apple rejects gated privacy URLs; publish as `notion.site`**), review `phone_number` = a real number is set. `.gitignore` hardened for secrets (`.env`, `**/*.p8`, `fastlane/keys/`); no secret has ever been committed. `aigos_architecture.pdf` is untracked (on disk, gitignored).
 
@@ -174,6 +183,81 @@ The `aigosTests` target covers the pure logic (**221 cases**, all passing) — r
 - **Sprint 3:** Apple Intelligence / `TalkToAigosView`, `AIGateView`, App Store assets + submission.
 
 When starting fresh, default to Sprint 1 unless told otherwise. Keep scope tight — feature creep is the named enemy; ship imperfect and iterate.
+
+## v1.1 Roadmap (documentation only — do NOT build until v1.0 ships)
+
+Full specs for the next development cycle. These are **not** implemented; they're the agreed direction. Order is roughly by priority. Keep the v1.0 constraints (offline-first, zero backend, privacy-locked, SwiftData, iOS-only) — every networked piece must degrade gracefully offline.
+
+### HEADLINE — GPS Trip Tracking (Start → Drive → End)
+
+The differentiator: record the **actual** drive and compare it to the estimate, then self-correct the vehicle's real-world efficiency.
+
+- **Flow:** user calculates a trip → on the result sheet a new amber pill **"Start Tracking This Trip"** appears → app enters tracking mode with a **live dashboard** (distance so far, est. fuel burned, est. cost, time elapsed, current speed) → auto-detect arrival (**within 500 m** of destination) or user taps **"End Trip"** → **Trip Summary**: ESTIMATED vs ACTUAL (km / litres / PHP) + an accuracy % ("your estimate was 93% accurate") + the inferred real km/L for this route ("your Vios seems to get ~13.8 km/L, rated 14.5") + **[Update my profile] / [Keep current]**.
+- **Update my profile** → adjust the vehicle's real-world km/L and feed REAL data into `DrivingProfile` (instead of self-reported), so the next same-route estimate is more accurate.
+- **Technical:** `NSLocationAlwaysAndWhenInUseUsageDescription` = "aigos tracks your trip to compare estimated vs actual fuel cost. Location is stored on-device only."; `CLLocationManager` with `allowsBackgroundLocationUpdates`; battery-efficient — `kCLLocationAccuracyHundredMeters` + distance filter **50 m** (continuous for short trips, `startMonitoringSignificantLocationChanges` for long); store the route as `[CLLocationCoordinate2D]`; compute actual distance from GPS points; save to `TripRecord` with **`isTracked = true`**; show tracked trips in History with an **accuracy badge**.
+- **Privacy (locked):** GPS data **never leaves the device** (no server/cloud); tracking is **opt-in per trip**; the user can delete any tracked trip. This EXTENDS the existing precise-location declaration to background use — update `PrivacyInfo.xcprivacy` + ASC nutrition labels (Location = App Functionality, not linked, not tracking).
+
+### Fuel Purchase Logging (true km/L from fill-to-fill)
+
+- **Flow:** a "Fuel Log" section (new area or inside History) → "Log Fuel Purchase" form: Date (default today), Station name (optional — Apple Maps search or manual), Fuel type (auto from vehicle), Litres purchased, Total cost (PHP), Odometer (km), **Full tank?** toggle (critical for fill-to-fill). After **2+ full-tank logs**: ACTUAL km/L = (odometer₂ − odometer₁) / litres₂ → "Your real efficiency: 12.8 km/L (rated 14.5, −12%)" → offer to update the vehicle profile.
+- **Data model** (new `@Model` — remember to add to the `aigosApp` schema AND every `#Preview .modelContainer(for:)`):
+  ```
+  @Model class FuelLog {
+      var id: UUID = UUID()
+      var date: Date
+      var vehicleId: UUID
+      var stationName: String?
+      var fuelType: FuelType
+      var litersPurchased: Double
+      var totalCostPHP: Double
+      var odometerKm: Double?
+      var isFullTank: Bool
+      var pricePerLiter: Double
+      var createdAt: Date = Date()
+  }
+  ```
+
+### Monthly Fuel Report (shareable)
+
+- Auto-generated on the 1st of each month: total spent, total trips, total distance, avg trip cost, avg km/L; most expensive / cheapest / most-frequent trip; **vs last month** deltas (fuel spend, fuel price, distance); one fuel-saving tip derived from the user's own history (e.g. "Friday evening drives cost 25% more than Monday mornings — rush-hour traffic"). Footer: "Made with aigos 🇵🇭".
+- **Share:** render via **SwiftUI `ImageRenderer`/Canvas** to an image — Instagram Story (1080×1920), Facebook (text + image), screenshot-friendly; share via `UIActivityViewController`. All computed on-device from `TripRecord`/`FuelLog`.
+
+### Remote Fuel Prices (auto-update, no app update)
+
+- Host `prices.json` on **GitHub Pages** (free/static). A **GitHub Actions** cron (Tuesdays 08:00 Manila) scrapes the DOE weekly advisory from fuelprice.ph, updates `prices.json`, auto-commits. App on launch (when online): fetch → compare `lastUpdated` to local → if newer, silently update `FuelPriceCache`; if offline/failed, keep local; show an "Updated [date]" badge. **Never block launch**; the user can still override any price. This is the one pre-approved network exception from the spec (fuel-price fetch with cached fallback).
+- Repo: `aigos-prices/prices.json` + `.github/workflows/update-prices.yml`. Format: `{ "lastUpdated": "YYYY-MM-DD", "source": "DOE via fuelprice.ph", "prices": { "unleaded91": 72.00, "premium95": 73.00, "premium97": 76.00, "diesel": 69.10, "premiumDiesel": 72.40, "eGasoline": 73.50 } }`.
+
+### Gas Station Finder (online) — see also the earlier backlog note
+
+- Online: `MKLocalSearch` with category `.gasStation` to find stations along the calculated route → map pins + a list with distance-along-route; filter by brand (Shell, Petron, Caltex, Seaoil, Phoenix, Flying V, Cleanfuel); sort by nearest / cheapest (if price data exists). In Talk: "Nearest gas stations on your route to Baguio: 1. Shell Dau — 2 km from NLEX exit … 3. Flying V Urdaneta — last station before the mountain climb." Offline: general advice only ("fill up before entering TPLEX; stations are sparse on the mountain section to Baguio"). Replaces the generic v1.0 refuel message when online.
+
+### Widgets (WidgetKit + App Groups)
+
+- Small (2×2): current fuel prices ("Unleaded 91: PHP 72.00"), updates weekly with the price fetch, tap → app. Medium (4×2): last-trip summary ("Home → Office — PHP 85") or month-to-date spend. Lock-screen: single current price ("⛽ PHP 72/L") with a trend arrow. Share data app↔widget via an **App Group**.
+
+### Apple Watch companion
+
+- Complications: current fuel price / last-trip cost / monthly spend. Watch app: **saved routes only** ("Home to Office: PHP 85 today", tap → breakdown) — no full calculator on the watch, just saved-route recalculation.
+
+### v1.1 quality improvements
+
+- Expand the offline gazetteer from **`UnlistedSearchLog`** analytics (already recording "not listed" searches locally).
+- Offline **OSRM** road routing if the bundled PH extract fits under ~100 MB (else keep haversine×1.3 / MKDirections).
+- **Apple Intelligence via FoundationModels** when the SDK is stable — flip the existing `AIAvailability` seam ON; keep the badge provider-neutral.
+- **Conversation memory** in Talk to aigos (multi-turn context beyond the current per-message `lastQuery`).
+- Vehicle **year-based variant** selection in the DB add flow.
+- Crowdsourced fuel prices from users (opt-in; would need a backend — weigh against the zero-backend rule).
+- **Dark-amber dark-mode** option; **iPad** support; full **accessibility audit** (VoiceOver, Dynamic Type, contrast).
+
+## v2.0 Ideas (further out — not scoped)
+
+- Android version (React Native or Kotlin).
+- Fleet-management dashboard.
+- Delivery-rider mode with per-delivery tracking.
+- **OBD-II Bluetooth** integration for real-time fuel consumption.
+- Carbon-footprint tracking.
+- Fuel-price alerts (notify when prices drop).
+- Route optimization: cheapest-fuel route vs fastest route.
 
 ## Skills & References
 - UI/UX design system: see UI_GUIDELINES.md
