@@ -35,6 +35,8 @@ struct CalculateView: View {
     @State private var vehicleLoad: VehicleLoad = .light
     @State private var rushHour = false
     @State private var fuelLevel: FuelLevel = .full
+    @State private var weather: WeatherCondition = .clear
+    @State private var roadSurface: RoadSurface = .smooth
 
     @State private var showingDrivingSheet = false
     @State private var estimate: FuelEstimate?
@@ -123,7 +125,9 @@ struct CalculateView: View {
                 traffic: $traffic,
                 load: $vehicleLoad,
                 rushHour: $rushHour,
-                fuelLevel: $fuelLevel
+                fuelLevel: $fuelLevel,
+                weather: $weather,
+                roadSurface: $roadSurface
             )
             .presentationDetents([.large])
             .presentationDragIndicator(.visible)
@@ -512,7 +516,11 @@ struct CalculateView: View {
             traffic: traffic,
             load: vehicleLoad,
             availableFuelLitres: availableFuelLitres,
-            acUsage: acUsage        // real 3-state factor (Always/Sometimes/Off)
+            acUsage: acUsage,       // real 3-state factor (Always/Sometimes/Off)
+            ageYears: vehicle.ageYears(),
+            maintenance: vehicle.maintenanceStatus,
+            weather: weather,
+            roadSurface: roadSurface
         )
 
         estimate = result

@@ -85,13 +85,20 @@ enum VehicleDatabase {
                 vehicleType: entry.vehicleType, suggestedName: entry.makeModel)
         }
 
-        // 3. Age / engine-wear question.
+        // 3. Age / engine-wear question — apply the age band from CalculationEngine.
         if age != nil || q.contains("years old") || q.contains("year old") || q.contains("yr old") || q.contains("older car") {
             if let entry {
-                let realistic = round(entry.kmL * 0.85 * 10) / 10
+                let factor = age.map { CalculationEngine.ageFactor(forYears: $0) } ?? 0.85
+                let realistic = round(entry.kmL * factor * 10) / 10
+                let pct = Int(round((1 - factor) * 100))
+                let text: String
+                if let age {
+                    text = "Based on typical wear for a \(age)-year-old vehicle, I'm adjusting efficiency by −\(pct)%. Your effective km/L is about \(fmt(realistic)) instead of \(fmt(entry.kmL))."
+                } else {
+                    text = "Older cars typically get 10–20% less than rated due to engine wear. The \(entry.displayName) is rated \(fmt(entry.kmL)) km/L, so I'd use about \(fmt(realistic)) km/L as a realistic estimate."
+                }
                 return VehicleAnswer(
-                    text: "Older cars typically get 10–20% less than rated due to engine wear. The \(entry.displayName) is rated \(fmt(entry.kmL)) km/L, so I'd use about \(fmt(realistic)) km/L as a realistic estimate.",
-                    efficiencyKmL: realistic, fuelType: entry.fuelType,
+                    text: text, efficiencyKmL: realistic, fuelType: entry.fuelType,
                     vehicleType: entry.vehicleType, suggestedName: entry.displayName)
             }
             return VehicleAnswer(text: "Older cars typically get 10–20% less than their rated efficiency due to engine wear. A good rule of thumb is rated × 0.85 for a realistic estimate.")

@@ -89,6 +89,7 @@ enum KnowledgeBase {
         if isFuelWastage(q) { return wastageAnswer }
         if isDieselVsGas(q) { return dieselVsGasAnswer }
         if isUsesMoreGas(q) { return usesMoreGasAnswer }
+        if isNeedsPMS(q) { return needsPMSAnswer }
         if let premium = premiumForModelAnswer(q) { return premium }
         if isCO2(q) { return co2Answer(vehicle) }
 
@@ -126,6 +127,10 @@ enum KnowledgeBase {
         has(q, ["more gas lately", "uses more gas", "using more gas", "more fuel lately", "consuming more fuel",
                 "fuel consumption increased", "eating more gas", "mas maraming gas", "dumami ang gas",
                 "bakit mabilis maubos", "gas efficiency dropped", "efficiency dropped", "mileage dropped"])
+    }
+    private static func isNeedsPMS(_ q: String) -> Bool {
+        has(q, ["needs pms", "need pms", "overdue pms", "needs service", "need service", "overdue service",
+                "due for service", "overdue for maintenance", "kailangan mag pms", "kailangan ng pms", "needs maintenance"])
     }
     private static func isCO2(_ q: String) -> Bool {
         has(q, ["co2", "carbon", "emission", "carbon footprint", "greenhouse"])
@@ -343,6 +348,10 @@ enum KnowledgeBase {
     10. Ethanol content variation
 
     Start cheap: PMS check, inflate the tires, and try a different station.
+    """
+
+    private static let needsPMSAnswer = """
+    An overdue PMS typically cuts fuel efficiency by ~15%. Servicing your car soon (oil, filters, spark plugs) could save you roughly PHP 800–1,200 a month in fuel — and prevent bigger repairs later. In aigos, set the vehicle's maintenance to "Overdue PMS" so your estimates reflect it.
     """
 
     private static let jeepneyAnswer = """

@@ -79,11 +79,19 @@ Physics-based, not simple multipliers. The result screen must show a full breakd
 **Result presentation:** the Calculate screen stays clean (vehicle · route · driving profile only). Tapping Calculate shows a loading state (`isCalculating` → spinner + "Calculating…" with an intensified amber glow, light haptic on start), computes immediately, then after a **minimum 1.2s** reveals the result as a bottom **`.sheet`** (`ResultSheet`, `.presentationDetents([.large])`, drag indicator, `.presentationBackground { AigosBackground() }`, medium haptic on reveal). `ResultSheet` = route header ("Origin → Destination" + vehicle name) → `ResultCard` receipt (owns its own 0→final count-up via `heroCost`) → "Save this route" (secondary) + "Done" (primary). Swipe-down dismisses back to the form to adjust. `startCalculate()` orchestrates loading+delay; `performCalculation()` computes/persists/learns. `ResultCard` is never rendered inline anymore.
 
 ```
-adjustmentMultiplier = speedFactor * acFactor * roadFactor * trafficFactor * loadFactor
-adjustedEfficiencyKmL = baseEfficiencyKmL / adjustmentMultiplier
-litresNeeded = distanceKm / adjustedEfficiencyKmL
-estimatedCost = litresNeeded * fuelPricePerLitre
+adjustmentMultiplier  = speedFactor * acFactor * roadFactor * trafficFactor * loadFactor   // consumption ↑
+efficiencyMultiplier  = ageFactor * maintenanceFactor * weatherFactor * roadSurfaceFactor   // efficiency ×
+adjustedEfficiencyKmL = baseEfficiencyKmL / adjustmentMultiplier * efficiencyMultiplier
+litresNeeded          = distanceKm / adjustedEfficiencyKmL
+estimatedCost         = litresNeeded * fuelPricePerLitre
 ```
+
+**Two factor families (kept separate for the breakdown).** The 5 *driving* factors above are **consumption** multipliers (≥1 divides efficiency). The 4 *vehicle/condition* factors are **efficiency** multipliers (<1 lowers economy) and MULTIPLY the efficiency — they compound, never add. `ResultCard` shows them under a "Vehicle factors" header (green badge for a gain, deep-amber for a loss). All default to no-effect so existing callers are unaffected.
+- `ageFactor` (`CalculationEngine.ageFactor(forYears:)`, from `VehicleProfile.manufacturingYear`) — 0–2 yr `1.00`, 3–5 `0.92`, 6–10 `0.85`, 11–15 `0.75`, 16+ `0.65`.
+- `maintenanceFactor` (`VehicleProfile.maintenanceStatus`, `MaintenanceStatus`) — well-maintained `1.05`, average `1.00`, overdue PMS `0.85`.
+- `weatherFactor` (per-trip `WeatherCondition` in `DrivingSheet`) — clear `1.00`, light rain `0.97`, heavy rain `0.92`, extreme heat `0.90`.
+- `roadSurfaceFactor` (per-trip `RoadSurface` in `DrivingSheet`) — smooth `1.00`, city `0.95`, rough `0.88`, unpaved `0.80`.
+- Year is an optional field in `AddVehicleView` + onboarding; maintenance is a selector in `AddVehicleView`. Talk applies age (band-based) + maintenance from the vehicle; "My car needs PMS" → `KnowledgeBase` advice.
 
 - `speedFactor` — lookup table (Section 14E): <60 km/h → 1.18, 60–80 → 1.08, 80–100 → 1.00 (optimal), 100–120 → 1.13, >120 → 1.22.
 - `acFactor` — `1.12` when AC on, else `1.0`.

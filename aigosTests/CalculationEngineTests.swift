@@ -138,4 +138,112 @@ final class CalculationEngineTests: XCTestCase {
         // Speed +13% contributes ~0.74 L over the 5.68 L base.
         XCTAssertEqual(e.litres(forFactor: e.speedFactor), 5.68 * 0.13, accuracy: 0.05)
     }
+
+    // MARK: - Efficiency modifiers (age / maintenance / weather / road surface)
+
+    /// A helper "no consumption factor" baseline: 90 km/h highway, no AC → mult 1.0.
+    private func clean(base: Double = 14.0,
+                       ageYears: Int? = nil,
+                       maintenance: MaintenanceStatus = .average,
+                       weather: WeatherCondition = .clear,
+                       roadSurface: RoadSurface = .smooth) -> FuelEstimate {
+        CalculationEngine.estimate(
+            distanceKm: 100, baseEfficiencyKmL: base, fuelPricePerLitre: 60,
+            avgHighwaySpeedKmh: 90, avgCitySpeedKmh: 40, acInUse: false, roadType: .highway,
+            ageYears: ageYears, maintenance: maintenance, weather: weather, roadSurface: roadSurface)
+    }
+
+    func testAgeFactorBands() {
+        XCTAssertEqual(CalculationEngine.ageFactor(forYears: nil), 1.00)
+        XCTAssertEqual(CalculationEngine.ageFactor(forYears: 0), 1.00)
+        XCTAssertEqual(CalculationEngine.ageFactor(forYears: 2), 1.00)
+        XCTAssertEqual(CalculationEngine.ageFactor(forYears: 3), 0.92)
+        XCTAssertEqual(CalculationEngine.ageFactor(forYears: 5), 0.92)
+        XCTAssertEqual(CalculationEngine.ageFactor(forYears: 6), 0.85)
+        XCTAssertEqual(CalculationEngine.ageFactor(forYears: 10), 0.85)
+        XCTAssertEqual(CalculationEngine.ageFactor(forYears: 11), 0.75)
+        XCTAssertEqual(CalculationEngine.ageFactor(forYears: 15), 0.75)
+        XCTAssertEqual(CalculationEngine.ageFactor(forYears: 16), 0.65)
+        XCTAssertEqual(CalculationEngine.ageFactor(forYears: 30), 0.65)
+    }
+
+    func testDefaultsHaveNoModifierEffect() {
+        let e = clean(base: 12.0)
+        XCTAssertEqual(e.ageFactor, 1.0)
+        XCTAssertEqual(e.maintenanceFactor, 1.0)
+        XCTAssertEqual(e.weatherFactor, 1.0)
+        XCTAssertEqual(e.roadSurfaceFactor, 1.0)
+        XCTAssertEqual(e.efficiencyMultiplier, 1.0)
+        XCTAssertEqual(e.adjustedEfficiencyKmL, 12.0, accuracy: 0.0001)   // unchanged
+    }
+
+    func testAgeModifierLowersEfficiency() {
+        let e = clean(base: 14.5, ageYears: 8)               // 6–10 band → 0.85
+        XCTAssertEqual(e.ageFactor, 0.85)
+        XCTAssertEqual(e.ageYears, 8)
+        XCTAssertEqual(e.adjustedEfficiencyKmL, 14.5 * 0.85, accuracy: 0.0001)   // 12.325
+        XCTAssertEqual(e.adjustedLitres, 100 / (14.5 * 0.85), accuracy: 0.001)
+    }
+
+    func testMaintenanceModifier() {
+        XCTAssertEqual(clean(maintenance: .wellMaintained).maintenanceFactor, 1.05)
+        XCTAssertEqual(clean(maintenance: .overduePMS).maintenanceFactor, 0.85)
+        let e = clean(base: 10.0, maintenance: .wellMaintained)
+        XCTAssertEqual(e.adjustedEfficiencyKmL, 10.5, accuracy: 0.0001)   // +5%
+    }
+
+    func testWeatherModifier() {
+        XCTAssertEqual(clean(weather: .heavyRain).weatherFactor, 0.92)
+        let e = clean(base: 10.0, weather: .heavyRain)
+        XCTAssertEqual(e.adjustedEfficiencyKmL, 9.2, accuracy: 0.0001)    // −8%
+    }
+
+    func testRoadSurfaceModifier() {
+        XCTAssertEqual(clean(roadSurface: .rough).roadSurfaceFactor, 0.88)
+        XCTAssertEqual(clean(roadSurface: .unpaved).roadSurfaceFactor, 0.80)
+        let e = clean(base: 10.0, roadSurface: .rough)
+        XCTAssertEqual(e.adjustedEfficiencyKmL, 8.8, accuracy: 0.0001)    // −12%
+    }
+
+    /// Modifiers COMPOUND (multiply), they don't add.
+    func testModifiersMultiplyNotAdd() {
+        let e = clean(base: 10.0, maintenance: .overduePMS, weather: .heavyRain)  // 0.85 × 0.92
+        XCTAssertEqual(e.efficiencyMultiplier, 0.85 * 0.92, accuracy: 1e-9)       // 0.782
+        XCTAssertEqual(e.adjustedEfficiencyKmL, 10.0 * 0.782, accuracy: 1e-6)
+        // Additive would be 0.85 + 0.92 − 1 = 0.77 — confirm we are NOT doing that.
+        XCTAssertNotEqual(e.efficiencyMultiplier, 0.77, accuracy: 0.001)
+    }
+
+    /// Full stack: driving factors divide, efficiency factors multiply, all separate.
+    func testCombinedModifierStack() {
+        let e = CalculationEngine.estimate(
+            distanceKm: 82.4, baseEfficiencyKmL: 14.5, fuelPricePerLitre: 72,
+            avgHighwaySpeedKmh: 110, avgCitySpeedKmh: 40, acInUse: true, roadType: .city,
+            traffic: .heavy, load: .moderate,
+            ageYears: 8, maintenance: .wellMaintained, weather: .heavyRain, roadSurface: .rough)
+
+        // City road → city speed (40 km/h) governs, so speed factor is 1.18.
+        let consumption = 1.18 * 1.12 * 1.20 * 1.25 * 1.05
+        let efficiency = 0.85 * 1.05 * 0.92 * 0.88
+        XCTAssertEqual(e.adjustmentMultiplier, consumption, accuracy: 1e-6)
+        XCTAssertEqual(e.efficiencyMultiplier, efficiency, accuracy: 1e-6)
+        XCTAssertEqual(e.adjustedEfficiencyKmL, 14.5 / consumption * efficiency, accuracy: 1e-6)
+        XCTAssertEqual(e.estimatedCost, (82.4 / (14.5 / consumption * efficiency)) * 72, accuracy: 1e-4)
+    }
+
+    func testBrandNewAndVeryOldEdges() {
+        XCTAssertEqual(clean(base: 15.0, ageYears: 0).adjustedEfficiencyKmL, 15.0, accuracy: 1e-6)   // as rated
+        XCTAssertEqual(clean(base: 15.0, ageYears: 20).ageFactor, 0.65)
+        XCTAssertEqual(clean(base: 15.0, ageYears: 20).adjustedEfficiencyKmL, 15.0 * 0.65, accuracy: 1e-6)
+    }
+
+    func testVehicleProfileAgeYears() {
+        var comps = DateComponents(); comps.year = 2026; comps.month = 7; comps.day = 4
+        let now = Calendar.current.date(from: comps)!
+        let v = VehicleProfile(name: "V", type: .car, fuelType: .unleaded91,
+                               efficiencyKmL: 14.5, manufacturingYear: 2018)
+        XCTAssertEqual(v.ageYears(asOf: now), 8)
+        let noYear = VehicleProfile(name: "V2", type: .car, fuelType: .unleaded91, efficiencyKmL: 14.5)
+        XCTAssertNil(noYear.ageYears(asOf: now))
+    }
 }

@@ -187,7 +187,12 @@ private extension FuelEstimate {
             distanceKm: distanceKm, baseEfficiencyKmL: baseEfficiencyKmL, baseLitres: baseLitres,
             speedFactor: speedFactor, acFactor: acFactor, roadFactor: roadFactor,
             trafficFactor: trafficFactor, loadFactor: loadFactor,
-            adjustmentMultiplier: adjustmentMultiplier, adjustedEfficiencyKmL: adjustedEfficiencyKmL,
+            adjustmentMultiplier: adjustmentMultiplier,
+            ageFactor: ageFactor, maintenanceFactor: maintenanceFactor,
+            weatherFactor: weatherFactor, roadSurfaceFactor: roadSurfaceFactor,
+            efficiencyMultiplier: efficiencyMultiplier, ageYears: ageYears,
+            maintenance: maintenance, weather: weather, roadSurface: roadSurface,
+            adjustedEfficiencyKmL: adjustedEfficiencyKmL,
             adjustedLitres: adjustedLitres, fuelPricePerLitre: fuelPricePerLitre,
             estimatedCost: estimatedCost, availableFuelLitres: availableFuel
         )

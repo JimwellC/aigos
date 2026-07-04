@@ -78,6 +78,14 @@ final class VehicleDatabaseTests: XCTestCase {
         XCTAssertTrue(a!.text.contains("12.5"), a!.text)
     }
 
+    // Age uses the CalculationEngine band (8 yr → −15%), not a flat 0.85 blurb.
+    func testAgeBandResponse() {
+        let a = VehicleDatabase.answer(for: "My Vios is 8 years old")
+        XCTAssertNotNil(a)
+        XCTAssertTrue(a!.text.contains("15%"), a!.text)
+        XCTAssertEqual(a!.efficiencyKmL, 12.5)   // 14.7 × 0.85 = 12.495 → 12.5
+    }
+
     func testFoundVehicleOffersEfficiency() {
         let a = VehicleDatabase.answer(for: "how many km/L does a Wigo get")
         XCTAssertNotNil(a)

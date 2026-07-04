@@ -126,7 +126,8 @@ enum DebugSupport {
         AppSeeder.seedPricesIfNeeded(context)
 
         let vehicle = VehicleProfile(
-            name: "My Vios", type: .car, fuelType: .premium95, efficiencyKmL: 14.5, isDefault: true
+            name: "My Vios", type: .car, fuelType: .premium95, efficiencyKmL: 14.5, isDefault: true,
+            manufacturingYear: 2016, maintenanceStatus: .wellMaintained
         )
         let profile = DrivingProfile(vehicleId: vehicle.id)
         profile.avgHighwaySpeedKmh = 110

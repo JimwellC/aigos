@@ -226,6 +226,100 @@ enum VehicleLoad: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+/// How well the vehicle is maintained — an efficiency multiplier (not consumption).
+enum MaintenanceStatus: String, Codable, CaseIterable, Identifiable {
+    case wellMaintained, average, overduePMS
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .wellMaintained: "Well maintained"
+        case .average: "Average"
+        case .overduePMS: "Overdue PMS"
+        }
+    }
+
+    var emoji: String {
+        switch self {
+        case .wellMaintained: "✅"
+        case .average: "⚠️"
+        case .overduePMS: "❌"
+        }
+    }
+
+    /// Efficiency multiplier: recent PMS +5%, average baseline, overdue −15%.
+    var efficiencyFactor: Double {
+        switch self {
+        case .wellMaintained: 1.05
+        case .average: 1.00
+        case .overduePMS: 0.85
+        }
+    }
+}
+
+/// Per-trip weather — an efficiency multiplier (rain/heat lower economy).
+enum WeatherCondition: String, Codable, CaseIterable, Identifiable {
+    case clear, lightRain, heavyRain, extremeHeat
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .clear: "Clear"
+        case .lightRain: "Light rain"
+        case .heavyRain: "Heavy rain"
+        case .extremeHeat: "Extreme heat"
+        }
+    }
+
+    var emoji: String {
+        switch self {
+        case .clear: "☀️"
+        case .lightRain: "🌧️"
+        case .heavyRain: "⛈️"
+        case .extremeHeat: "🌡️"
+        }
+    }
+
+    /// Efficiency multiplier: clear baseline, light rain −3%, heavy rain −8%,
+    /// extreme heat (AC maxed) −10%.
+    var efficiencyFactor: Double {
+        switch self {
+        case .clear: 1.00
+        case .lightRain: 0.97
+        case .heavyRain: 0.92
+        case .extremeHeat: 0.90
+        }
+    }
+}
+
+/// Per-trip road surface — an efficiency multiplier (rough/unpaved lower economy).
+enum RoadSurface: String, Codable, CaseIterable, Identifiable {
+    case smooth, cityRoad, rough, unpaved
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .smooth: "Smooth highway"
+        case .cityRoad: "City road"
+        case .rough: "Rough / damaged"
+        case .unpaved: "Unpaved / rural"
+        }
+    }
+
+    /// Efficiency multiplier: smooth baseline, city −5%, rough −12%, unpaved −20%.
+    var efficiencyFactor: Double {
+        switch self {
+        case .smooth: 1.00
+        case .cityRoad: 0.95
+        case .rough: 0.88
+        case .unpaved: 0.80
+        }
+    }
+}
+
 /// Current fuel-tank level, used only for the low-fuel warning (not the cost).
 enum FuelLevel: String, Codable, CaseIterable, Identifiable {
     case full, threeQuarters, half, quarter, low

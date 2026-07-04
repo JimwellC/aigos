@@ -269,7 +269,9 @@ struct TalkToAigosView: View {
             acInUse: acOn,
             roadType: roadType,
             traffic: traffic,
-            load: load
+            load: load,
+            ageYears: vehicle.ageYears(),
+            maintenance: vehicle.maintenanceStatus
         )
 
         var conditions: [String] = []

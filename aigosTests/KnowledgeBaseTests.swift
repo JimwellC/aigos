@@ -71,6 +71,12 @@ final class KnowledgeBaseTests: XCTestCase {
         XCTAssertTrue(a!.lowercased().contains("air filter"), a!)
     }
 
+    func testNeedsPMS() {
+        let a = KnowledgeBase.answer(for: "My car needs PMS")
+        XCTAssertNotNil(a)
+        XCTAssertTrue(a!.contains("15%"), a!)
+    }
+
     func testPremiumForVios() {
         let a = KnowledgeBase.answer(for: "Should I use Premium 95 in my Vios?")
         XCTAssertNotNil(a)

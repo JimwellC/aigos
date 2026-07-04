@@ -22,9 +22,20 @@ struct AddVehicleView: View {
     @State private var type: VehicleType = .car
     @State private var fuelType: FuelType = .premium95
     @State private var efficiencyText = ""
+    @State private var yearText = ""
+    @State private var maintenance: MaintenanceStatus = .average
 
     private var efficiency: Double? {
         Double(efficiencyText.trimmingCharacters(in: .whitespaces))
+    }
+
+    private var currentYear: Int { Calendar.current.component(.year, from: Date()) }
+
+    /// A valid manufacturing year (1990…current) or nil (no age modifier applied).
+    private var year: Int? {
+        guard let y = Int(yearText.trimmingCharacters(in: .whitespaces)),
+              (1990...currentYear).contains(y) else { return nil }
+        return y
     }
 
     private var canSave: Bool {
@@ -49,6 +60,16 @@ struct AddVehicleView: View {
 
                         FieldLabel("Efficiency (\(fuelUnit.label))")
                         GlassField(placeholder: fuelUnit.defaultInput, text: $efficiencyText, keyboard: .decimalPad)
+
+                        FieldLabel("Year (optional)")
+                        GlassField(placeholder: "e.g. 2018", text: $yearText, keyboard: .numberPad)
+                        Text("We use this to estimate real-world efficiency based on engine wear.")
+                            .rounded(12)
+                            .foregroundStyle(.white.opacity(0.5))
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        FieldLabel("Maintenance")
+                        SelectablePillFlow(items: MaintenanceStatus.allCases, selection: $maintenance) { "\($0.emoji) \($0.label)" }
                     }
                     .padding(.horizontal, Space.screen)
                     .padding(.vertical, Space.lg)
@@ -91,7 +112,9 @@ struct AddVehicleView: View {
             type: type,
             fuelType: fuelType,
             efficiencyKmL: fuelUnit.kmL(fromDisplay: efficiency),   // store canonical km/L
-            isDefault: isFirst
+            isDefault: isFirst,
+            manufacturingYear: year,
+            maintenanceStatus: maintenance
         )
         let profile = DrivingProfile(vehicleId: vehicle.id)
         vehicle.drivingProfile = profile

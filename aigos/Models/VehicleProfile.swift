@@ -19,6 +19,12 @@ final class VehicleProfile {
     var isDefault: Bool = false
     var createdAt: Date = Date()
 
+    /// Model/manufacturing year (optional). When set, an age efficiency modifier
+    /// is applied based on typical engine wear.
+    var manufacturingYear: Int? = nil
+    /// Maintenance status — an efficiency modifier (recent PMS +5%, overdue −15%).
+    var maintenanceStatus: MaintenanceStatus = MaintenanceStatus.average
+
     @Relationship(deleteRule: .cascade)
     var drivingProfile: DrivingProfile?
 
@@ -28,6 +34,8 @@ final class VehicleProfile {
         fuelType: FuelType,
         efficiencyKmL: Double,
         isDefault: Bool = false,
+        manufacturingYear: Int? = nil,
+        maintenanceStatus: MaintenanceStatus = .average,
         drivingProfile: DrivingProfile? = nil
     ) {
         self.id = UUID()
@@ -36,7 +44,16 @@ final class VehicleProfile {
         self.fuelType = fuelType
         self.efficiencyKmL = efficiencyKmL
         self.isDefault = isDefault
-        self.createdAt = Date()
+        self.manufacturingYear = manufacturingYear
+        self.maintenanceStatus = maintenanceStatus
         self.drivingProfile = drivingProfile
+        self.createdAt = Date()
+    }
+
+    /// Vehicle age in whole years given "now", or nil when no year is set.
+    func ageYears(asOf now: Date = Date()) -> Int? {
+        guard let year = manufacturingYear else { return nil }
+        let current = Calendar.current.component(.year, from: now)
+        return max(0, current - year)
     }
 }

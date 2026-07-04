@@ -29,15 +29,39 @@ struct ResultCard: View {
                 infoRow("drop.fill", "Base fuel",
                         "\(estimate.baseLitres.oneDecimal) L",
                         detail: "at \(fuelUnit.format(kmL: estimate.baseEfficiencyKmL))")
+
+                sectionLabel("Driving factors")
                 adjustmentRow("speedometer", "Speed", estimate.speedFactor)
                 adjustmentRow("snowflake", "Aircon", estimate.acFactor)
                 adjustmentRow("road.lanes", "Road type", estimate.roadFactor)
                 adjustmentRow("car.2.fill", "Traffic", estimate.trafficFactor)
                 adjustmentRow("person.2.fill", "Load", estimate.loadFactor)
+
+                if hasVehicleFactors {
+                    sectionLabel("Vehicle factors")
+                    if estimate.ageFactor != 1.0 {
+                        vehicleFactorRow("calendar", "Age adjustment", estimate.ageFactor,
+                                         estimate.ageYears.map { "\($0)-year-old vehicle" } ?? "")
+                    }
+                    if estimate.maintenanceFactor != 1.0 {
+                        vehicleFactorRow("wrench.and.screwdriver.fill", "Maintenance",
+                                         estimate.maintenanceFactor, estimate.maintenance.label.lowercased())
+                    }
+                    if estimate.weatherFactor != 1.0 {
+                        vehicleFactorRow("cloud.rain.fill", "Weather",
+                                         estimate.weatherFactor, estimate.weather.label.lowercased())
+                    }
+                    if estimate.roadSurfaceFactor != 1.0 {
+                        vehicleFactorRow("road.lanes", "Road surface",
+                                         estimate.roadSurfaceFactor, estimate.roadSurface.label.lowercased())
+                    }
+                }
             }
 
             DashedDivider()
 
+            infoRow("gauge.with.dots.needle.50percent", "Adjusted efficiency",
+                    fuelUnit.format(kmL: estimate.adjustedEfficiencyKmL))
             infoRow("fuelpump.fill", "Fuel needed", "\(estimate.adjustedLitres.oneDecimal) L", emphasised: true)
 
             if let tankLiters {
@@ -109,6 +133,52 @@ struct ResultCard: View {
                 .font(.system(size: emphasised ? 20 : 17, weight: .bold, design: .rounded))
                 .monospacedDigit()
                 .foregroundStyle(.white)
+        }
+    }
+
+    private var hasVehicleFactors: Bool {
+        estimate.ageFactor != 1.0 || estimate.maintenanceFactor != 1.0
+            || estimate.weatherFactor != 1.0 || estimate.roadSurfaceFactor != 1.0
+    }
+
+    private func sectionLabel(_ title: String) -> some View {
+        Text(title.uppercased())
+            .font(.system(size: 11, weight: .semibold, design: .rounded))
+            .kerning(1.5)
+            .foregroundStyle(Color.white.opacity(0.5))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 4)
+    }
+
+    /// A vehicle/condition efficiency modifier row: shows the ± efficiency change
+    /// with a short note; green for a gain, deep-amber for a loss.
+    private func vehicleFactorRow(_ icon: String, _ name: String, _ factor: Double, _ note: String) -> some View {
+        let gain = factor >= 1.0
+        return HStack(spacing: Space.sm) {
+            Image(systemName: icon)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(Color.white.opacity(0.75))
+                .frame(width: 22)
+            Text(name)
+                .font(.system(size: 16, weight: .medium, design: .rounded))
+                .foregroundStyle(.white)
+            Spacer()
+            if !note.isEmpty {
+                Text(note)
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundStyle(Color.white.opacity(0.6))
+                    .lineLimit(1)
+            }
+            Text(factor.factorPercentString)
+                .font(.system(size: 13, weight: .bold, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(.white)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(
+                    Capsule().fill(gain ? Color(hex: "#7ED957").opacity(0.75)
+                                        : Color.aigosAmberDeep.opacity(0.85))
+                )
         }
     }
 

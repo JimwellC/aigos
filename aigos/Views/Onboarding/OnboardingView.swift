@@ -32,6 +32,7 @@ struct OnboardingView: View {
     @State private var type: VehicleType = .car
     @State private var fuelType: FuelType = .premium95
     @State private var efficiencyText = ""
+    @State private var yearText = ""
 
     // Driving style
     @State private var highwayChoice = 2      // 0..3 -> 70/90/110/130
@@ -172,6 +173,13 @@ struct OnboardingView: View {
                 FieldLabel("Efficiency (\(fuelUnit.label))")
                 GlassField(placeholder: fuelUnit.defaultInput, text: $efficiencyText, keyboard: .decimalPad)
                     .onAppear { if efficiencyText.isEmpty { efficiencyText = fuelUnit.defaultInput } }
+
+                FieldLabel("Year (optional)")
+                GlassField(placeholder: "e.g. 2018", text: $yearText, keyboard: .numberPad)
+                Text("We use this to estimate real-world efficiency based on engine wear.")
+                    .rounded(12)
+                    .foregroundStyle(Color.aigosTextTertiary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .padding(Space.md)
             .glassCard()
@@ -269,12 +277,15 @@ struct OnboardingView: View {
         // Create the first vehicle + its driving profile from the answers. Input
         // is in the user's chosen unit; store canonical km/L.
         let enteredEff = efficiency ?? Double(fuelUnit.defaultInput) ?? 12
+        let parsedYear = Int(yearText.trimmingCharacters(in: .whitespaces))
+        let year = parsedYear.flatMap { (1990...Calendar.current.component(.year, from: Date())).contains($0) ? $0 : nil }
         let vehicle = VehicleProfile(
             name: name.trimmingCharacters(in: .whitespaces),
             type: type,
             fuelType: fuelType,
             efficiencyKmL: fuelUnit.kmL(fromDisplay: enteredEff),
-            isDefault: true
+            isDefault: true,
+            manufacturingYear: year
         )
         let profile = DrivingProfile(vehicleId: vehicle.id)
         profile.avgHighwaySpeedKmh = highwaySpeeds[highwayChoice]

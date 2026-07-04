@@ -21,6 +21,8 @@ struct DrivingSheet: View {
     @Binding var load: VehicleLoad
     @Binding var rushHour: Bool
     @Binding var fuelLevel: FuelLevel
+    @Binding var weather: WeatherCondition
+    @Binding var roadSurface: RoadSurface
 
     var body: some View {
         VStack(spacing: 0) {
@@ -51,6 +53,14 @@ struct DrivingSheet: View {
 
                     section("Passengers & load") {
                         SelectablePillFlow(items: VehicleLoad.allCases, selection: $load) { loadLabel($0) }
+                    }
+
+                    section("Weather") {
+                        SelectablePillFlow(items: WeatherCondition.allCases, selection: $weather) { "\($0.emoji) \($0.label)" }
+                    }
+
+                    section("Road surface") {
+                        SelectablePillFlow(items: RoadSurface.allCases, selection: $roadSurface) { $0.label }
                     }
 
                     section("Fuel level") {
