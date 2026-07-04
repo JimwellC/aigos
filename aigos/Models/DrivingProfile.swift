@@ -13,7 +13,15 @@ import SwiftData
 @Model
 final class DrivingProfile {
     var id: UUID = UUID()
-    var vehicleId: UUID = UUID()
+    var vehicleId: UUID = UUID()   // legacy id (kept for back-compat; not read for logic)
+
+    /// The owning vehicle. This is the INVERSE of `VehicleProfile.drivingProfile`,
+    /// making the relationship bidirectional so SwiftData manages its backing data
+    /// correctly on the persistent store. A one-way (no-inverse) to-one relationship
+    /// caused a `swift_dynamicCastFailure` inside SwiftData's save on device
+    /// (iPhone 11 / iOS 26) — see the crash-log analysis. Set automatically when
+    /// `vehicle.drivingProfile = profile` is assigned.
+    var vehicle: VehicleProfile?
 
     // User-reported (set via Talk to aigos interview)
     var avgHighwaySpeedKmh: Double = 90.0   // default: 90 km/h

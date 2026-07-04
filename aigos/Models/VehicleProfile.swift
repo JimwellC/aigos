@@ -25,7 +25,11 @@ final class VehicleProfile {
     /// Maintenance status — an efficiency modifier (recent PMS +5%, overdue −15%).
     var maintenanceStatus: MaintenanceStatus = MaintenanceStatus.average
 
-    @Relationship(deleteRule: .cascade)
+    // Bidirectional to-one: the `inverse:` makes SwiftData manage both sides, which
+    // it needs to serialize the relationship safely on the persistent store. The
+    // previous no-inverse version crashed with swift_dynamicCastFailure inside
+    // SwiftData's save() on device (iPhone 11 / iOS 26) — see DrivingProfile.vehicle.
+    @Relationship(deleteRule: .cascade, inverse: \DrivingProfile.vehicle)
     var drivingProfile: DrivingProfile?
 
     init(
