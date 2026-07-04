@@ -57,7 +57,7 @@ final class VehicleDatabaseTests: XCTestCase {
 
     // 5. Tier 2 fallback for unknown models
     func testTier2Fallback() {
-        let a = VehicleDatabase.answer(for: "My car is a Chery Tiggo sedan")
+        let a = VehicleDatabase.answer(for: "My car is a small sedan not in your list")
         XCTAssertNotNil(a)
         XCTAssertTrue(a!.text.lowercased().contains("don't have"), a!.text)
         XCTAssertTrue(a!.text.contains("14–17 km/L"), a!.text)   // sedan category range
@@ -102,5 +102,56 @@ final class VehicleDatabaseTests: XCTestCase {
         let a = VehicleDatabase.answer(for: "how do I know my km/L?")
         XCTAssertNotNil(a)
         XCTAssertTrue(a!.text.lowercased().contains("odometer"), a!.text)
+    }
+
+    // 7. Newly added popular PH vehicles are present + findable.
+    func testNewVehiclesPresent() {
+        XCTAssertGreaterThanOrEqual(VehicleDatabase.entries.count, 95)
+        XCTAssertEqual(VehicleDatabase.find("What's the km/L of a Land Cruiser?")?.model, "Land Cruiser")
+        XCTAssertEqual(VehicleDatabase.find("Toyota Raize")?.kmL, 18.0)
+        XCTAssertEqual(VehicleDatabase.find("Hyundai Creta")?.kmL, 16.0)
+        XCTAssertEqual(VehicleDatabase.find("Ford Territory")?.model, "Territory")
+        XCTAssertEqual(VehicleDatabase.find("Chery Tiggo 8")?.make, "Chery")
+        XCTAssertEqual(VehicleDatabase.find("Maxus T60")?.fuel, "diesel")
+    }
+
+    // 8. "[model] is a SUV" → category clarification, not a location query.
+    func testCategoryCorrectionLandCruiser() {
+        let a = VehicleDatabase.answer(for: "Land cruiser is a SUV")
+        XCTAssertNotNil(a)
+        XCTAssertTrue(a!.text.contains("full-size SUV"), a!.text)
+        XCTAssertTrue(a!.text.contains("8–11"), a!.text)          // diesel range
+        XCTAssertEqual(a!.efficiencyKmL, 9.5)                     // offers to use it
+        XCTAssertEqual(a!.fuelType, .diesel)
+    }
+
+    func testCategoryCorrectionGenericSUV() {
+        let a = VehicleDatabase.answer(for: "The X-Trail is an SUV right?")
+        XCTAssertNotNil(a)
+        XCTAssertTrue(a!.text.contains("SUV"), a!.text)
+        XCTAssertEqual(a!.efficiencyKmL, 13.0)
+    }
+
+    // 9. "What SUVs are fuel efficient?" → top ranking.
+    func testBestSUVs() {
+        let a = VehicleDatabase.answer(for: "What SUVs are fuel efficient?")
+        XCTAssertNotNil(a)
+        XCTAssertTrue(a!.text.contains("Raize"), a!.text)   // 18 km/L tops the SUVs
+        XCTAssertTrue(a!.text.contains("Creta"), a!.text)   // 16 km/L
+        XCTAssertTrue(a!.text.contains("km/L"), a!.text)
+    }
+
+    func testBestMotorcycles() {
+        let a = VehicleDatabase.answer(for: "Cheapest to run motorcycle?")
+        XCTAssertNotNil(a)
+        XCTAssertTrue(a!.text.lowercased().contains("motorcycle"), a!.text)
+        XCTAssertEqual(a!.text.components(separatedBy: "•").count, 4)   // 3 bullets
+    }
+
+    func testBestCarsForLongDrives() {
+        let a = VehicleDatabase.answer(for: "Best car for long drives?")
+        XCTAssertNotNil(a)
+        XCTAssertTrue(a!.text.contains("km/L"), a!.text)
+        XCTAssertEqual(a!.text.components(separatedBy: "•").count, 4)
     }
 }

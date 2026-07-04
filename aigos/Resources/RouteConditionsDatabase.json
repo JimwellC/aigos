@@ -1,0 +1,28 @@
+{
+  "note": "Major PH route characteristics — distance, toll, timing, elevation, gas stops. Bundled + offline. Tolls/times are typical ranges and can vary.",
+  "routes": [
+    { "from": "Manila", "to": "Baguio", "distanceKm": 246, "via": "TPLEX",
+      "tollMin": 220, "tollMax": 280, "timeHours": "4–5", "elevationGainM": 1500,
+      "bestTime": "4–6 AM", "trafficPattern": "heavy Fri PM & Sun PM",
+      "fuelNote": "full tank minimum",
+      "gasStations": ["Shell km 89", "Petron km 145", "Caltex km 200 (all 24-hr, with food)"] },
+    { "from": "Manila", "to": "Batangas", "distanceKm": 108, "via": "SLEX–STAR",
+      "tollMin": 145, "tollMax": 180, "timeHours": "1.5–2.5",
+      "trafficPattern": "heavy Sat AM going, Sun PM returning", "gasStations": [] },
+    { "from": "Manila", "to": "Clark", "distanceKm": 80, "via": "NLEX",
+      "tollMin": 155, "tollMax": 200, "timeHours": "1–1.5",
+      "trafficPattern": "best for airport transfers", "gasStations": [] },
+    { "from": "Manila", "to": "Tagaytay", "distanceKm": 60, "via": "CALAX",
+      "tollMin": 85, "tollMax": 120, "timeHours": "1.5–2", "elevationGainM": 640,
+      "trafficPattern": "640 m ridge; heavy weekends", "gasStations": [] },
+    { "from": "Manila", "to": "Subic", "distanceKm": 120, "via": "NLEX–SCTEX",
+      "tollMin": 240, "tollMax": 320, "timeHours": "2–3", "gasStations": [] },
+    { "from": "Manila", "to": "La Union", "distanceKm": 270, "via": "TPLEX",
+      "tollMin": 320, "tollMax": 400, "timeHours": "4.5–6", "gasStations": [] },
+    { "from": "Cebu", "to": "Bohol", "distanceKm": 55, "via": "ferry to Tagbilaran + drive",
+      "timeHours": "2 hr ferry + drive", "fuelNote": "fuel needed after the ferry", "gasStations": [] },
+    { "from": "Manila", "to": "Bicol", "distanceKm": 445, "via": "SLEX",
+      "tollMin": 385, "tollMax": 385, "timeHours": "8–10",
+      "fuelNote": "multiple gas stops needed", "gasStations": [] }
+  ]
+}

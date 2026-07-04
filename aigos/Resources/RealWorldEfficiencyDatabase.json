@@ -1,0 +1,68 @@
+{
+  "note": "Real-world km/L adjustment factors for Filipino driving conditions. Multiply rated km/L by the chosen factors. Bundled + offline.",
+  "age": [
+    { "maxYears": 2,  "factor": 1.00, "label": "0–2 years", "note": "as rated" },
+    { "maxYears": 5,  "factor": 0.92, "label": "3–5 years", "note": "5–10% loss from break-in wear" },
+    { "maxYears": 10, "factor": 0.85, "label": "6–10 years", "note": "moderate wear" },
+    { "maxYears": 15, "factor": 0.75, "label": "11–15 years", "note": "significant wear" },
+    { "maxYears": 99, "factor": 0.65, "label": "16+ years", "note": "heavy wear — worth a maintenance check" }
+  ],
+  "maintenance": {
+    "wellMaintained": { "factor": 1.05, "label": "Well-maintained (recent PMS)" },
+    "average":        { "factor": 1.00, "label": "Average maintenance" },
+    "poor":           { "factor": 0.85, "label": "Poor maintenance (overdue service)" },
+    "dirtyAirFilter": { "factor": 0.90, "label": "Dirty air filter" },
+    "wornSparkPlugs": { "factor": 0.92, "label": "Worn spark plugs" },
+    "badOxygenSensor":{ "factor": 0.80, "label": "Bad oxygen sensor" }
+  },
+  "tires": {
+    "proper":       { "factor": 1.00, "label": "Properly inflated (recommended PSI)" },
+    "under5":       { "factor": 0.97, "label": "5 PSI under" },
+    "under10":      { "factor": 0.94, "label": "10 PSI under" },
+    "baldOld":      { "factor": 0.95, "label": "Bald/old tires" },
+    "wrongSize":    { "factor": 0.92, "label": "Wrong (bigger) tire size" }
+  },
+  "driving": {
+    "aggressive":   { "factor": 0.75, "label": "Aggressive acceleration" },
+    "ecoSmooth":    { "factor": 1.10, "label": "Smooth eco-driving" },
+    "hardBraking":  { "factor": 0.88, "label": "Frequent hard braking" },
+    "coasting":     { "factor": 1.08, "label": "Coasting / anticipation" },
+    "idlingPerStop":{ "factor": 0.97, "label": "Idling >1 min (per stop)" }
+  },
+  "cargo": {
+    "empty":     { "factor": 1.00, "label": "Empty vehicle" },
+    "light25":   { "factor": 0.99, "label": "Light cargo (~25 kg)" },
+    "moderate100":{ "factor": 0.97, "label": "Moderate load (~100 kg)" },
+    "heavy300":  { "factor": 0.92, "label": "Heavy load (300 kg+)" },
+    "roofRack":  { "factor": 0.88, "label": "Roof rack cargo" },
+    "roofBox":   { "factor": 0.95, "label": "Roof box (empty)" },
+    "bikeRack":  { "factor": 0.92, "label": "Bike rack" }
+  },
+  "timeOfDay": {
+    "earlyMorning":{ "factor": 1.00, "label": "Early morning 5–7 AM (light)" },
+    "amRush":      { "factor": 0.85, "label": "Rush hour 7–9 AM (heavy)" },
+    "midday":      { "factor": 0.97, "label": "Midday 10 AM–4 PM (moderate)" },
+    "pmRush":      { "factor": 0.82, "label": "Rush hour 5–8 PM (worst)" },
+    "lateNight":   { "factor": 1.05, "label": "Late night 10 PM+ (light)" }
+  },
+  "weather": {
+    "clear":       { "factor": 1.00, "label": "Sunny / clear" },
+    "lightRain":   { "factor": 0.97, "label": "Light rain" },
+    "heavyRain":   { "factor": 0.92, "label": "Heavy rain (wipers, AC, slower)" },
+    "typhoon":     { "factor": 0.85, "label": "Typhoon conditions" },
+    "extremeHeat": { "factor": 0.90, "label": "Extreme heat (AC max)" }
+  },
+  "roadSurface": {
+    "highway":     { "factor": 1.00, "label": "Smooth highway (NLEX/SLEX)" },
+    "cityRoad":    { "factor": 0.95, "label": "Regular city road" },
+    "rough":       { "factor": 0.88, "label": "Rough / damaged road" },
+    "unpaved":     { "factor": 0.80, "label": "Unpaved / rural" },
+    "floodPassable":{ "factor": 0.85, "label": "Flood-passable" }
+  },
+  "elevation": {
+    "seaLevel":     { "factor": 1.00, "label": "Sea level" },
+    "mountainClimb":{ "factor": 0.75, "label": "Mountain climb (Baguio/Tagaytay)" },
+    "mountainDescent":{ "factor": 0.95, "label": "Mountain descent (engine braking)" },
+    "rollingHills": { "factor": 0.90, "label": "Rolling hills" }
+  }
+}

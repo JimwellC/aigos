@@ -181,7 +181,22 @@ struct TalkToAigosView: View {
         }
     }
 
-    private func reply(to text: String) -> ChatMessage {
+    private func reply(to rawText: String) -> ChatMessage {
+        // Rewrite common Filipino phrasings to the English patterns below.
+        let text = TalkNormalizer.normalize(rawText)
+
+        // Greetings / thanks / goodbye / confusion — quick, unambiguous replies.
+        if let smalltalk = TalkSmallTalk.quickReply(for: text) {
+            return ChatMessage(role: .aigos, text: smalltalk)
+        }
+
+        // Knowledge base — fuel-economy tips, troubleshooting, culture, routes,
+        // drive-vs-bus, CO2, best time to travel. Checked before trip parsing
+        // because many of these questions also name a place.
+        if let knowledge = KnowledgeBase.answer(for: text, vehicle: knowledgeVehicle()) {
+            return ChatMessage(role: .aigos, text: knowledge)
+        }
+
         // A full trip in the message starts (and remembers) a new context.
         if let query = TripQueryParser.parse(text, vehicles: vehicles, personalPlaces: personalPlaces) {
             lastQuery = query
@@ -197,15 +212,22 @@ struct TalkToAigosView: View {
                 return estimate(for: merged)
             }
         }
-        // Vehicle knowledge base — "what's the km/L of Vios?", "my car is Honda City".
+        // Vehicle knowledge base — "what's the km/L of Vios?", "my car is a SUV",
+        // "what SUVs are fuel efficient?".
         if let answer = VehicleDatabase.answer(for: text) {
             let suggestion = (answer.efficiencyKmL != nil || answer.offersAddVehicle) ? answer : nil
             return ChatMessage(role: .aigos, text: answer.text, vehicleSuggestion: suggestion)
         }
-        return ChatMessage(
-            role: .aigos,
-            text: "I don't know that location yet. Try typing it in the calculator and pick from the suggestions."
-        )
+        // Nothing matched — nudge to the calculator, or redirect if off-topic.
+        return ChatMessage(role: .aigos, text: TalkSmallTalk.fallback(for: text))
+    }
+
+    /// Default-vehicle context so KnowledgeBase can personalise savings/CO2 math.
+    private func knowledgeVehicle() -> KnowledgeBase.Vehicle? {
+        guard let v = vehicles.first(where: \.isDefault) ?? vehicles.first else { return nil }
+        return KnowledgeBase.Vehicle(
+            name: v.name, efficiencyKmL: v.efficiencyKmL, fuelType: v.fuelType,
+            pricePerLitre: PriceService.price(for: v.fuelType, in: context))
     }
 
     /// Match a vehicle named anywhere in the text (for "same trip in my truck").

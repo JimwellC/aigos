@@ -540,6 +540,288 @@
       "fuel": "unleaded91",
       "type": "motorcycle",
       "category": "moto_125"
+    },
+    {
+      "make": "Toyota",
+      "model": "Land Cruiser",
+      "kmL": 9.5,
+      "fuel": "diesel",
+      "type": "car",
+      "category": "suv_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Toyota",
+      "model": "Land Cruiser",
+      "kmL": 8.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas",
+      "variant": "gas"
+    },
+    {
+      "make": "Toyota",
+      "model": "Land Cruiser Prado",
+      "kmL": 11.0,
+      "fuel": "diesel",
+      "type": "car",
+      "category": "suv_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Toyota",
+      "model": "Hiace",
+      "kmL": 10.5,
+      "fuel": "diesel",
+      "type": "van",
+      "category": "van_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Toyota",
+      "model": "Alphard",
+      "kmL": 10.0,
+      "fuel": "premium95",
+      "type": "van",
+      "category": "mpv"
+    },
+    {
+      "make": "Toyota",
+      "model": "Raize",
+      "kmL": 18.0,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Toyota",
+      "model": "Veloz",
+      "kmL": 16.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "mpv"
+    },
+    {
+      "make": "Honda",
+      "model": "CR-V",
+      "kmL": 14.5,
+      "fuel": "diesel",
+      "type": "car",
+      "category": "suv_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Honda",
+      "model": "CR-V",
+      "kmL": 12.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas",
+      "variant": "gas"
+    },
+    {
+      "make": "Honda",
+      "model": "Pilot",
+      "kmL": 10.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Mitsubishi",
+      "model": "Strada",
+      "kmL": 12.0,
+      "fuel": "diesel",
+      "type": "truck",
+      "category": "pickup_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Mitsubishi",
+      "model": "Eclipse Cross",
+      "kmL": 13.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Mitsubishi",
+      "model": "Outlander",
+      "kmL": 12.0,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Nissan",
+      "model": "X-Trail",
+      "kmL": 13.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Nissan",
+      "model": "Patrol",
+      "kmL": 8.0,
+      "fuel": "diesel",
+      "type": "car",
+      "category": "suv_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Nissan",
+      "model": "NV350 Urvan",
+      "kmL": 10.0,
+      "fuel": "diesel",
+      "type": "van",
+      "category": "van_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Ford",
+      "model": "Territory",
+      "kmL": 14.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Ford",
+      "model": "Explorer",
+      "kmL": 10.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Ford",
+      "model": "F-150",
+      "kmL": 9.0,
+      "fuel": "unleaded91",
+      "type": "truck",
+      "category": "pickup_gas"
+    },
+    {
+      "make": "Hyundai",
+      "model": "Tucson",
+      "kmL": 13.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas",
+      "variant": "gas"
+    },
+    {
+      "make": "Hyundai",
+      "model": "Starex",
+      "kmL": 10.5,
+      "fuel": "diesel",
+      "type": "van",
+      "category": "van_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Hyundai",
+      "model": "Staria",
+      "kmL": 11.0,
+      "fuel": "diesel",
+      "type": "van",
+      "category": "van_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Hyundai",
+      "model": "Creta",
+      "kmL": 16.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Kia",
+      "model": "Carnival",
+      "kmL": 10.5,
+      "fuel": "diesel",
+      "type": "van",
+      "category": "van_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Kia",
+      "model": "Sorento",
+      "kmL": 13.0,
+      "fuel": "diesel",
+      "type": "car",
+      "category": "suv_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Kia",
+      "model": "Stinger",
+      "kmL": 11.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "sedan_large"
+    },
+    {
+      "make": "Geely",
+      "model": "Okavango",
+      "kmL": 14.0,
+      "fuel": "diesel",
+      "type": "car",
+      "category": "suv_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Geely",
+      "model": "Tugella",
+      "kmL": 13.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "BAIC",
+      "model": "BJ40",
+      "kmL": 10.0,
+      "fuel": "diesel",
+      "type": "car",
+      "category": "suv_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Chery",
+      "model": "Tiggo 8",
+      "kmL": 13.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "GAC",
+      "model": "GS8",
+      "kmL": 12.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Maxus",
+      "model": "T60",
+      "kmL": 11.5,
+      "fuel": "diesel",
+      "type": "truck",
+      "category": "pickup_diesel",
+      "variant": "diesel"
+    },
+    {
+      "make": "Foton",
+      "model": "Toplander",
+      "kmL": 11.0,
+      "fuel": "diesel",
+      "type": "truck",
+      "category": "pickup_diesel",
+      "variant": "diesel"
     }
   ]
 }
