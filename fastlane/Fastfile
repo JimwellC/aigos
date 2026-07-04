@@ -37,6 +37,25 @@ platform :ios do
     )
   end
 
+  # --- Connection check ------------------------------------------------------
+  desc "Read-only App Store Connect auth check (no upload, no mutation)"
+  lane :verify do
+    require "spaceship"
+    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.create(
+      key_id:    ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      filepath:  File.expand_path(ENV.fetch("ASC_KEY_PATH"))
+    )
+    apps = Spaceship::ConnectAPI::App.all
+    UI.success("✓ Authenticated with App Store Connect — #{apps.count} app(s) visible")
+    app = apps.find { |a| a.bundle_id == "com.aigos.app" }
+    if app
+      UI.success("✓ App record found: #{app.name} (#{app.bundle_id})")
+    else
+      UI.important("Auth OK, but no app record for com.aigos.app yet — create it in App Store Connect before `metadata`/`release`.")
+    end
+  end
+
   # --- Testing ---------------------------------------------------------------
   desc "Run the unit-test suite on a simulator"
   lane :test do
