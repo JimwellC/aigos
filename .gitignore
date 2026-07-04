@@ -16,6 +16,9 @@ xcuserdata/
 # Claude Code local settings
 .claude/
 
+# Spec (kept on disk, not tracked)
+aigos_architecture.pdf
+
 # Fastlane — secrets & generated output (keep Fastfile/Appfile/metadata)
 .env
 .env.*
