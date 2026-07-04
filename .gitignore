@@ -17,8 +17,11 @@ xcuserdata/
 .claude/
 
 # Fastlane — secrets & generated output (keep Fastfile/Appfile/metadata)
-fastlane/.env
+.env
+.env.*
+!.env.template
 **/*.p8
+fastlane/keys/
 fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
