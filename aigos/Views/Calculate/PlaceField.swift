@@ -8,6 +8,7 @@
 //
 
 import SwiftUI
+import MapKit
 
 struct PlaceField: View {
     let placeholder: String
@@ -19,13 +20,29 @@ struct PlaceField: View {
     var startMapOpen: Bool = false   // DEBUG: auto-open the map picker for screenshots
 
     @FocusState private var focused: Bool
-    @State private var suggestions: [PlaceSuggestion] = []
+    @State private var suggestions: [PlaceSuggestion] = []      // gazetteer (offline, instant)
+    @State private var appleResults: [PlaceSuggestion] = []     // Apple Maps (online)
+    @State private var searchTask: Task<Void, Never>?
+    @State private var searchingApple = false
     @State private var justSelected = false
     @State private var forceOpen = false
     @State private var showingMap = false
+    @State private var net = NetworkMonitor.shared
 
     private var isValid: Bool { selectedKey != nil }
-    private var showDropdown: Bool { (focused || forceOpen) && selectedKey == nil && !suggestions.isEmpty }
+    private var trimmed: String { text.trimmingCharacters(in: .whitespaces) }
+
+    /// Gazetteer first, then any Apple Maps results not already shown (max 6).
+    private var displayed: [PlaceSuggestion] {
+        var out = suggestions
+        let seen = Set(suggestions.map { $0.title.lowercased() })
+        for a in appleResults where !seen.contains(a.title.lowercased()) { out.append(a) }
+        return Array(out.prefix(6))
+    }
+
+    private var showDropdown: Bool {
+        (focused || forceOpen) && selectedKey == nil && !trimmed.isEmpty
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Space.sm) {
@@ -100,15 +117,53 @@ struct PlaceField: View {
 
     private var dropdown: some View {
         VStack(spacing: 0) {
-            ForEach(suggestions) { s in
+            statusHeader
+            let rows = displayed
+            ForEach(rows) { s in
                 Button { select(s) } label: { row(s) }
                     .buttonStyle(.plain)
-                if s.id != suggestions.last?.id {
+                if s.id != rows.last?.id {
                     Divider().overlay(Color.white.opacity(0.12))
+                }
+            }
+            if rows.isEmpty {
+                if searchingApple {
+                    messageRow("Searching Apple Maps…", systemImage: "magnifyingglass")
+                } else if !net.isOnline {
+                    messageRow("Not found offline. Connect to the internet to search for more places, or pick the nearest city.",
+                               systemImage: "wifi.slash")
+                } else {
+                    messageRow("No match. Tap the map to search Apple Maps.", systemImage: "map")
                 }
             }
         }
         .glassCard()
+    }
+
+    /// Search-source indicator: Apple Maps when online, major-cities-only offline.
+    private var statusHeader: some View {
+        HStack(spacing: 6) {
+            Text(net.isOnline ? "🌐 Searching Apple Maps" : "📵 Offline mode — showing major cities only")
+                .rounded(11, weight: .semibold)
+                .foregroundStyle(Color.white.opacity(0.7))
+            Spacer()
+        }
+        .padding(.horizontal, Space.md)
+        .padding(.vertical, 8)
+    }
+
+    private func messageRow(_ text: String, systemImage: String) -> some View {
+        HStack(spacing: Space.sm) {
+            Image(systemName: systemImage).foregroundStyle(.white.opacity(0.7))
+            Text(text)
+                .rounded(13)
+                .foregroundStyle(Color.white.opacity(0.8))
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, Space.md)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func row(_ s: PlaceSuggestion) -> some View {
@@ -142,10 +197,51 @@ struct PlaceField: View {
         if let resolved = PlaceSearch.exactKey(newValue, personalPlaces: personalPlaces) {
             selectedKey = resolved
             suggestions = []
+            cancelAppleSearch()
         } else {
             if selectedKey != nil { selectedKey = nil }
             suggestions = PlaceSearch.suggestions(for: newValue, personalPlaces: personalPlaces)
+            searchApple(newValue)   // online: also search Apple Maps for any PH place
         }
+    }
+
+    /// Online: debounced Apple Maps search so any Philippine place (SM Calamba,
+    /// Jollibee Trinoma, a barangay hall…) is selectable with a precise coordinate.
+    /// Offline: no-op — the gazetteer's major cities are the fallback.
+    private func searchApple(_ query: String) {
+        searchTask?.cancel()
+        appleResults = []
+        let q = query.trimmingCharacters(in: .whitespaces)
+        guard net.isOnline, q.count >= 2 else { searchingApple = false; return }
+        searchingApple = true
+        searchTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 350_000_000)   // debounce keystrokes
+            if Task.isCancelled { return }
+            let req = MKLocalSearch.Request()
+            req.naturalLanguageQuery = q
+            req.region = LocationPickerView.phRegion
+            let response = try? await MKLocalSearch(request: req).start()
+            if Task.isCancelled { return }
+            // Drop stale responses (the text moved on while we waited).
+            guard text.trimmingCharacters(in: .whitespaces) == q else { return }
+            appleResults = (response?.mapItems ?? []).prefix(5).map { item in
+                let c = item.placemark.coordinate
+                let locality = item.placemark.locality ?? item.placemark.administrativeArea ?? "Apple Maps"
+                return PlaceSuggestion(
+                    id: "apple:\(c.latitude),\(c.longitude)",
+                    title: item.name ?? "Place",
+                    subtitle: "\(locality) · Apple Maps",
+                    resolveKey: "@pin:\(c.latitude),\(c.longitude)",
+                    isPersonal: false)
+            }
+            searchingApple = false
+        }
+    }
+
+    private func cancelAppleSearch() {
+        searchTask?.cancel()
+        appleResults = []
+        searchingApple = false
     }
 
     /// Apply a map-picked location: mark valid via a synthetic `@pin:` key. The
@@ -155,6 +251,7 @@ struct PlaceField: View {
         text = picked.name
         selectedKey = picked.keyString
         suggestions = []
+        cancelAppleSearch()
         focused = false
     }
 
@@ -164,6 +261,7 @@ struct PlaceField: View {
         text = s.title
         selectedKey = s.resolveKey
         suggestions = []
+        cancelAppleSearch()
         focused = false
     }
 
@@ -171,5 +269,6 @@ struct PlaceField: View {
         text = ""
         selectedKey = nil
         suggestions = []
+        cancelAppleSearch()
     }
 }
