@@ -13,7 +13,8 @@
     "poor":           { "factor": 0.85, "label": "Poor maintenance (overdue service)" },
     "dirtyAirFilter": { "factor": 0.90, "label": "Dirty air filter" },
     "wornSparkPlugs": { "factor": 0.92, "label": "Worn spark plugs" },
-    "badOxygenSensor":{ "factor": 0.80, "label": "Bad oxygen sensor" }
+    "badOxygenSensor":{ "factor": 0.80, "label": "Bad oxygen sensor" },
+    "cloggedInjectors":{ "factor": 0.88, "label": "Clogged fuel injectors" }
   },
   "tires": {
     "proper":       { "factor": 1.00, "label": "Properly inflated (recommended PSI)" },
@@ -27,6 +28,7 @@
     "ecoSmooth":    { "factor": 1.10, "label": "Smooth eco-driving" },
     "hardBraking":  { "factor": 0.88, "label": "Frequent hard braking" },
     "coasting":     { "factor": 1.08, "label": "Coasting / anticipation" },
+    "cruiseControl":{ "factor": 1.08, "label": "Highway cruise control" },
     "idlingPerStop":{ "factor": 0.97, "label": "Idling >1 min (per stop)" }
   },
   "cargo": {

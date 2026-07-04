@@ -105,7 +105,8 @@ final class KnowledgeBaseTests: XCTestCase {
     // MARK: - Routes / cost / timing / CO2
 
     func testRouteFacts() {
-        let a = KnowledgeBase.answer(for: "What's the toll from Manila to Baguio?")
+        // "route" (not "toll") → the route-facts card with distance + via.
+        let a = KnowledgeBase.answer(for: "Route info for Manila to Baguio")
         XCTAssertNotNil(a)
         XCTAssertTrue(a!.contains("TPLEX"), a!)
         XCTAssertTrue(a!.contains("246"), a!)
@@ -140,6 +141,53 @@ final class KnowledgeBaseTests: XCTestCase {
 
     func testTagalogDieselVsGas() {
         XCTAssertTrue(KnowledgeBase.answer(for: "Diesel o gasolina?")?.contains("DIESEL") ?? false)
+    }
+
+    // MARK: - Toll / RFID / coding / emergency
+
+    func testTollDatabaseLoads() {
+        XCTAssertNotNil(KnowledgeBase.tolls)
+        XCTAssertGreaterThanOrEqual(KnowledgeBase.tolls?.fullRoutes.count ?? 0, 10)
+    }
+
+    func testTollLookup() {
+        let a = KnowledgeBase.answer(for: "How much is the toll to Baguio?")
+        XCTAssertNotNil(a)
+        XCTAssertTrue(a!.contains("PHP 450"), a!)
+        XCTAssertTrue(a!.contains("Class 1"), a!)          // mandatory class note
+        XCTAssertTrue(a!.contains("expressway.ph"), a!)    // disclaimer
+    }
+
+    func testTollGenericFallback() {
+        let a = KnowledgeBase.answer(for: "What are the expressway toll fees?")
+        XCTAssertNotNil(a)
+        XCTAssertTrue(a!.contains("Class 1"), a!)
+    }
+
+    func testRFIDLoad() {
+        let a = KnowledgeBase.answer(for: "How do I load my Easytrip?")
+        XCTAssertNotNil(a)
+        XCTAssertTrue(a!.contains("GCash"), a!)
+    }
+
+    func testWhichRFID() {
+        let a = KnowledgeBase.answer(for: "Which RFID do I need?")
+        XCTAssertNotNil(a)
+        XCTAssertTrue(a!.lowercased().contains("interoperable"), a!)
+    }
+
+    func testNumberCoding() {
+        let a = KnowledgeBase.answer(for: "What is number coding?")
+        XCTAssertNotNil(a)
+        XCTAssertTrue(a!.contains("Mon"), a!)
+        XCTAssertTrue(a!.contains("1 & 2"), a!)
+    }
+
+    func testEmergency() {
+        let a = KnowledgeBase.answer(for: "What if I break down on the expressway?")
+        XCTAssertNotNil(a)
+        XCTAssertTrue(a!.lowercased().contains("hazard"), a!)
+        XCTAssertTrue(a!.contains("136"), a!)
     }
 
     // MARK: - Must not swallow real trip / vehicle queries

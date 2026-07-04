@@ -106,6 +106,20 @@ final class VehicleDatabaseTests: XCTestCase {
         XCTAssertNil(VehicleDatabase.answer(for: "How much to drive Manila to Batangas?"))
     }
 
+    // EVs report km/kWh and don't offer the litre-based "use this efficiency".
+    func testElectricVehicle() {
+        let a = VehicleDatabase.answer(for: "What's the km/L of an Ioniq 5?")
+        XCTAssertNotNil(a)
+        XCTAssertTrue(a!.text.contains("km/kWh"), a!.text)
+        XCTAssertTrue(a!.text.contains("Ioniq 5"), a!.text)
+        XCTAssertNil(a!.efficiencyKmL, "EVs are not fed into the litre-based calculator")
+        XCTAssertEqual(VehicleDatabase.find("BYD Atto 3")?.isElectric, true)
+    }
+
+    func testExpandedDatabaseSize() {
+        XCTAssertGreaterThanOrEqual(VehicleDatabase.entries.count, 180)
+    }
+
     func testHowToKnow() {
         let a = VehicleDatabase.answer(for: "how do I know my km/L?")
         XCTAssertNotNil(a)
@@ -140,13 +154,16 @@ final class VehicleDatabaseTests: XCTestCase {
         XCTAssertEqual(a!.efficiencyKmL, 13.0)
     }
 
-    // 9. "What SUVs are fuel efficient?" → top ranking.
+    // 9. "What SUVs are fuel efficient?" → top-3 ranking (highest km/L first).
     func testBestSUVs() {
         let a = VehicleDatabase.answer(for: "What SUVs are fuel efficient?")
         XCTAssertNotNil(a)
-        XCTAssertTrue(a!.text.contains("Raize"), a!.text)   // 18 km/L tops the SUVs
-        XCTAssertTrue(a!.text.contains("Creta"), a!.text)   // 16 km/L
+        XCTAssertTrue(a!.text.contains("SUVs"), a!.text)
         XCTAssertTrue(a!.text.contains("km/L"), a!.text)
+        XCTAssertEqual(a!.text.components(separatedBy: "•").count, 4)   // 3 bullets
+        // The top-listed SUV must be the most efficient in the DB.
+        let top = VehicleDatabase.topEfficient(matching: { $0.category.contains("suv") }, limit: 1).first
+        XCTAssertTrue(a!.text.contains(top!.makeModel), a!.text)
     }
 
     func testBestMotorcycles() {

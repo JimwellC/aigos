@@ -48,11 +48,34 @@ struct RouteInfo: Decodable, Equatable {
     var gasStations: [String]?
 }
 
+struct TollFullRoute: Decodable, Equatable {
+    let route: String
+    let via: String
+    let tollMin: Int
+    let tollMax: Int
+    let keys: [String]
+
+    var tollText: String { tollMin == tollMax ? "PHP \(tollMin)" : "PHP \(tollMin)–\(tollMax)" }
+}
+
+struct TollData: Decodable {
+    let classNote: String
+    let disclaimer: String
+    let fullRoutes: [TollFullRoute]
+}
+
 // MARK: - Knowledge base
 
 enum KnowledgeBase {
     static let modifiers: EfficiencyModifiers? = loadModifiers()
     static let routes: [RouteInfo] = loadRoutes()
+    static let tolls: TollData? = loadTolls()
+
+    private static func loadTolls() -> TollData? {
+        guard let url = Bundle.main.url(forResource: "TollDatabase", withExtension: "json"),
+              let data = try? Data(contentsOf: url) else { return nil }
+        return try? JSONDecoder().decode(TollData.self, from: data)
+    }
 
     private static func loadModifiers() -> EfficiencyModifiers? {
         guard let url = Bundle.main.url(forResource: "RealWorldEfficiencyDatabase", withExtension: "json"),
@@ -76,6 +99,14 @@ enum KnowledgeBase {
     /// message isn't one of these (so Talk falls through to trips/vehicles).
     static func answer(for text: String, vehicle: Vehicle? = nil) -> String? {
         let q = text.lowercased()
+
+        // Expressway / RFID / coding / emergency — checked first (toll shares the
+        // "toll" keyword with route facts, so it must win).
+        if isToll(q) { return tollAnswer(q) }
+        if isRFIDLoad(q) { return rfidLoadAnswer }
+        if isWhichRFID(q) { return whichRFIDAnswer }
+        if isNumberCoding(q) { return numberCodingAnswer }
+        if isEmergency(q) { return emergencyAnswer }
 
         // Route facts / drive-vs-bus / best-time all reference a route — resolve once.
         let route = matchedRoute(in: q)
@@ -154,6 +185,24 @@ enum KnowledgeBase {
     private static func isBestTime(_ q: String) -> Bool {
         (has(q, ["best time", "what time is best", "anong oras", "anong best time", "when is the best time"])
          && has(q, ["drive", "travel", "go", "leave", "punta", "byahe"]))
+    }
+    private static func isToll(_ q: String) -> Bool { has(q, ["toll", "magkano ang toll", "toll fee", "toll rate"]) }
+    private static func isRFIDLoad(_ q: String) -> Bool {
+        has(q, ["rfid", "easytrip", "autosweep"])
+            && has(q, ["load", "reload", "balance", "top up", "top-up", "magkano"])
+    }
+    private static func isWhichRFID(_ q: String) -> Bool {
+        has(q, ["rfid", "easytrip", "autosweep"])
+            && has(q, ["which", "what rfid", "need", "get", "interoperable", "one rfid", "anong rfid", "difference"])
+    }
+    private static func isNumberCoding(_ q: String) -> Bool {
+        has(q, ["number coding", "coding scheme", "uvvrp", "color coding", "window hours",
+                "plate ending", "coding day", "coding today", "anong coding", "am i coded"])
+    }
+    private static func isEmergency(_ q: String) -> Bool {
+        has(q, ["break down", "broke down", "breakdown", "stranded", "need a tow", "towing", "get towed",
+                "emergency number", "emergency contact", "emergency hotline", "flat tire on",
+                "accident on the expressway", "nasiraan", "aksidente sa"])
     }
     private static func isRouteFacts(_ q: String) -> Bool {
         has(q, ["toll", "route", "gas station", "how far", "distance", "how long", "elevation", "gaano kalayo", "gaano katagal"])
@@ -348,6 +397,70 @@ enum KnowledgeBase {
     10. Ethanol content variation
 
     Start cheap: PMS check, inflate the tires, and try a different station.
+    """
+
+    // MARK: - Toll / RFID / coding / emergency
+
+    private static func tollAnswer(_ q: String) -> String? {
+        guard let t = tolls else { return nil }
+        if let r = t.fullRoutes.first(where: { $0.keys.contains { q.contains($0) } }) {
+            return "\(r.route) toll (\(r.via)): \(r.tollText) for Class 1.\n\n\(t.classNote)\n\n\(t.disclaimer)"
+        }
+        let common = t.fullRoutes.prefix(6).map { "• \($0.route): \($0.tollText)" }.joined(separator: "\n")
+        return "Common Class 1 expressway tolls:\n\(common)\n\nTell me your destination for an exact figure.\n\n\(t.classNote)\n\n\(t.disclaimer)"
+    }
+
+    private static let rfidLoadAnswer = """
+    RFID reload options:
+    • GCash: Pay Bills → Easytrip or Autosweep
+    • Maya: Bills → RFID
+    • BDO / BPI / Metrobank online banking
+    • 7-Eleven (over the counter)
+    • Expressway reload centers at the toll plazas
+
+    Minimum reload PHP 200; load PHP 500+ before a long trip.
+    Check balance — Easytrip: easytrip.ph · Autosweep: autosweep.com.ph
+    """
+
+    private static let whichRFIDAnswer = """
+    Since December 2024, one RFID works on ALL expressways (they're interoperable) — get whichever is easier to find:
+
+    • Easytrip (MPTC): NLEX plazas, SM, Robinsons, hardware stores
+    • Autosweep (SMC): SLEX/Skyway, SM, Robinsons, Shell stations
+
+    Cost: about PHP 150–200 (one-time sticker + initial load).
+    """
+
+    private static let numberCodingAnswer = """
+    MMDA Number Coding (UVVRP) — by last plate digit:
+    • Mon: 1 & 2
+    • Tue: 3 & 4
+    • Wed: 5 & 6
+    • Thu: 7 & 8
+    • Fri: 9 & 0
+
+    Hours: 7:00 AM – 8:00 PM, on EDSA and major Manila roads.
+    Exempt: expressways (NLEX, SLEX, Skyway) and provincial roads.
+
+    Coding matters for fuel too — detours add km, which add fuel. Factor it into your budget!
+    """
+
+    private static let emergencyAnswer = """
+    If you break down on the expressway:
+    1. Turn on your hazard lights immediately
+    2. Pull onto the shoulder / emergency lane
+    3. Place an early-warning device ~30 m behind
+    4. Call the expressway hotline
+    5. Call MMDA: 136
+    6. Stay INSIDE the vehicle or behind the barrier — never between your car and traffic
+
+    Hotlines:
+    • NLEX / SCTEX / TPLEX: 1-800-8-NLEX (6539)
+    • SLEX / Skyway: (02) 8-843-5359
+    • CALAX / CAVITEX: 1-800-888-2539
+    • All expressways: 136
+
+    Towing to the nearest exit is FREE on most expressways.
     """
 
     private static let needsPMSAnswer = """

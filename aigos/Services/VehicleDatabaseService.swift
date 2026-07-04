@@ -27,6 +27,8 @@ struct VehicleEntry: Decodable, Equatable {
     var makeModel: String { "\(make) \(model)" }
     var fuelType: FuelType { FuelType(rawValue: fuel) ?? .unleaded91 }
     var vehicleType: VehicleType { VehicleType(rawValue: type) ?? .car }
+    /// Electric vehicle — its `kmL` value is really km/kWh, not km/L.
+    var isElectric: Bool { fuel == "electric" }
 }
 
 /// A structured answer to a vehicle question. `text` is always shown; when
@@ -75,6 +77,12 @@ enum VehicleDatabase {
 
         let entry = find(text, entries: entries)
         let age = extractAge(text)
+
+        // 2b-EV. Electric vehicles are measured in km/kWh and aren't part of the
+        // litre-based trip calculator, so answer with efficiency only (no button).
+        if let entry, entry.isElectric {
+            return VehicleAnswer(text: "The \(entry.displayName) is electric — it gets about \(fmt(entry.kmL)) km/kWh. I can share EV efficiency, but aigos's trip-cost calculator is for petrol/diesel vehicles for now.")
+        }
 
         // 2c. "[model] is a SUV" — a category clarification, not a location query.
         if let stated = statedCategory(in: q), let entry {

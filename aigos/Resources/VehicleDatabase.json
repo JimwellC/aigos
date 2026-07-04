@@ -822,6 +822,732 @@
       "type": "truck",
       "category": "pickup_diesel",
       "variant": "diesel"
+    },
+    {
+      "make": "Toyota",
+      "model": "Land Cruiser",
+      "kmL": 9.0,
+      "fuel": "diesel",
+      "type": "car",
+      "category": "suv_diesel",
+      "variant": "GX diesel"
+    },
+    {
+      "make": "Toyota",
+      "model": "Hiace",
+      "kmL": 11.0,
+      "fuel": "diesel",
+      "type": "van",
+      "category": "van_diesel",
+      "variant": "GL Grandia"
+    },
+    {
+      "make": "Toyota",
+      "model": "Hiace",
+      "kmL": 12.0,
+      "fuel": "diesel",
+      "type": "van",
+      "category": "van_diesel",
+      "variant": "Super Grandia"
+    },
+    {
+      "make": "Toyota",
+      "model": "Alphard",
+      "kmL": 14.0,
+      "fuel": "premium95",
+      "type": "van",
+      "category": "mpv",
+      "variant": "2.5 hybrid"
+    },
+    {
+      "make": "Toyota",
+      "model": "GR86",
+      "kmL": 12.5,
+      "fuel": "premium97",
+      "type": "car",
+      "category": "sedan_large",
+      "variant": "GR86"
+    },
+    {
+      "make": "Toyota",
+      "model": "Supra",
+      "kmL": 11.0,
+      "fuel": "premium97",
+      "type": "car",
+      "category": "sedan_large",
+      "variant": "Supra"
+    },
+    {
+      "make": "Toyota",
+      "model": "Camry",
+      "kmL": 18.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "sedan_large",
+      "variant": "hybrid"
+    },
+    {
+      "make": "Toyota",
+      "model": "Corolla Cross",
+      "kmL": 20.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas",
+      "variant": "hybrid"
+    },
+    {
+      "make": "Toyota",
+      "model": "Corolla Altis",
+      "kmL": 14.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "sedan_large",
+      "variant": "Altis"
+    },
+    {
+      "make": "Honda",
+      "model": "Accord",
+      "kmL": 13.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "sedan_large"
+    },
+    {
+      "make": "Honda",
+      "model": "Civic",
+      "kmL": 14.0,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "sedan_large",
+      "variant": "RS turbo"
+    },
+    {
+      "make": "Honda",
+      "model": "WR-V",
+      "kmL": 17.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Honda",
+      "model": "ZR-V",
+      "kmL": 14.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Mitsubishi",
+      "model": "Outlander",
+      "kmL": 15.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas",
+      "variant": "PHEV"
+    },
+    {
+      "make": "Mitsubishi",
+      "model": "Galant Fortis",
+      "kmL": 13.0,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "sedan_large"
+    },
+    {
+      "make": "Mitsubishi",
+      "model": "ASX",
+      "kmL": 14.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Mitsubishi",
+      "model": "Pajero",
+      "kmL": 10.0,
+      "fuel": "diesel",
+      "type": "car",
+      "category": "suv_diesel"
+    },
+    {
+      "make": "Mitsubishi",
+      "model": "L300",
+      "kmL": 12.0,
+      "fuel": "diesel",
+      "type": "van",
+      "category": "van_diesel",
+      "variant": "Versa Van"
+    },
+    {
+      "make": "Nissan",
+      "model": "Navara",
+      "kmL": 11.0,
+      "fuel": "diesel",
+      "type": "truck",
+      "category": "pickup_diesel",
+      "variant": "Pro-4X"
+    },
+    {
+      "make": "Nissan",
+      "model": "Kicks",
+      "kmL": 22.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas",
+      "variant": "e-Power"
+    },
+    {
+      "make": "Nissan",
+      "model": "Leaf",
+      "kmL": 6.5,
+      "fuel": "electric",
+      "type": "car",
+      "category": "ev"
+    },
+    {
+      "make": "Nissan",
+      "model": "Urvan Escapade",
+      "kmL": 11.0,
+      "fuel": "diesel",
+      "type": "van",
+      "category": "van_diesel"
+    },
+    {
+      "make": "Ford",
+      "model": "Bronco Sport",
+      "kmL": 13.0,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Ford",
+      "model": "Mustang",
+      "kmL": 11.0,
+      "fuel": "premium97",
+      "type": "car",
+      "category": "sedan_large"
+    },
+    {
+      "make": "Ford",
+      "model": "Ranger Raptor",
+      "kmL": 10.0,
+      "fuel": "diesel",
+      "type": "truck",
+      "category": "pickup_diesel",
+      "variant": "Raptor"
+    },
+    {
+      "make": "Hyundai",
+      "model": "Santa Cruz",
+      "kmL": 11.5,
+      "fuel": "diesel",
+      "type": "truck",
+      "category": "pickup_diesel"
+    },
+    {
+      "make": "Hyundai",
+      "model": "Ioniq 5",
+      "kmL": 6.2,
+      "fuel": "electric",
+      "type": "car",
+      "category": "ev"
+    },
+    {
+      "make": "Hyundai",
+      "model": "Ioniq 6",
+      "kmL": 7.0,
+      "fuel": "electric",
+      "type": "car",
+      "category": "ev"
+    },
+    {
+      "make": "Hyundai",
+      "model": "Elantra",
+      "kmL": 15.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "sedan_large"
+    },
+    {
+      "make": "Hyundai",
+      "model": "Kona",
+      "kmL": 15.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Kia",
+      "model": "Seltos",
+      "kmL": 15.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Kia",
+      "model": "Sportage",
+      "kmL": 14.0,
+      "fuel": "diesel",
+      "type": "car",
+      "category": "suv_diesel"
+    },
+    {
+      "make": "Kia",
+      "model": "EV6",
+      "kmL": 6.5,
+      "fuel": "electric",
+      "type": "car",
+      "category": "ev"
+    },
+    {
+      "make": "Kia",
+      "model": "Carens",
+      "kmL": 17.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "mpv"
+    },
+    {
+      "make": "Geely",
+      "model": "Emgrand",
+      "kmL": 16.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "sedan_large"
+    },
+    {
+      "make": "Geely",
+      "model": "Coolray",
+      "kmL": 14.0,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas",
+      "variant": "Sport"
+    },
+    {
+      "make": "MG",
+      "model": "ZS EV",
+      "kmL": 6.0,
+      "fuel": "electric",
+      "type": "car",
+      "category": "ev"
+    },
+    {
+      "make": "MG",
+      "model": "ZS",
+      "kmL": 14.0,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas",
+      "variant": "1.5 gas"
+    },
+    {
+      "make": "MG",
+      "model": "MG5",
+      "kmL": 15.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "sedan_large"
+    },
+    {
+      "make": "MG",
+      "model": "VS",
+      "kmL": 18.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas",
+      "variant": "HEV"
+    },
+    {
+      "make": "MG",
+      "model": "RX8",
+      "kmL": 12.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "MG",
+      "model": "MG4 EV",
+      "kmL": 6.8,
+      "fuel": "electric",
+      "type": "car",
+      "category": "ev"
+    },
+    {
+      "make": "Mazda",
+      "model": "CX-5",
+      "kmL": 13.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas",
+      "variant": "gas"
+    },
+    {
+      "make": "Mazda",
+      "model": "CX-8",
+      "kmL": 14.5,
+      "fuel": "diesel",
+      "type": "car",
+      "category": "suv_diesel"
+    },
+    {
+      "make": "Mazda",
+      "model": "CX-30",
+      "kmL": 14.0,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Mazda",
+      "model": "CX-60",
+      "kmL": 15.0,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas",
+      "variant": "PHEV"
+    },
+    {
+      "make": "Mazda",
+      "model": "MX-5",
+      "kmL": 15.0,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "sedan_large",
+      "variant": "Miata"
+    },
+    {
+      "make": "Subaru",
+      "model": "Outback",
+      "kmL": 12.0,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Subaru",
+      "model": "WRX",
+      "kmL": 11.5,
+      "fuel": "premium97",
+      "type": "car",
+      "category": "sedan_large"
+    },
+    {
+      "make": "Subaru",
+      "model": "BRZ",
+      "kmL": 13.0,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "sedan_large"
+    },
+    {
+      "make": "Subaru",
+      "model": "Levorg",
+      "kmL": 13.5,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Chery",
+      "model": "Tiggo 7 Pro",
+      "kmL": 14.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "GAC",
+      "model": "Emkoo",
+      "kmL": 14.0,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Maxus",
+      "model": "D60",
+      "kmL": 14.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Foton",
+      "model": "Thunder",
+      "kmL": 10.5,
+      "fuel": "diesel",
+      "type": "truck",
+      "category": "pickup_diesel"
+    },
+    {
+      "make": "BAIC",
+      "model": "X55",
+      "kmL": 14.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Jetour",
+      "model": "X70",
+      "kmL": 14.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Omoda",
+      "model": "C5",
+      "kmL": 15.0,
+      "fuel": "premium95",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Jaecoo",
+      "model": "J7",
+      "kmL": 14.5,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "DFSK",
+      "model": "Glory 560",
+      "kmL": 14.0,
+      "fuel": "unleaded91",
+      "type": "car",
+      "category": "suv_gas"
+    },
+    {
+      "make": "Isuzu",
+      "model": "Crosswind",
+      "kmL": 13.0,
+      "fuel": "diesel",
+      "type": "van",
+      "category": "van_diesel"
+    },
+    {
+      "make": "Isuzu",
+      "model": "Sportivo",
+      "kmL": 14.0,
+      "fuel": "diesel",
+      "type": "van",
+      "category": "van_diesel"
+    },
+    {
+      "make": "Isuzu",
+      "model": "Traviz",
+      "kmL": 11.0,
+      "fuel": "diesel",
+      "type": "truck",
+      "category": "pickup_diesel"
+    },
+    {
+      "make": "Isuzu",
+      "model": "NLR",
+      "kmL": 9.5,
+      "fuel": "diesel",
+      "type": "truck",
+      "category": "pickup_diesel",
+      "variant": "light truck"
+    },
+    {
+      "make": "BYD",
+      "model": "Atto 3",
+      "kmL": 6.5,
+      "fuel": "electric",
+      "type": "car",
+      "category": "ev"
+    },
+    {
+      "make": "BYD",
+      "model": "Seal",
+      "kmL": 7.0,
+      "fuel": "electric",
+      "type": "car",
+      "category": "ev"
+    },
+    {
+      "make": "BYD",
+      "model": "Dolphin",
+      "kmL": 7.5,
+      "fuel": "electric",
+      "type": "car",
+      "category": "ev"
+    },
+    {
+      "make": "Peugeot",
+      "model": "e-2008",
+      "kmL": 6.0,
+      "fuel": "electric",
+      "type": "car",
+      "category": "ev"
+    },
+    {
+      "make": "Volvo",
+      "model": "XC40 Recharge",
+      "kmL": 6.2,
+      "fuel": "electric",
+      "type": "car",
+      "category": "ev"
+    },
+    {
+      "make": "BMW",
+      "model": "iX",
+      "kmL": 5.5,
+      "fuel": "electric",
+      "type": "car",
+      "category": "ev"
+    },
+    {
+      "make": "Mercedes",
+      "model": "EQS",
+      "kmL": 6.0,
+      "fuel": "electric",
+      "type": "car",
+      "category": "ev"
+    },
+    {
+      "make": "Honda",
+      "model": "Forza 350",
+      "kmL": 30,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_150"
+    },
+    {
+      "make": "Honda",
+      "model": "CBR150R",
+      "kmL": 42,
+      "fuel": "premium95",
+      "type": "motorcycle",
+      "category": "moto_150"
+    },
+    {
+      "make": "Honda",
+      "model": "CB500F",
+      "kmL": 25,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_400"
+    },
+    {
+      "make": "Honda",
+      "model": "CRF150L",
+      "kmL": 42,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_150"
+    },
+    {
+      "make": "Yamaha",
+      "model": "XMAX 300",
+      "kmL": 28,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_400"
+    },
+    {
+      "make": "Yamaha",
+      "model": "MT-15",
+      "kmL": 38,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_150"
+    },
+    {
+      "make": "Yamaha",
+      "model": "R15",
+      "kmL": 40,
+      "fuel": "premium95",
+      "type": "motorcycle",
+      "category": "moto_150"
+    },
+    {
+      "make": "Yamaha",
+      "model": "Fazzio",
+      "kmL": 55,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_125"
+    },
+    {
+      "make": "Kawasaki",
+      "model": "Ninja 400",
+      "kmL": 22,
+      "fuel": "premium95",
+      "type": "motorcycle",
+      "category": "moto_400"
+    },
+    {
+      "make": "Kawasaki",
+      "model": "Z400",
+      "kmL": 22,
+      "fuel": "premium95",
+      "type": "motorcycle",
+      "category": "moto_400"
+    },
+    {
+      "make": "Kawasaki",
+      "model": "Dominar 400",
+      "kmL": 25,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_400"
+    },
+    {
+      "make": "Suzuki",
+      "model": "GSX-S150",
+      "kmL": 45,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_150"
+    },
+    {
+      "make": "Suzuki",
+      "model": "Address 110",
+      "kmL": 52,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_125"
+    },
+    {
+      "make": "Royal Enfield",
+      "model": "Meteor 350",
+      "kmL": 30,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_400"
+    },
+    {
+      "make": "CFMoto",
+      "model": "300NK",
+      "kmL": 28,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_400"
+    },
+    {
+      "make": "Rusi",
+      "model": "RC 150",
+      "kmL": 48,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_150"
+    },
+    {
+      "make": "TVS",
+      "model": "Apache RTR 160",
+      "kmL": 45,
+      "fuel": "unleaded91",
+      "type": "motorcycle",
+      "category": "moto_150"
     }
   ]
 }

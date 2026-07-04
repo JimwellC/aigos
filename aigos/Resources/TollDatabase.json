@@ -1,0 +1,74 @@
+{
+  "note": "TRB-approved 2026 Class 1 (car/SUV/van) toll rates, VAT-inclusive, via expressway.ph. Verify latest at expressway.ph.",
+  "classNote": "Toll rates are for Class 1 vehicles (cars, SUVs, vans). Buses pay ~2.28x, trucks pay ~3x. Rates may change — always check your RFID balance before entering the expressway.",
+  "disclaimer": "Verify at expressway.ph for the latest rates.",
+  "rfid": {
+    "easytrip": { "operator": "MPTC", "expressways": ["NLEX", "SCTEX", "TPLEX", "CALAX", "CAVITEX", "NLEX Connector", "Harbor Link"] },
+    "autosweep": { "operator": "SMC", "expressways": ["SLEX", "Skyway", "Skyway Stage 3", "STAR Tollway", "NAIAX", "MCX"] },
+    "interoperableSince": "December 2024"
+  },
+  "expressways": [
+    { "name": "NLEX", "rfid": "Easytrip", "plazas": 18, "lengthKm": 84, "segments": [
+      { "from": "Balintawak", "to": "Valenzuela", "toll": 27 },
+      { "from": "Balintawak", "to": "Meycauayan", "toll": 46 },
+      { "from": "Balintawak", "to": "Marilao", "toll": 55 },
+      { "from": "Balintawak", "to": "Bocaue", "toll": 72 },
+      { "from": "Balintawak", "to": "Tabang", "toll": 88 },
+      { "from": "Balintawak", "to": "Pulilan", "toll": 107 },
+      { "from": "Balintawak", "to": "San Simon", "toll": 138 },
+      { "from": "Balintawak", "to": "San Fernando", "toll": 176 },
+      { "from": "Balintawak", "to": "Mexico", "toll": 220 },
+      { "from": "Balintawak", "to": "Angeles/Dau", "toll": 411 } ] },
+    { "name": "SLEX", "rfid": "Autosweep", "plazas": 15, "lengthKm": 46.9, "segments": [
+      { "from": "Magallanes", "to": "Alabang", "toll": 118 },
+      { "from": "Magallanes", "to": "Susana Heights", "toll": 131 },
+      { "from": "Magallanes", "to": "Filinvest/Muntinlupa", "toll": 144 },
+      { "from": "Magallanes", "to": "Calamba", "toll": 244 },
+      { "from": "Magallanes", "to": "Sto. Tomas", "toll": 311 } ] },
+    { "name": "STAR Tollway", "rfid": "Autosweep", "plazas": 8, "segments": [
+      { "from": "Sto. Tomas", "to": "Lipa", "toll": 37 },
+      { "from": "Sto. Tomas", "to": "Batangas City", "toll": 68 },
+      { "from": "Calamba", "to": "Batangas", "toll": 135 } ] },
+    { "name": "Skyway Stage 3", "rfid": "Autosweep", "plazas": 8, "flat": true, "segments": [
+      { "from": "Buendia", "to": "Balintawak", "toll": 264 } ] },
+    { "name": "Skyway", "rfid": "Autosweep", "plazas": 5, "segments": [
+      { "from": "Buendia", "to": "Sucat", "toll": 33 },
+      { "from": "Buendia", "to": "Alabang", "toll": 68 } ] },
+    { "name": "TPLEX", "rfid": "Easytrip", "plazas": 11, "segments": [
+      { "from": "La Paz", "to": "Urdaneta", "toll": 127 },
+      { "from": "La Paz", "to": "Rosales", "toll": 143 },
+      { "from": "La Paz", "to": "Pozorrubio", "toll": 196 },
+      { "from": "La Paz", "to": "Rosario", "toll": 311 } ] },
+    { "name": "SCTEX", "rfid": "Easytrip", "plazas": 12, "segments": [
+      { "from": "Dau/Clark", "to": "San Fernando", "toll": 45 },
+      { "from": "Dau/Clark", "to": "Subic (Tipo)", "toll": 200 },
+      { "from": "Angeles", "to": "Subic", "toll": 210 } ] },
+    { "name": "CALAX", "rfid": "Easytrip", "plazas": 6, "segments": [
+      { "from": "Mamplasan", "to": "Silang East", "toll": 63 },
+      { "from": "Mamplasan", "to": "Sta. Rosa-Tagaytay Rd", "toll": 84 },
+      { "from": "Mamplasan", "to": "Gov. Drive", "toll": 107 } ] },
+    { "name": "CAVITEX", "rfid": "Easytrip", "plazas": 5, "segments": [
+      { "from": "Parañaque", "to": "Kawit", "toll": 127 },
+      { "from": "Parañaque", "to": "Noveleta", "toll": 150 } ] },
+    { "name": "NLEX Connector", "rfid": "Easytrip", "plazas": 3, "lengthKm": 7.7, "flat": true, "segments": [
+      { "from": "España", "to": "C-3 Road", "toll": 119 } ] },
+    { "name": "MCX", "rfid": "Autosweep", "plazas": 2, "segments": [
+      { "from": "Susana Heights", "to": "Daang Hari", "toll": 65 } ] },
+    { "name": "CLLEX", "rfid": "Easytrip", "plazas": 3, "segments": [
+      { "from": "Cabanatuan", "to": "Cabu", "toll": 55 } ] }
+  ],
+  "fullRoutes": [
+    { "route": "Manila to Baguio", "via": "NLEX+TPLEX", "tollMin": 450, "tollMax": 550, "keys": ["baguio"] },
+    { "route": "Manila to Clark", "via": "NLEX", "tollMin": 411, "tollMax": 411, "keys": ["clark"] },
+    { "route": "Manila to Subic", "via": "NLEX+SCTEX", "tollMin": 611, "tollMax": 650, "keys": ["subic"] },
+    { "route": "Manila to Tagaytay", "via": "CAVITEX+CALAX", "tollMin": 190, "tollMax": 210, "keys": ["tagaytay"] },
+    { "route": "Manila to Batangas", "via": "SLEX+STAR", "tollMin": 379, "tollMax": 379, "keys": ["batangas"] },
+    { "route": "Manila to San Fernando (Pampanga)", "via": "NLEX", "tollMin": 176, "tollMax": 176, "keys": ["pampanga", "san fernando"] },
+    { "route": "Manila to Tarlac", "via": "NLEX", "tollMin": 220, "tollMax": 220, "keys": ["tarlac"] },
+    { "route": "Manila to La Union", "via": "NLEX+TPLEX", "tollMin": 730, "tollMax": 780, "keys": ["la union", "san juan"] },
+    { "route": "Manila to Calamba (Laguna)", "via": "SLEX", "tollMin": 244, "tollMax": 244, "keys": ["calamba", "laguna"] },
+    { "route": "Manila to Cabanatuan", "via": "NLEX+CLLEX", "tollMin": 290, "tollMax": 320, "keys": ["cabanatuan", "nueva ecija"] },
+    { "route": "Manila to Lucena", "via": "SLEX", "tollMin": 244, "tollMax": 244, "keys": ["lucena", "quezon"] },
+    { "route": "Manila to Legazpi (Bicol)", "via": "SLEX", "tollMin": 311, "tollMax": 311, "keys": ["legazpi", "bicol", "naga"] }
+  ]
+}
