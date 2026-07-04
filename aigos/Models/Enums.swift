@@ -43,12 +43,13 @@ enum VehicleType: String, Codable, CaseIterable, Identifiable {
     }
 
     /// Typical fuel-tank capacity (litres) — the per-type default in manual entry
-    /// and the fallback for database models without a listed tank size.
+    /// and the fallback for vehicles without a known tank size. Known models use
+    /// the accurate `tankL` from VehicleDatabase.json; this is only the fallback.
     var typicalTankLiters: Double {
         switch self {
-        case .car: 42
-        case .motorcycle: 5
-        case .truck: 75
+        case .car: 45
+        case .motorcycle: 6
+        case .truck: 100
         case .van: 65
         }
     }

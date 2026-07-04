@@ -28,7 +28,7 @@ final class VehicleTankTests: XCTestCase {
         let entry = VehicleDatabase.entries.first { $0.vehicleType == .car && $0.tankL == nil }
         XCTAssertNotNil(entry, "expected at least one car without a listed tank")
         XCTAssertEqual(entry?.tankCapacityL, VehicleType.car.typicalTankLiters)
-        XCTAssertEqual(entry?.tankCapacityL, 42)   // car typical tank
+        XCTAssertEqual(entry?.tankCapacityL, 45)   // car fallback tank
     }
 
     func testAnswerCarriesTankCapacity() {

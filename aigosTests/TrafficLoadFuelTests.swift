@@ -124,10 +124,9 @@ final class TrafficLoadFuelTests: XCTestCase {
     }
 
     func testTypicalTankLiters() {
-        // Per-type default tank (also the manual-entry default): car 42, moto 5,
-        // truck 75, van 65.
-        XCTAssertEqual(VehicleType.car.typicalTankLiters, 42)
-        XCTAssertEqual(VehicleType.motorcycle.typicalTankLiters, 5)
+        // Fallback tank by type (known models use accurate DB values): car 45 L.
+        XCTAssertEqual(VehicleType.car.typicalTankLiters, 45)
+        XCTAssertEqual(VehicleType.motorcycle.typicalTankLiters, 6)
         XCTAssertGreaterThan(VehicleType.truck.typicalTankLiters, VehicleType.van.typicalTankLiters)
     }
 
