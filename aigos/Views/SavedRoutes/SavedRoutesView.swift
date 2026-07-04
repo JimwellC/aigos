@@ -17,7 +17,7 @@ struct SavedRoutesView: View {
 
     var body: some View {
         ZStack {
-            AigosBackground(variant: 2)
+            AigosBackground(variant: 2, mascotPeek: CGSize(width: 55, height: -75))
 
             if routes.isEmpty {
                 emptyState

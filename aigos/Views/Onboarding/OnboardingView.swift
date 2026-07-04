@@ -62,14 +62,19 @@ struct OnboardingView: View {
                 .allowsHitTesting(false)
 
             VStack(spacing: Space.md) {
-                ProgressBar(progress: Double(step + 1) / 3)
-                    .padding(.top, Space.xl)
-                    .padding(.horizontal, Space.lg)
+                // The welcome hero (step 0) is full-bleed with no progress bar;
+                // the progress bar tracks the three form steps that follow.
+                if step > 0 {
+                    ProgressBar(progress: Double(step) / 3)
+                        .padding(.top, Space.xl)
+                        .padding(.horizontal, Space.lg)
+                }
 
                 Group {
                     switch step {
-                    case 0: addVehicle
-                    case 1: drivingStyle
+                    case 0: welcome
+                    case 1: addVehicle
+                    case 2: drivingStyle
                     default: pricesIntro
                     }
                 }
@@ -104,10 +109,47 @@ struct OnboardingView: View {
 
     private var bgSymbol: String {
         switch step {
-        case 0: "car.fill"
-        case 1: "steeringwheel"
+        case 0: "hand.wave.fill"
+        case 1: "car.fill"
+        case 2: "steeringwheel"
         default: "fuelpump.fill"
         }
+    }
+
+
+    // MARK: - Screen 0 — Welcome
+
+    /// Large, centered jeepney hero (the square app-icon mascot) that opens the
+    /// flow, gently bobbing above the welcome copy.
+    private var welcome: some View {
+        VStack(spacing: 0) {
+            Spacer().frame(height: 60)
+
+            MascotView(size: 220, floating: true, imageName: "Mascot",
+                       floatDistance: 8, floatDuration: 2.5)
+
+            Spacer().frame(height: 40)
+
+            VStack(spacing: Space.sm) {
+                Text("Welcome to aigos")
+                    .rounded(30, weight: .bold)
+                    .foregroundStyle(.white)
+                Text("Know your fuel cost before every trip.\nOffline. No login. Sakto para sa Pinoy roads.")
+                    .rounded(16, weight: .medium)
+                    .foregroundStyle(Color.aigosTextSecondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.horizontal, Space.screen)
+
+            Spacer(minLength: 0)
+
+            PrimaryButton(title: "Get Started  →", action: advance)
+                .padding(.horizontal, Space.screen)
+                .padding(.top, Space.sm)
+                .padding(.bottom, Space.lg)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
 
@@ -352,31 +394,35 @@ private struct MascotBubble: View {
 struct MascotView: View {
     var size: CGFloat = 120
     var floating: Bool = false
+    var imageName: String = "Mascot"
+    var floatDistance: CGFloat = 6
+    var floatDuration: Double = 1.8
     @State private var floatUp = false
 
     var body: some View {
-        Image("Mascot")
+        Image(imageName)
             .resizable()
             .scaledToFit()
             .frame(width: size, height: size)
             .shadow(color: .black.opacity(0.28), radius: size * 0.09, x: 0, y: size * 0.035)
-            .offset(y: floating && floatUp ? -6 : 0)
+            .offset(y: floating && floatUp ? -floatDistance : 0)
             .onAppear {
                 if floating {
-                    withAnimation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true)) { floatUp = true }
+                    withAnimation(.easeInOut(duration: floatDuration).repeatForever(autoreverses: true)) { floatUp = true }
                 }
             }
     }
 }
 
-/// Full-screen empty state: floating mascot + a friendly title and message.
+/// Empty state: centered title + message. The waving jeepney is supplied by the
+/// tab's `AigosBackground(mascotPeek:)` watermark, so this view stays text-only
+/// to avoid doubling the mascot on empty History/Saved screens.
 struct MascotEmptyState: View {
     let title: String
     let message: String
 
     var body: some View {
-        VStack(spacing: Space.lg) {
-            MascotView(size: 120, floating: true)
+        VStack(spacing: Space.sm) {
             Text(title)
                 .font(.system(size: 22, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
@@ -386,6 +432,6 @@ struct MascotEmptyState: View {
                 .multilineTextAlignment(.center)
         }
         .padding(Space.xl)
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

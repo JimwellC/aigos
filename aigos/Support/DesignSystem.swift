@@ -89,6 +89,12 @@ enum Radius {
 struct AigosBackground: View {
     var variant: Int = 0
 
+    /// When set, the waving jeepney peeks in from the bottom-trailing corner at
+    /// this (x, y) offset — a subtle brand watermark behind the content. It rides
+    /// in the orb overlay so its sub-screen size can't inflate the layout (same
+    /// reasoning as the bokeh orbs). Only the main tab roots opt in.
+    var mascotPeek: CGSize? = nil
+
     private struct Orb { let color: Color; let size: CGFloat; let blur: CGFloat }
 
     /// The four glowing orbs. Tighter blur keeps them as defined circles; the
@@ -131,6 +137,18 @@ struct AigosBackground: View {
                         .frame(width: orb.size, height: orb.size)
                         .blur(radius: orb.blur)
                         .offset(x: pos[i].0, y: pos[i].1)
+                }
+
+                if let peek = mascotPeek {
+                    Image("MascotWave")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 300)
+                        .opacity(0.20)
+                        .offset(x: peek.width, y: peek.height)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
                 }
             }
         }

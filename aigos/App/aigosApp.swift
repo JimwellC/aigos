@@ -32,6 +32,8 @@ struct aigosApp: App {
         #if DEBUG
         if DebugSupport.isSeedDemo {
             DebugSupport.seed(container.mainContext)
+        } else if DebugSupport.isSeedEmpty {
+            DebugSupport.seedEmpty(container.mainContext)
         }
         #endif
     }

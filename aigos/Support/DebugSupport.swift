@@ -20,6 +20,12 @@ enum DebugSupport {
         ProcessInfo.processInfo.arguments.contains("-seedDemo")
     }
 
+    /// Onboarded but empty: wipes data, seeds prices, marks onboarding done —
+    /// no vehicles, trips, or routes. Drives the empty-state screens for QA.
+    static var isSeedEmpty: Bool {
+        ProcessInfo.processInfo.arguments.contains("-seedEmpty")
+    }
+
     /// Auto-present Talk to aigos (optionally with a seeded query) for screenshots.
     static var autoOpenTalk: Bool {
         ProcessInfo.processInfo.arguments.contains("-talk")
@@ -157,6 +163,22 @@ enum DebugSupport {
         context.insert(PersonalPlace(name: "School", gazetteerKey: ""))
 
         try? context.save()
+        UserDefaults.standard.set(true, forKey: "hasOnboarded")
+    }
+
+    /// Onboarded-but-empty state for exercising the empty-state screens.
+    @MainActor
+    static func seedEmpty(_ context: ModelContext) {
+        try? context.delete(model: TripRecord.self)
+        try? context.delete(model: SavedRoute.self)
+        try? context.delete(model: VehicleProfile.self)
+        try? context.delete(model: DrivingProfile.self)
+        try? context.delete(model: PersonalPlace.self)
+        try? context.save()
+
+        AppSeeder.seedPricesIfNeeded(context)
+        try? context.save()
+
         UserDefaults.standard.set(true, forKey: "hasOnboarded")
     }
 }

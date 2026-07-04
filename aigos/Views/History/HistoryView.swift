@@ -18,7 +18,7 @@ struct HistoryView: View {
 
     var body: some View {
         ZStack {
-            AigosBackground(variant: 1)
+            AigosBackground(variant: 1, mascotPeek: CGSize(width: 65, height: -80))
 
             if trips.isEmpty {
                 emptyState

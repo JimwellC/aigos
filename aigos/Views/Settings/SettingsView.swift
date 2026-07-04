@@ -21,7 +21,7 @@ struct SettingsView: View {
 
     var body: some View {
         ZStack {
-            AigosBackground(variant: 4)
+            AigosBackground(variant: 4, mascotPeek: CGSize(width: 60, height: -80))
 
             ScrollView {
                 VStack(alignment: .leading, spacing: Space.lg) {

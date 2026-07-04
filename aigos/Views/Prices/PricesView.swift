@@ -31,7 +31,7 @@ struct PricesView: View {
 
     var body: some View {
         ZStack {
-            AigosBackground(variant: 3)
+            AigosBackground(variant: 3, mascotPeek: CGSize(width: 60, height: -70))
 
             ScrollView {
                 VStack(alignment: .leading, spacing: Space.lg) {

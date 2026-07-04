@@ -89,7 +89,7 @@ struct CalculateView: View {
 
     var body: some View {
         ZStack {
-            AigosBackground()
+            AigosBackground(mascotPeek: CGSize(width: 60, height: -70))
 
             ScrollView {
                 VStack(spacing: Space.lg) {
