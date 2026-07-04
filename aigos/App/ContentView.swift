@@ -31,29 +31,33 @@ struct ContentView: View {
     var body: some View {
         currentScreen
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                // The tracker bar/sheet sits directly above the tab bar and pushes
-                // content up (via the safe-area inset) so it never covers anything.
-                VStack(spacing: 8) {
-                    if tracker.isLive {
-                        Group {
-                            if expanded {
-                                TrackingExpandedSheet(
-                                    tracker: tracker,
-                                    onCollapse: { withAnimation(.easeOut(duration: 0.3)) { expanded = false } },
-                                    onEnd: endTracking)
-                            } else {
-                                TrackingMiniBar(
-                                    tracker: tracker,
-                                    onTap: { withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) { expanded = true } },
-                                    onLongPressEnd: { showingEndConfirm = true })
-                            }
-                        }
+            // Expanded dashboard = a bottom sheet FLOATING over content (doesn't push
+            // it, never touches the header). Anchored just above the mini bar / tab bar.
+            .overlay(alignment: .bottom) {
+                if tracker.isLive && expanded {
+                    TrackingExpandedSheet(
+                        tracker: tracker,
+                        onCollapse: { withAnimation(.easeOut(duration: 0.3)) { expanded = false } },
+                        onEnd: endTracking)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
+            .animation(.spring(response: 0.32, dampingFraction: 0.82), value: expanded)
+            // The compact bar sits in the bottom inset directly above the tab bar —
+            // it only reserves ~56pt, so the header is never pushed.
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                VStack(spacing: 8) {
+                    if tracker.isLive && !expanded {
+                        TrackingMiniBar(
+                            tracker: tracker,
+                            onTap: { withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) { expanded = true } },
+                            onLongPressEnd: { showingEndConfirm = true })
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                     AigosTabBar(selected: $appState.selectedTab)
                 }
                 .animation(.spring(response: 0.35, dampingFraction: 0.85), value: tracker.isLive)
+                .animation(.spring(response: 0.32, dampingFraction: 0.82), value: expanded)
             }
             .environment(appState)
             .task {
@@ -80,17 +84,13 @@ struct ContentView: View {
                 Button("End Trip", role: .destructive, action: endTracking)
                 Button("Cancel", role: .cancel) {}
             }
-            // Calculate shows the expanded sheet by default; other tabs minimize.
+            // Tracking always starts MINIMIZED — the full dashboard only appears when
+            // the user taps the bar. Reset on end, and minimize when switching tabs.
             .onChange(of: tracker.isLive) { _, live in
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
-                    expanded = live && appState.selectedTab == .calculate
-                }
+                if !live { withAnimation(.easeOut(duration: 0.25)) { expanded = false } }
             }
-            .onChange(of: appState.selectedTab) { _, tab in
-                guard tracker.isLive else { return }
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
-                    expanded = (tab == .calculate)
-                }
+            .onChange(of: appState.selectedTab) { _, _ in
+                if expanded { withAnimation(.easeOut(duration: 0.25)) { expanded = false } }
             }
     }
 
