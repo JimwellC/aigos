@@ -57,3 +57,35 @@ final class VehicleProfile {
         return max(0, current - year)
     }
 }
+
+extension VehicleProfile {
+    /// Atomically make `vehicle` the one-and-only default vehicle.
+    ///
+    /// The single safe path for changing the default from anywhere (garage,
+    /// Settings, Add/Edit). It fetches every persisted vehicle from the
+    /// `ModelContext` — the source of truth, not a possibly-stale or filtered
+    /// `@Query` snapshot — clears all their `isDefault` flags, sets this one's,
+    /// and saves **once**. SwiftData errors are caught and logged rather than
+    /// allowed to propagate into a crash (P0 hardening).
+    ///
+    /// Returns `true` when the change persisted, `false` when a SwiftData error
+    /// was caught (callers can ignore the result; state stays consistent).
+    @MainActor
+    @discardableResult
+    static func setAsDefault(_ vehicle: VehicleProfile, context: ModelContext) -> Bool {
+        do {
+            let all = try context.fetch(FetchDescriptor<VehicleProfile>())
+            for v in all { v.isDefault = (v.id == vehicle.id) }
+            // Guarantee the target ends up default even if it isn't in the fetch
+            // yet (e.g. just inserted in this run loop and not persisted).
+            vehicle.isDefault = true
+            try context.save()
+            return true
+        } catch {
+            #if DEBUG
+            print("⚠️ VehicleProfile.setAsDefault failed: \(error)")
+            #endif
+            return false
+        }
+    }
+}

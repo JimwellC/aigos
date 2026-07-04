@@ -150,8 +150,7 @@ struct VehiclePicker: View {
 
     private func setDefault(_ vehicle: VehicleProfile) {
         Haptics.tap(.light)
-        for v in vehicles { v.isDefault = (v.id == vehicle.id) }
-        try? context.save()
+        VehicleProfile.setAsDefault(vehicle, context: context)
     }
 
     private func delete(_ vehicle: VehicleProfile) {
@@ -161,14 +160,19 @@ struct VehiclePicker: View {
         let remaining = vehicles.filter { $0.id != vehicle.id }
 
         context.delete(vehicle)   // cascade-deletes the linked DrivingProfile
-        try? context.save()
-
-        // If the default was deleted, promote the first remaining vehicle.
-        if wasDefault, !remaining.contains(where: \.isDefault), let first = remaining.first {
-            first.isDefault = true
-        }
         // If the selected-for-calc vehicle was deleted, fall back to the first left.
         if wasSelected { selectedVehicleID = remaining.first?.id }
-        try? context.save()
+
+        // If the default was deleted, promote the first remaining vehicle. This
+        // fetch-clears-sets-saves once (and covers the post-delete save too).
+        if wasDefault, let first = remaining.first {
+            VehicleProfile.setAsDefault(first, context: context)
+        } else {
+            do { try context.save() } catch {
+                #if DEBUG
+                print("⚠️ delete vehicle save failed: \(error)")
+                #endif
+            }
+        }
     }
 }

@@ -239,8 +239,7 @@ struct SettingsView: View {
     // MARK: - Actions
 
     private func setDefault(_ vehicle: VehicleProfile) {
-        for v in vehicles { v.isDefault = (v.id == vehicle.id) }
-        try? context.save()
+        VehicleProfile.setAsDefault(vehicle, context: context)
     }
 
     private func resetProfile() {

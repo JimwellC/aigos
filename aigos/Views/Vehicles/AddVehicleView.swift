@@ -144,24 +144,39 @@ struct AddVehicleView: View {
             v.efficiencyKmL = kmL
             v.manufacturingYear = year
             v.maintenanceStatus = maintenance
-            if makeDefault { for other in vehicles { other.isDefault = (other.id == v.id) } }
-            try? context.save()
+            if makeDefault {
+                // Fetch-clears-sets-saves once via the single safe path.
+                VehicleProfile.setAsDefault(v, context: context)
+            } else {
+                saveContext()
+            }
             selectedVehicleID = v.id
         } else {
-            let isFirst = vehicles.isEmpty
-            let makeItDefault = makeDefault || isFirst
-            if makeItDefault { for other in vehicles { other.isDefault = false } }
+            let makeItDefault = makeDefault || vehicles.isEmpty
             let vehicle = VehicleProfile(
                 name: trimmedName, type: type, fuelType: fuelType, efficiencyKmL: kmL,
-                isDefault: makeItDefault, manufacturingYear: year, maintenanceStatus: maintenance
+                isDefault: false, manufacturingYear: year, maintenanceStatus: maintenance
             )
             let profile = DrivingProfile(vehicleId: vehicle.id)
             vehicle.drivingProfile = profile
             context.insert(vehicle)
             context.insert(profile)
-            try? context.save()
+            if makeItDefault {
+                // Clears any other default and saves once, atomically.
+                VehicleProfile.setAsDefault(vehicle, context: context)
+            } else {
+                saveContext()
+            }
             selectedVehicleID = vehicle.id
         }
         dismiss()
+    }
+
+    private func saveContext() {
+        do { try context.save() } catch {
+            #if DEBUG
+            print("⚠️ AddVehicleView save failed: \(error)")
+            #endif
+        }
     }
 }
