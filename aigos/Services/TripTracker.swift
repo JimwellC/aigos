@@ -12,6 +12,8 @@
 
 import Foundation
 import CoreLocation
+import UIKit
+import UserNotifications
 
 struct TripSummary {
     let actualDistanceKm: Double
@@ -29,7 +31,7 @@ struct TripSummary {
 final class TripTracker: NSObject, CLLocationManagerDelegate, @unchecked Sendable {
     static let shared = TripTracker()
 
-    enum Status { case idle, requesting, tracking, arrived, denied }
+    enum Status { case idle, requesting, tracking, paused, arrived, denied }
 
     private(set) var status: Status = .idle
     private(set) var distanceKm: Double = 0
@@ -60,8 +62,19 @@ final class TripTracker: NSObject, CLLocationManagerDelegate, @unchecked Sendabl
         manager.distanceFilter = 50                                  // 50 m between updates
         manager.activityType = .automotiveNavigation
         manager.pausesLocationUpdatesAutomatically = true            // auto-pause when parked
+        // FOREGROUND-ONLY (v1.0): no background location mode, so when the app
+        // backgrounds we pause and resume on return.
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(appDidEnterBackground),
+            name: UIApplication.didEnterBackgroundNotification, object: nil)
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(appWillEnterForeground),
+            name: UIApplication.willEnterForegroundNotification, object: nil)
     }
 
+    /// Tracking (including the paused-in-background state) is "live".
+    var isLive: Bool { status == .tracking || status == .arrived || status == .paused }
+    /// Actively receiving updates (not paused).
     var isTracking: Bool { status == .tracking || status == .arrived }
     var fuelL: Double { TripMetrics.fuelLitres(distanceKm: distanceKm, efficiencyKmL: efficiencyKmL) }
     var costPHP: Double { fuelL * pricePerLitre }
@@ -82,10 +95,12 @@ final class TripTracker: NSObject, CLLocationManagerDelegate, @unchecked Sendabl
         self.destCoord = destinationCoord
         self.startDate = Date()
         status = .requesting
-        // Ask for Always only now (opt-in per trip); begin once authorized.
-        manager.requestAlwaysAuthorization()
+        // Foreground-only: "While Using" is enough (usually already granted from the
+        // map picker). Never request "Always" — that path led to the background-mode
+        // crash. Begin once authorized.
+        manager.requestWhenInUseAuthorization()
         switch manager.authorizationStatus {
-        case .authorizedAlways, .authorizedWhenInUse: beginUpdates()
+        case .authorizedWhenInUse, .authorizedAlways: beginUpdates()
         case .denied, .restricted: status = .denied
         default: break   // wait for the authorization callback
         }
@@ -111,20 +126,49 @@ final class TripTracker: NSObject, CLLocationManagerDelegate, @unchecked Sendabl
     func cancel() { stop() }
 
     private func beginUpdates() {
+        // FOREGROUND-ONLY: deliberately do NOT set allowsBackgroundLocationUpdates —
+        // that requires the UIBackgroundModes "location" entitlement and throws
+        // (crashes) without it once permission escalates to "Always". Foreground
+        // location auto-pauses in the background anyway; we handle that explicitly.
         status = .tracking
-        if manager.authorizationStatus == .authorizedAlways {
-            manager.allowsBackgroundLocationUpdates = true
-            manager.showsBackgroundLocationIndicator = true
-        }
         manager.startUpdatingLocation()
         startTimer()
     }
 
     private func stop() {
         manager.stopUpdatingLocation()
-        manager.allowsBackgroundLocationUpdates = false
         timer?.invalidate(); timer = nil
         if status != .denied { status = .idle }
+    }
+
+    // MARK: - Foreground-only background handling
+
+    @objc private func appDidEnterBackground() {
+        guard status == .tracking || status == .arrived else { return }
+        manager.stopUpdatingLocation()      // no background entitlement — pause cleanly
+        currentSpeedKmh = 0
+        status = .paused
+        notifyPaused()
+    }
+
+    @objc private func appWillEnterForeground() {
+        guard status == .paused else { return }
+        status = .tracking
+        manager.startUpdatingLocation()     // resume automatically
+        lastLocation = nil                  // don't count the gap as a giant jump
+        UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ["trip-paused"])
+    }
+
+    /// A quiet nudge to reopen the app (provisional auth = no permission prompt).
+    private func notifyPaused() {
+        let center = UNUserNotificationCenter.current()
+        center.requestAuthorization(options: [.alert, .provisional]) { granted, _ in
+            guard granted else { return }
+            let content = UNMutableNotificationContent()
+            content.title = "Trip tracking paused"
+            content.body = "Reopen aigos to keep tracking your trip."
+            center.add(UNNotificationRequest(identifier: "trip-paused", content: content, trigger: nil))
+        }
     }
 
     private func reset() {
@@ -135,7 +179,7 @@ final class TripTracker: NSObject, CLLocationManagerDelegate, @unchecked Sendabl
     private func startTimer() {
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-            guard let self, self.isTracking else { return }
+            guard let self, self.isLive else { return }
             self.elapsedSeconds = Int(Date().timeIntervalSince(self.startDate))
         }
     }

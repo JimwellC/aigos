@@ -64,6 +64,11 @@ struct ResultSheet: View {
                     }
                     .buttonStyle(.plain)
 
+                    Text("Keep aigos open while driving to track your trip.")
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.55))
+                        .multilineTextAlignment(.center)
+
                     PrimaryButton(title: "Done", action: onDone)
                 }
             }

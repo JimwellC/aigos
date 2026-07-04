@@ -116,7 +116,7 @@ struct CalculateView: View {
 
             ScrollView {
                 VStack(spacing: Space.lg) {
-                    Color.clear.frame(height: tracker.isTracking ? 220 : 0)   // room for the banner
+                    Color.clear.frame(height: tracker.isLive ? 220 : 0)   // room for the banner
                     header
                     vehicleCard
                     routeCard
@@ -129,14 +129,14 @@ struct CalculateView: View {
             }
             .scrollDismissesKeyboard(.interactively)
 
-            if tracker.isTracking {
+            if tracker.isLive {
                 TripTrackingBanner(tracker: tracker, onEnd: endTracking)
                     .padding(.horizontal, Space.screen)
                     .padding(.top, Space.md)
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
-        .animation(.spring(response: 0.4), value: tracker.isTracking)
+        .animation(.spring(response: 0.4), value: tracker.isLive)
         .sheet(isPresented: $showingComparison) {
             if let s = lastSummary {
                 TripComparisonView(
@@ -151,7 +151,7 @@ struct CalculateView: View {
         .alert("Location needed", isPresented: $showingTrackDenied) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("Allow \u{201C}Always\u{201D} location in Settings to track your trip, or just drop pins as usual.")
+            Text("Allow location for aigos in Settings to track your trip, or just drop pins as usual.")
         }
         .sheet(isPresented: $showingVehiclePicker) {
             VehiclePicker(selectedVehicleID: $selectedVehicleID)
@@ -715,7 +715,7 @@ struct CalculateView: View {
     }
 
     private func endTracking() {
-        guard tracker.isTracking else { return }
+        guard tracker.isLive else { return }
         let summary = tracker.finish()
         Haptics.tap(.medium)
         if let trip = lastTrip {

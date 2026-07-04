@@ -46,7 +46,14 @@ struct TripTrackingBanner: View {
             if tracker.status == .arrived {
                 Text("Looks like you've arrived 🎉")
                     .rounded(13, weight: .semibold).foregroundStyle(Color.aigosAmberLight)
+            } else if tracker.status == .paused {
+                Text("⏸ Paused — reopen aigos to keep tracking")
+                    .rounded(13, weight: .semibold).foregroundStyle(Color.aigosAmberLight)
             }
+
+            Text("📱 Keep aigos open while driving to track your trip.")
+                .rounded(11, weight: .medium).foregroundStyle(.white.opacity(0.6))
+                .multilineTextAlignment(.center)
 
             Button(action: onEnd) {
                 HStack(spacing: 6) { Image(systemName: "stop.fill"); Text("End Trip") }
