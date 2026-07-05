@@ -29,7 +29,8 @@ struct TalkToAigosView: View {
     @State private var messages: [ChatMessage] = []
     @State private var input = ""
     @State private var showingGate = false
-    @State private var lastQuery: TripQuery?   // for conversational follow-ups
+    @State private var convo = TalkContext()             // conversation memory (in-memory only)
+    @State private var pendingSuggestion: VehicleAnswer? // last offered vehicle, for "yes/use it"
 
     private let suggestions = [
         "Manila to Batangas",
@@ -52,6 +53,8 @@ struct TalkToAigosView: View {
         }
         .sheet(isPresented: $showingGate) { AIGateView() }
         .onAppear(perform: greetIfNeeded)
+        // Conversation memory is per-session — clear it when the sheet closes.
+        .onDisappear { convo.reset(); pendingSuggestion = nil }
     }
 
     // MARK: - Header
@@ -249,18 +252,13 @@ struct TalkToAigosView: View {
 
         // A full trip in the message starts (and remembers) a new context.
         if let query = TripQueryParser.parse(text, vehicles: vehicles, personalPlaces: personalPlaces) {
-            lastQuery = query
             return estimate(for: query)
         }
-        // Otherwise treat it as a follow-up modifying the previous trip.
-        if let prev = lastQuery {
-            let hints = TripQueryParser.hints(from: text)
-            let vehicleName = matchedVehicleName(in: text)
-            if FollowUp.isFollowUp(text, hints: hints, vehicleChanged: vehicleName != nil) {
-                let merged = FollowUp.merge(previous: prev, hints: hints, vehicleName: vehicleName)
-                lastQuery = merged
-                return estimate(for: merged)
-            }
+        // Otherwise treat it as a conversational follow-up on the remembered
+        // trip/vehicle (condition changes, round trip, split, fuel swap, "how far?",
+        // "cheaper?", confirmations — English + Tagalog).
+        if let followUp = followUpReply(text) {
+            return followUp
         }
         // "What's my mileage?" → the default vehicle's efficiency in the user's unit.
         if let mine = myMileageReply(text) {
@@ -270,6 +268,14 @@ struct TalkToAigosView: View {
         // "what SUVs are fuel efficient?". Efficiency figures follow the user's unit.
         if let answer = VehicleDatabase.answer(for: text, unit: fuelUnit) {
             let suggestion = (answer.efficiencyKmL != nil || answer.offersAddVehicle) ? answer : nil
+            // Remember the vehicle layer so "what about the 1.5?" / "diesel version"
+            // can follow up on it.
+            if let entry = VehicleDatabase.find(text) {
+                convo.lastVehicleModel = entry.displayName
+                convo.lastTopic = .vehicle
+                convo.updatedAt = Date()
+            }
+            pendingSuggestion = suggestion
             return ChatMessage(role: .aigos, text: answer.text, vehicleSuggestion: suggestion)
         }
         // Nothing matched — nudge to the calculator, or redirect if off-topic.
@@ -461,8 +467,8 @@ struct TalkToAigosView: View {
 
         // Resolve the trip: a full parse of this message, else the last trip.
         let query = TripQueryParser.parse(text, vehicles: vehicles, personalPlaces: personalPlaces)
-        let originName = query?.origin ?? lastQuery?.origin
-        let destName = query?.destination ?? lastQuery?.destination
+        let originName = query?.origin ?? convo.tripQuery?.origin
+        let destName = query?.destination ?? convo.tripQuery?.destination
         guard let originName, let destName,
               let route = PlaceResolver.route(from: originName, to: destName, personalPlaces: personalPlaces) else {
             return "Tell me the trip too — like “Manila to Baguio on one tank” — and I'll check if you can make it without refueling."
@@ -571,64 +577,263 @@ struct TalkToAigosView: View {
         "PHP \(Int(lo).formatted()) – \(Int(hi).formatted()) (estimated)"
     }
 
-    private func estimate(for query: TripQuery) -> ChatMessage {
-        // Cross-island endpoints can't be driven — hand off to the sea/air breakdown.
-        if let multi = interIslandMessage(for: query) { return multi }
-        // Personal shortcuts (Home/Office/…) resolve before the gazetteer.
-        guard let route = PlaceResolver.route(from: query.origin, to: query.destination, personalPlaces: personalPlaces) else {
-            return ChatMessage(role: .aigos, text: "I don't know that location yet. Try typing it in the calculator and pick from the suggestions.")
-        }
+    /// The numeric result of estimating a trip query (+ the resolved vehicle).
+    private struct TripEstimate {
+        let est: FuelEstimate
+        let distanceKm: Double
+        let vehicle: VehicleProfile
+        let fuelType: FuelType
+    }
 
+    /// Resolve + estimate a trip query, optionally overriding the fuel grade (for a
+    /// "what if diesel?" follow-up). Returns nil when the route or vehicle is unknown.
+    private func computeEstimate(for query: TripQuery, fuelOverride: FuelType? = nil) -> TripEstimate? {
+        guard let route = PlaceResolver.route(from: query.origin, to: query.destination, personalPlaces: personalPlaces) else { return nil }
         let vehicle = vehicles.first { $0.name == query.vehicleName }
             ?? vehicles.first(where: \.isDefault)
             ?? vehicles.first
-        guard let vehicle else {
-            return ChatMessage(role: .aigos, text: "Add a vehicle first and I can estimate this trip for you.")
-        }
+        guard let vehicle else { return nil }
 
         let profile = vehicle.drivingProfile
         let roadType = profile?.defaultRoadType ?? .highway
         let rush = query.rushHour ?? false
-        // Rush hour on city roads implies heavy traffic (Section 2 rule).
         let traffic = query.traffic ?? ((rush && roadType == .city) ? .heavy : .light)
         let acOn = query.acOn ?? (profile?.usesACByDefault ?? true)
         let load = query.load ?? .light
-
-        let price = PriceService.price(for: vehicle.fuelType, in: context)
+        let fuelType = fuelOverride ?? vehicle.fuelType
+        let price = PriceService.price(for: fuelType, in: context)
         let est = CalculationEngine.estimate(
             distanceKm: route.distanceKm,
             baseEfficiencyKmL: vehicle.efficiencyKmL,
             fuelPricePerLitre: price,
             avgHighwaySpeedKmh: profile?.avgHighwaySpeedKmh ?? 90,
             avgCitySpeedKmh: profile?.avgCitySpeedKmh ?? 40,
-            acInUse: acOn,
-            roadType: roadType,
-            traffic: traffic,
-            load: load,
-            ageYears: vehicle.ageYears(),
-            maintenance: vehicle.maintenanceStatus
+            acInUse: acOn, roadType: roadType, traffic: traffic, load: load,
+            ageYears: vehicle.ageYears(), maintenance: vehicle.maintenanceStatus
         )
+        return TripEstimate(est: est, distanceKm: route.distanceKm, vehicle: vehicle, fuelType: fuelType)
+    }
 
+    /// Human list of the non-default conditions on a query ("heavy traffic, no AC").
+    private func conditionsText(for query: TripQuery) -> String {
         var conditions: [String] = []
-        if traffic != .light { conditions.append("\(traffic.label.lowercased()) traffic") }
-        if load != .light { conditions.append(load.label.lowercased()) }
+        if let t = query.traffic, t != .light { conditions.append("\(t.label.lowercased()) traffic") }
+        if let l = query.load, l != .light { conditions.append(l.label.lowercased()) }
         if query.acOn == true { conditions.append("AC on") }
         if query.acOn == false { conditions.append("no AC") }
-        if rush { conditions.append("rush hour") }
-        let condText = conditions.isEmpty ? "" : " with \(conditions.joined(separator: ", "))"
+        if query.rushHour == true { conditions.append("rush hour") }
+        return conditions.isEmpty ? "" : " with \(conditions.joined(separator: ", "))"
+    }
 
-        let draft = CalculatorDraft(
-            origin: query.origin.capitalized,
-            destination: query.destination.capitalized,
-            distanceKm: route.distanceKm,
-            vehicleId: vehicle.id,
+    private func draft(for query: TripQuery, distanceKm: Double, vehicle: VehicleProfile) -> CalculatorDraft {
+        let rush = query.rushHour ?? false
+        let roadType = vehicle.drivingProfile?.defaultRoadType ?? .highway
+        return CalculatorDraft(
+            origin: query.origin.capitalized, destination: query.destination.capitalized,
+            distanceKm: distanceKm, vehicleId: vehicle.id,
             traffic: query.traffic ?? ((rush && roadType == .city) ? .heavy : nil),
-            acOn: query.acOn,
-            rushHour: query.rushHour,
-            load: query.load
-        )
-        let text = "\(query.origin.capitalized) → \(query.destination.capitalized) is ≈\(route.distanceKm.oneDecimal) km\(condText). In your \(vehicle.name), that's roughly \(est.estimatedCost.phpString)."
-        return ChatMessage(role: .aigos, text: text, result: ChatResult(draft: draft, costText: est.estimatedCost.phpString))
+            acOn: query.acOn, rushHour: query.rushHour, load: query.load)
+    }
+
+    /// Estimate a freshly-parsed trip and REMEMBER it as the conversation context.
+    private func estimate(for query: TripQuery) -> ChatMessage {
+        if let multi = interIslandMessage(for: query) { return multi }
+        guard let r = computeEstimate(for: query) else {
+            if PlaceResolver.route(from: query.origin, to: query.destination, personalPlaces: personalPlaces) == nil {
+                return ChatMessage(role: .aigos, text: "I don't know that location yet. Try typing it in the calculator and pick from the suggestions.")
+            }
+            return ChatMessage(role: .aigos, text: "Add a vehicle first and I can estimate this trip for you.")
+        }
+        rememberTrip(query, r)
+        let condText = conditionsText(for: query)
+        let text = "\(query.origin.capitalized) → \(query.destination.capitalized) is ≈\(r.distanceKm.oneDecimal) km\(condText). In your \(r.vehicle.name), that's roughly \(r.est.estimatedCost.phpString)."
+        return ChatMessage(role: .aigos, text: text,
+                           result: ChatResult(draft: draft(for: query, distanceKm: r.distanceKm, vehicle: r.vehicle), costText: r.est.estimatedCost.phpString))
+    }
+
+    /// Record the trip layer of the conversation context after an estimate.
+    private func rememberTrip(_ query: TripQuery, _ r: TripEstimate) {
+        // Store the resolved vehicle name so follow-ups keep the same car.
+        convo.tripQuery = TripQuery(origin: query.origin, destination: query.destination, vehicleName: r.vehicle.name,
+                                    traffic: query.traffic, acOn: query.acOn, rushHour: query.rushHour, load: query.load)
+        convo.lastDistanceKm = r.distanceKm
+        convo.lastCostPHP = r.est.estimatedCost
+        convo.lastFuelType = r.fuelType
+        convo.lastTopic = .trip
+        convo.updatedAt = Date()
+    }
+
+    // MARK: - Conversational follow-ups (uses TalkContext memory)
+
+    /// Handle a message that isn't a full fresh trip by interpreting it against the
+    /// remembered trip/vehicle. Returns nil to let the normal pipeline continue.
+    private func followUpReply(_ text: String) -> ChatMessage? {
+        let kind = FollowUp.classify(text)
+
+        switch kind {
+        case .reset:
+            convo.reset(); pendingSuggestion = nil
+            return ChatMessage(role: .aigos, text: "Okay, fresh start 🚙 — what trip or car should I check?")
+        case .confirmYes:
+            return confirmYesReply()
+        case .confirmNo:
+            pendingSuggestion = nil
+            return ChatMessage(role: .aigos, text: "No worries — want to tweak the trip or ask something else?")
+        case .acknowledge:
+            return ChatMessage(role: .aigos, text: "👍 Anytime! Ask me another trip whenever you like.")
+        default:
+            break
+        }
+
+        // Vehicle-layer follow-up ("what about the 1.5?", "diesel version") — only
+        // when the last thing discussed was a vehicle.
+        if convo.lastTopic == .vehicle, let v = vehicleVariantReply(text) { return v }
+
+        // Everything else needs a remembered trip.
+        guard let prev = convo.tripQuery, let prevCost = convo.lastCostPHP else {
+            if let v = vehicleVariantReply(text) { return v }   // maybe a vehicle follow-up
+            if kind == .none { return nil }                     // let the pipeline continue
+            return ChatMessage(role: .aigos, text: "Tell me a route first — like “Manila to Baguio” — and I'll adjust it from there.")
+        }
+
+        switch kind {
+        case .roundTrip:              return roundTripReply(prev, prevCost)
+        case .perPerson(let n):       return perPersonReply(prev, prevCost, count: n)
+        case .howFar:                 return howFarReply(prev)
+        case .cheaper:                return cheaperReply(prev)
+        case .swapFuel(let fuel):     return swapFuelReply(prev, prevCost, fuel: fuel)
+        case .modifyConditions(let hints):
+            return modifyReply(prev, prevCost, hints: hints, vehicleText: text)
+        case .repeatLast:
+            return modifyReply(prev, prevCost, hints: TripHints(), vehicleText: text)
+        case .none:
+            return nil
+        default:
+            return nil
+        }
+    }
+
+    /// A small "↩ Following up on: …" header shown above every follow-up answer,
+    /// plus a gentle nudge if the context has gone stale (>5 min).
+    private func followUpHeader() -> String {
+        guard let label = convo.routeLabel else { return "" }
+        var h = "↩ Following up on: \(label)"
+        if convo.isStale(now: Date()) {
+            h += "\n(Still on this trip? Say “new trip” to start over.)"
+        }
+        return h + "\n\n"
+    }
+
+    /// Show the before → after difference for a re-estimated trip.
+    private func diffBody(label: String, from oldCost: Double, to newCost: Double, note: String? = nil) -> String {
+        let delta = newCost - oldCost
+        let sign = delta > 0 ? "+" : (delta < 0 ? "−" : "±")
+        var s = "\(convo.routeLabel ?? "Trip")\nBefore: \(oldCost.phpString)\n\(label): \(newCost.phpString)"
+        if abs(delta) >= 0.005 {
+            s += "\nChange: \(sign)\(abs(delta).phpString)"
+        }
+        if let note { s += "\n\n\(note)" }
+        return s
+    }
+
+    private func modifyReply(_ prev: TripQuery, _ prevCost: Double, hints: TripHints, vehicleText: String) -> ChatMessage? {
+        let vehicleName = matchedVehicleName(in: vehicleText)
+        let merged = FollowUp.merge(previous: prev, hints: hints, vehicleName: vehicleName)
+        guard let r = computeEstimate(for: merged) else { return nil }
+        rememberTrip(merged, r)
+        let changed = conditionsText(for: merged)   // already begins with " with …"
+        let label = changed.isEmpty ? "Now" : "Now\(changed)"
+        let body = diffBody(label: label, from: prevCost, to: r.est.estimatedCost)
+        return ChatMessage(role: .aigos, text: followUpHeader() + body,
+                           result: ChatResult(draft: draft(for: merged, distanceKm: r.distanceKm, vehicle: r.vehicle),
+                                              costText: r.est.estimatedCost.phpString))
+    }
+
+    private func swapFuelReply(_ prev: TripQuery, _ prevCost: Double, fuel: FuelType) -> ChatMessage {
+        guard let r = computeEstimate(for: prev, fuelOverride: fuel) else {
+            return ChatMessage(role: .aigos, text: "I couldn't recompute that — tell me the trip again?")
+        }
+        convo.lastCostPHP = r.est.estimatedCost
+        convo.lastFuelType = fuel
+        convo.updatedAt = Date()
+        let body = diffBody(label: "With \(fuel.label)", from: prevCost, to: r.est.estimatedCost,
+                            note: "Fuel price used: PHP \(PriceService.price(for: fuel, in: context).clean)/L. (Your car's own grade is \(r.vehicle.fuelType.label).)")
+        return ChatMessage(role: .aigos, text: followUpHeader() + body)
+    }
+
+    private func roundTripReply(_ prev: TripQuery, _ prevCost: Double) -> ChatMessage {
+        let total = prevCost * 2
+        convo.lastCostPHP = total; convo.updatedAt = Date()
+        let body = "\(convo.routeLabel ?? "Trip") — round trip\nOne way: \(prevCost.phpString)\nRound trip (×2): \(total.phpString)\nChange: +\(prevCost.phpString)\n\nFuel only — tolls (if any) also apply both ways."
+        return ChatMessage(role: .aigos, text: followUpHeader() + body)
+    }
+
+    private func perPersonReply(_ prev: TripQuery, _ prevCost: Double, count: Int?) -> ChatMessage {
+        // Head-count: explicit → remembered → the load setting's implied pax → 2.
+        let people = count ?? convo.passengers ?? impliedPax(prev.load) ?? 2
+        convo.passengers = people
+        convo.updatedAt = Date()
+        let each = prevCost / Double(max(people, 1))
+        let body = "\(convo.routeLabel ?? "Trip") — split \(people) ways\nTotal: \(prevCost.phpString)\nPer person: \(each.phpString) each"
+        return ChatMessage(role: .aigos, text: followUpHeader() + body)
+    }
+
+    private func impliedPax(_ load: VehicleLoad?) -> Int? {
+        switch load {
+        case .moderate: return 4
+        case .full: return 5
+        default: return nil
+        }
+    }
+
+    private func howFarReply(_ prev: TripQuery) -> ChatMessage {
+        let km = convo.lastDistanceKm ?? PlaceResolver.route(from: prev.origin, to: prev.destination, personalPlaces: personalPlaces)?.distanceKm
+        guard let km else {
+            return ChatMessage(role: .aigos, text: "I don't have that route's distance handy — tell me the trip again?")
+        }
+        // Rough drive time at a blended ~55 km/h door-to-door average.
+        let hours = km / 55.0
+        let timeText = hours < 1 ? "about \(Int((hours * 60).rounded())) min" : "about \(hours.oneDecimal) hrs"
+        return ChatMessage(role: .aigos, text: followUpHeader() + "\(convo.routeLabel ?? "That trip") is ≈\(km.oneDecimal) km — roughly \(timeText) of driving (varies with traffic).")
+    }
+
+    private func cheaperReply(_ prev: TripQuery) -> ChatMessage {
+        var tips: [String] = []
+        if prev.acOn != false { tips.append("• Ease off the aircon in slow traffic — saves ~12%.") }
+        if (prev.traffic ?? .light) != .light || prev.rushHour == true {
+            tips.append("• Travel off-peak — rush-hour crawl burns 25%+ more.")
+        }
+        if (prev.load ?? .light) != .light { tips.append("• Lighten the load — every kilo costs fuel.") }
+        tips.append("• Keep to 80–100 km/h on the highway (the efficiency sweet spot).")
+        tips.append("• Stay on top of PMS and tyre pressure.")
+        let body = "\(convo.routeLabel ?? "This trip") — ways to spend less:\n" + tips.prefix(4).joined(separator: "\n")
+        return ChatMessage(role: .aigos, text: followUpHeader() + body)
+    }
+
+    /// A vehicle-layer follow-up: combine the remembered model with the new text
+    /// ("Vios" + "the 1.5" → "Vios 1.5") and ask the database.
+    private func vehicleVariantReply(_ text: String) -> ChatMessage? {
+        guard let model = convo.lastVehicleModel else { return nil }
+        // Only treat as a variant follow-up if it reads like one (a variant/fuel cue).
+        let t = text.lowercased()
+        let cues = ["1.", "2.", "diesel", "gas", "petrol", "variant", "version", "manual",
+                    "automatic", "what about", "how about", "the ", "turbo", "hybrid"]
+        guard cues.contains(where: { t.contains($0) }) else { return nil }
+        guard let ans = VehicleDatabase.answer(for: "\(model) \(text)", unit: fuelUnit) else { return nil }
+        convo.lastTopic = .vehicle; convo.updatedAt = Date()
+        pendingSuggestion = (ans.efficiencyKmL != nil || ans.offersAddVehicle) ? ans : nil
+        return ChatMessage(role: .aigos, text: "↩ Following up on: \(model)\n\n\(ans.text)", vehicleSuggestion: pendingSuggestion)
+    }
+
+    /// "yes" / "oo" / "use it" → apply the last offered vehicle suggestion.
+    private func confirmYesReply() -> ChatMessage {
+        if let s = pendingSuggestion, s.efficiencyKmL != nil || s.offersAddVehicle {
+            return ChatMessage(role: .aigos, text: "Great — tap “Use this efficiency” above and I'll set it up in the calculator.", vehicleSuggestion: s)
+        }
+        if convo.hasTrip {
+            return ChatMessage(role: .aigos, text: "👍 Tap “Open in Calculator” on the trip above to run and save it.")
+        }
+        return ChatMessage(role: .aigos, text: "Sure — what would you like me to do? Ask a trip or a car, and I'll help.")
     }
 }
 
