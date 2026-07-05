@@ -384,8 +384,13 @@ struct TalkToAigosView: View {
     /// "How's my driving?" → the fuel-efficiency score + breakdown.
     private func drivingReply(_ text: String) -> String? {
         let q = text.lowercased()
+        // Match driving-SCORE questions only — NOT generic "how much to drive…" trips.
+        // The old `(how && driv)` clause stole trip queries (incl. Tagalog phrasings
+        // the normalizer rewrites to "how much to drive…").
         guard q.contains("my driving") || q.contains("driving score") || q.contains("fuel score")
-            || (q.contains("how") && q.contains("driv")) || (q.contains("score") && q.contains("driv")) else { return nil }
+            || q.contains("how's my driving") || q.contains("how is my driving")
+            || q.contains("how am i driving") || q.contains("rate my driving")
+            || (q.contains("score") && q.contains("driv")) else { return nil }
         guard let v = defaultVehicle() else { return "Add a vehicle and take a few trips — then I can score your driving." }
         let trips = tripRecords.filter { $0.vehicleName == v.name }
         let s = DrivingScorer.score(for: v, trips: trips, trackedTrips: trackedTrips)
