@@ -28,4 +28,26 @@ enum PriceService {
         let all = (try? context.fetch(FetchDescriptor<FuelPriceCache>())) ?? []
         return all.map(\.lastUpdated).max()
     }
+
+    /// Set a fuel price and mark it user-edited (mirrors the Prices-tab pencil edit:
+    /// `updatedBy = "user"`, `lastUpdated = now`). Creates the row if missing.
+    /// Returns whether it saved.
+    @discardableResult
+    static func update(_ fuelType: FuelType, to price: Double, in context: ModelContext) -> Bool {
+        if let row = cache(for: fuelType, in: context) {
+            row.pricePHP = price
+            row.updatedBy = "user"
+            row.lastUpdated = Date()
+        } else {
+            context.insert(FuelPriceCache(fuelType: fuelType, pricePHP: price,
+                                          lastUpdated: Date(), updatedBy: "user"))
+        }
+        do { try context.save(); return true }
+        catch {
+            #if DEBUG
+            print("⚠️ PriceService.update failed: \(error)")
+            #endif
+            return false
+        }
+    }
 }

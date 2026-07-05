@@ -31,6 +31,7 @@ struct TalkToAigosView: View {
     @State private var showingGate = false
     @State private var convo = TalkContext()             // conversation memory (in-memory only)
     @State private var pendingSuggestion: VehicleAnswer? // last offered vehicle, for "yes/use it"
+    @State private var priceBatch: PriceBatch?           // in-progress "update all prices" flow
 
     private let suggestions = [
         "Manila to Batangas",
@@ -100,7 +101,8 @@ struct TalkToAigosView: View {
                         }, onUseVehicle: { vehicle in
                             appState.addVehicle(vehicle)
                             dismiss()
-                        })
+                        }, onConfirmPrice: { id, p in confirmPrice(messageId: id, p) },
+                        onCancelPrice: { id, p in cancelPrice(messageId: id, p) })
                         .id(message.id)
                         .transition(.opacity)   // simple calm fade — no slide
                     }
@@ -208,6 +210,9 @@ struct TalkToAigosView: View {
     }
 
     private func reply(to rawText: String) -> ChatMessage {
+        // A batch "update all prices" flow is in progress → every message is an answer.
+        if priceBatch != nil { return batchReply(rawText) }
+
         // Rewrite common Filipino phrasings to the English patterns below.
         let text = TalkNormalizer.normalize(rawText)
 
@@ -220,6 +225,10 @@ struct TalkToAigosView: View {
         if let fuel = fuelLogReply(text) { return ChatMessage(role: .aigos, text: fuel) }
         if let report = reportReply(text) { return ChatMessage(role: .aigos, text: report) }
         if let acc = accuracyReply(text) { return ChatMessage(role: .aigos, text: acc) }
+
+        // Chat-based fuel-price editing: check current prices, update one, or start a
+        // batch update. Checked after fuel-log so a fill-up isn't mistaken for a price.
+        if let price = priceReply(text) { return price }
 
         // Feature 4: driving score, personalized tips, cost-trend analysis.
         if let driving = drivingReply(text) { return ChatMessage(role: .aigos, text: driving) }
@@ -835,6 +844,138 @@ struct TalkToAigosView: View {
         }
         return ChatMessage(role: .aigos, text: "Sure — what would you like me to do? Ask a trip or a car, and I'll help.")
     }
+
+    // MARK: - Fuel-price editing via chat
+
+    /// Route a fuel-price message: check / update (with confirmation) / start batch.
+    private func priceReply(_ text: String) -> ChatMessage? {
+        switch PriceChatParser.parse(text) {
+        case .none:
+            return nil
+        case .batch:
+            return startPriceBatch()
+        case .check:
+            return priceCheckMessage()
+        case .update(let fuel, let newPrice):
+            let old = PriceService.price(for: fuel, in: context)
+            if abs(old - newPrice) < 0.001 {
+                return ChatMessage(role: .aigos, text: "\(fuel.label) is already PHP \(newPrice.clean) — no change needed.")
+            }
+            let pending = PendingPriceUpdate(fuelType: fuel, oldPrice: old, newPrice: newPrice)
+            return ChatMessage(role: .aigos,
+                               text: "Update \(fuel.label) from PHP \(old.clean) to PHP \(newPrice.clean)?",
+                               priceConfirm: pending)
+        case .updateInvalidPrice(let fuel, let bad):
+            let hint = bad > PriceChatParser.maxPrice
+                ? "Did you mean PHP \(String(format: "%.0f", bad / 10))?"
+                : "PH pump prices are usually PHP 40–200/L."
+            return ChatMessage(role: .aigos, text: "Hmm, PHP \(bad.clean)/L for \(fuel.label) seems off. \(hint) Please tell me the price again.")
+        case .updateMissingPrice(let fuel):
+            return ChatMessage(role: .aigos, text: "What's the new price for \(fuel.label)? (current: PHP \(PriceService.price(for: fuel, in: context).clean))")
+        case .updateUnknownFuel:
+            return ChatMessage(role: .aigos, text: "I don't recognise that fuel type. Try: Unleaded 91, Premium 95, Premium 97, Diesel, Premium Diesel, or E-Gasoline.")
+        }
+    }
+
+    /// The current cached prices + where to find live figures + a staleness nudge.
+    private func priceCheckMessage() -> ChatMessage {
+        let last = PriceService.latestUpdate(in: context)
+        var head = "⛽ Current cached prices"
+        if let last { head += " (updated \(last.formatted(date: .abbreviated, time: .omitted)))" }
+        var lines = [head, ""]
+        for f in FuelType.allCases {
+            lines.append("\(f.label): PHP \(PriceService.price(for: f, in: context).clean)")
+        }
+        lines.append("")
+        lines.append("For live prices, check fuelprice.ph or gaswatchph.com. Update any anytime by chatting (e.g. “set diesel to 69.10”) or in the Prices tab.")
+        if let reminder = PriceChatParser.staleReminder(lastUpdated: last, now: Date()) {
+            lines.append(""); lines.append(reminder)
+        }
+        return ChatMessage(role: .aigos, text: lines.joined(separator: "\n"))
+    }
+
+    /// Apply a confirmed single-price update and acknowledge.
+    private func confirmPrice(messageId: UUID, _ p: PendingPriceUpdate) {
+        clearPriceConfirm(messageId)
+        PriceService.update(p.fuelType, to: p.newPrice, in: context)
+        Haptics.success()   // confirmation the price was saved (a completion)
+        appendAigos("✅ \(p.fuelType.label) updated to PHP \(p.newPrice.clean).\n\nAll future calculations will use the new price. You can edit anytime in the Prices tab.")
+    }
+
+    private func cancelPrice(messageId: UUID, _ p: PendingPriceUpdate) {
+        clearPriceConfirm(messageId)
+        appendAigos("No change — \(p.fuelType.label) stays at PHP \(p.oldPrice.clean).")
+    }
+
+    /// Remove the pending confirmation from a message so its buttons disappear.
+    private func clearPriceConfirm(_ id: UUID) {
+        if let i = messages.firstIndex(where: { $0.id == id }) {
+            messages[i].priceConfirm = nil
+        }
+    }
+
+    private func appendAigos(_ text: String) {
+        withAnimation(.easeOut(duration: 0.2)) {
+            messages.append(ChatMessage(role: .aigos, text: text))
+        }
+    }
+
+    // MARK: - Batch price update ("update all prices")
+
+    private func startPriceBatch() -> ChatMessage {
+        priceBatch = PriceBatch(fuels: FuelType.allCases)
+        let f = FuelType.allCases[0]
+        return ChatMessage(role: .aigos, text: "Sure! Let's update all six. What's the new \(f.label) price? (current: PHP \(PriceService.price(for: f, in: context).clean))\n\nSay a number, “skip” to keep it, or “cancel” to stop.")
+    }
+
+    private func batchReply(_ text: String) -> ChatMessage {
+        guard var batch = priceBatch, let fuel = batch.current else {
+            priceBatch = nil
+            return ChatMessage(role: .aigos, text: "All done with prices. What else can I help with?")
+        }
+        switch PriceChatParser.batchAnswer(text) {
+        case .cancel:
+            let msg = batchSummary(batch, cancelled: true)
+            priceBatch = nil
+            return msg
+        case .skip:
+            batch.index += 1
+            return advanceBatch(&batch)
+        case .invalid(let v):
+            priceBatch = batch
+            return ChatMessage(role: .aigos, text: "PHP \(v.clean) seems off for \(fuel.label) — give a price between 40 and 200, or say “skip”.")
+        case .unclear:
+            priceBatch = batch
+            return ChatMessage(role: .aigos, text: "Just a number for \(fuel.label) please (current: PHP \(PriceService.price(for: fuel, in: context).clean)), or “skip” / “cancel”.")
+        case .price(let v):
+            PriceService.update(fuel, to: v, in: context)
+            batch.updates.append(PriceBatch.Change(fuel: fuel, price: v))
+            batch.index += 1
+            return advanceBatch(&batch)
+        }
+    }
+
+    private func advanceBatch(_ batch: inout PriceBatch) -> ChatMessage {
+        if let next = batch.current {
+            priceBatch = batch
+            return ChatMessage(role: .aigos, text: "Got it. \(next.label)? (current: PHP \(PriceService.price(for: next, in: context).clean))")
+        }
+        let msg = batchSummary(batch, cancelled: false)
+        priceBatch = nil
+        return msg
+    }
+
+    private func batchSummary(_ batch: PriceBatch, cancelled: Bool) -> ChatMessage {
+        guard !batch.updates.isEmpty else {
+            return ChatMessage(role: .aigos, text: cancelled ? "Okay, stopped — no prices changed." : "No prices changed.")
+        }
+        if !cancelled { Haptics.success() }   // batch completion
+        var lines = [cancelled ? "Stopped. Prices updated so far:" : "✅ All done! Prices updated:"]
+        for c in batch.updates { lines.append("\(c.fuel.label): PHP \(c.price.clean)") }
+        lines.append("")
+        lines.append("You can fine-tune any of these in the Prices tab.")
+        return ChatMessage(role: .aigos, text: lines.joined(separator: "\n"))
+    }
 }
 
 // MARK: - Model
@@ -844,6 +985,22 @@ struct ChatResult: Equatable {
     let costText: String
 }
 
+/// A single fuel-price change awaiting the user's Confirm/Cancel tap.
+struct PendingPriceUpdate: Equatable {
+    let fuelType: FuelType
+    let oldPrice: Double
+    let newPrice: Double
+}
+
+/// State for the sequential "update all prices" flow.
+struct PriceBatch {
+    struct Change: Equatable { let fuel: FuelType; let price: Double }
+    let fuels: [FuelType]
+    var index: Int = 0
+    var updates: [Change] = []
+    var current: FuelType? { index < fuels.count ? fuels[index] : nil }
+}
+
 struct ChatMessage: Identifiable {
     enum Role { case user, aigos }
     let id = UUID()
@@ -851,6 +1008,7 @@ struct ChatMessage: Identifiable {
     let text: String
     var result: ChatResult? = nil
     var vehicleSuggestion: VehicleAnswer? = nil
+    var priceConfirm: PendingPriceUpdate? = nil   // non-nil → show Confirm/Cancel
 }
 
 // MARK: - Bubble
@@ -859,6 +1017,8 @@ private struct ChatBubble: View {
     let message: ChatMessage
     let onOpen: (CalculatorDraft) -> Void
     let onUseVehicle: (VehicleDraft) -> Void
+    var onConfirmPrice: (UUID, PendingPriceUpdate) -> Void = { _, _ in }
+    var onCancelPrice: (UUID, PendingPriceUpdate) -> Void = { _, _ in }
 
     var body: some View {
         HStack {
@@ -889,6 +1049,13 @@ private struct ChatBubble: View {
 
                 if let s = message.vehicleSuggestion {
                     vehicleButtons(for: s)
+                }
+
+                if let p = message.priceConfirm {
+                    HStack(spacing: Space.sm) {
+                        pillButton("Confirm", filled: true) { onConfirmPrice(message.id, p) }
+                        pillButton("Cancel", filled: false) { onCancelPrice(message.id, p) }
+                    }
                 }
             }
             .padding(Space.md)
