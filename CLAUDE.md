@@ -25,23 +25,35 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Multi-modal / cross-island trips (fixes the "Angeles → Davao impossible land distance" bug):** `IslandResolver` maps a place to its drivable **landmass** via `Resources/IslandDatabase.json` (province → island, plus city overrides for separate islands inside a mainland province — Boracay/Siargao/Samal; bridged islands like Leyte↔Samar and Mactan↔Cebu count as one). `IslandResolver.isCrossIsland(a,b)` is true only when both resolve to *different* landmasses (unknown places never block). `TravelRoutes` loads `Resources/FerryDatabase.json` + `FlightDatabase.json` (typical domestic routes/fares as **reference estimates** — 2GO/OceanJet/FastCat ferries, PAL/Cebu Pacific/AirAsia flights) with a bundled `disclaimer`. **`CalculateView`** blocks Calculate when the two picked places are cross-island (`crossIsland`) and shows a "Sea or air travel required" banner → **`TalkToAigosView`**. Talk's `crossIslandReply`/`interIslandMessage` (checked before the land intents) returns the full breakdown: land portion to the departure hub (real fuel in the user's vehicle) + typical flight & ferry estimates between hubs + destination land note + disclaimer. Never quote a continuous land distance for a sea/air trip.
 
-## Where we left off (session end · 2026-07-05, session 5 — v1.0 FROZEN, awaiting submission)
+## Where we left off (session end · 2026-07-06, session 6 — v1.0 SUBMITTED to the App Store, in review)
 
-**🏁 v1.0 is feature-complete and FROZEN. `main` is tagged `v1.0` at commit `9a6085b` (build 92).** No more features, no more fixes — the only remaining work is the App Store submission mechanics (blocked ~24h on Apple's upload cap; see the task list below).
+**🚀 v1.0 is SUBMITTED to the App Store and awaiting Apple Review.** The session-5 freeze was lifted mid-session; several improvements landed post-tag (see below), so the submitted binary is **build 99** — *ahead* of the `v1.0` git tag.
 
-**State:** builds warning-clean (Swift 6, iOS 17+), **248 tests passing**, everything committed + pushed to `github.com/JimwellC/aigos` (private, `main`, tag `v1.0`). Build number = git commit count. **Latest on TestFlight: build 84** — builds **90/91/92 did NOT upload** (Apple daily upload-limit 90382; see below). So TestFlight is missing the calm-animations pass (90), the onboarding feature screen (91), and the final metadata build (92).
+**Submission status:**
+- **Submitted:** 2026-07-06 at **01:49 AM**. **Build 99.** Awaiting Apple Review (typically **24–48h**).
+- **Submission ID:** `f6b5506c-c1b3-4454-9266-ced8f712b5f8`.
+- **Apple daily upload cap (90382) has CLEARED** — build 99 uploaded to TestFlight cleanly on 2026-07-06 (~00:15) via `fastlane beta`, then submitted for review.
+- **Metadata unchanged** from session 5 (privacy_url `notion.site`, support_url FB, review phone `+63 928 960 6868`). ASC web-UI settings (Category = Navigation, Age 4+, price, App Privacy labels mirroring `PrivacyInfo.xcprivacy`) as previously set.
 
-**v1.0 submission status (as of session 5 end):**
-- **Code frozen** at build 92 = tag `v1.0`. Do NOT commit app changes before the first successful upload, or the build number drifts from the tag (a metadata-only fix would need a re-tag).
-- **Metadata finalized** in `fastlane/metadata/`: **privacy_url** = `https://ritzy-nebula-f7d.notion.site/aigos-Privacy-Policy-2d41569dab8180cc9cd6eef55d2c331d` (verified public — `notion.site`, no login gate; the old `app.notion.com` link was a login wall → would've been rejected); **support_url** = `https://www.facebook.com/jimwell.calma.2024/`; review **phone** = `+63 928 960 6868`.
-- **BLOCKER: Apple daily upload limit (error 90382).** Three upload attempts on 2026-07-05 all failed (build 91 beta, build 92 release, build 92 beta) — we shipped too many builds in one day (84→92). Resets in ~24h. `fastlane release`/`beta` archive + sign fine; only Apple's server rejects the binary upload. **Per the new Build & Deploy Rules, only push when the user explicitly asks.**
+**⚠️ Build-number vs tag drift (deliberate this time).** The `v1.0` git tag is at `bd2df4c` (build 96), but the **submitted build is 99** (`4054b1f` + the drivingReply fix, `main` now at `088438f`). Build 99 = everything in the tag PLUS the post-freeze work below. **If you want the tag to match the shipped binary, move `v1.0` to HEAD (`git tag -f -a v1.0 088438f` + force-push).**
 
-**▶ NEXT-SESSION TASK LIST (v1.0 submission — do these when the user asks, after the ~24h upload-limit reset):**
-1. **`cd ~/Documents/Aigos && fastlane release`** — uploads build 92's binary + metadata to App Store Connect (no auto-submit; `submit_for_review: false`). Metadata upload is idempotent. (Only on explicit user request.)
-2. **Upload screenshots** to App Store Connect (6.7"; the `fastlane screenshots` lane isn't wired — `skip_screenshots(true)` — so do it in the ASC web UI, or drop PNGs in `fastlane/screenshots/en-US/` first).
-3. **Verify metadata** in ASC (name/subtitle/description/keywords/promo/release notes/support & privacy URLs/review phone).
-4. **Set in the ASC web UI (deliver can't do these):** **Category = Navigation**, **Age rating = 4+**, **Price/Availability**, and **App Privacy nutrition labels** — mirror `PrivacyInfo.xcprivacy`: **Location → Precise Location**, purpose **App Functionality**, **Not Linked**, **Not used for Tracking**; everything else Not Collected. (Full label + Notion-policy drafts are in this session's chat.)
-5. **Click Submit for Review** (manual — nothing auto-submits).
+**Post-freeze work shipped IN build 99 (all committed + pushed to `main`):**
+- **GPS tracking accuracy + short-trip handling** — `kCLLocationAccuracyBest` + 10 m filter; bad-point filtering (reject accuracy ≥50 m / negative speed / >500 m-in-≤1 s teleports); <3 km short-trip guidance instead of a % ; <30 s min-duration guard; accuracy-context bands; suppress profile-update on inaccurate short trips. Pure logic in `TripMetrics` (unit-tested).
+- **Pre-submission fixes (F3/F4/F8/F9):** autocomplete now resolves to the *exact tapped coordinate* (`@pin:` keys — fixes same-name town collisions like San Fernando); `AddVehicleView` save never silently fails (validation + error alert + rollback + success haptic); ferry/flight fares show "(estimated)" ranges; removed 2 MKLocalSearch-verified wrong landmark coords (LTO East Ave ~840 m off, Nueva Ecija Capitol ~2.5 km off).
+- **Conversation memory in Talk to aigos** — in-memory `TalkContext` (separate trip + vehicle layers); follow-ups: condition stacking, round trip, split/per-person, fuel swap, "how far?", cheaper, confirmations, reset — English + Tagalog — with a "↩ Following up on:" indicator + before/after diff. Pure `FollowUp` / `ConversationContext.swift` (unit-tested). `FollowUp.swift` folded into `ConversationContext.swift`.
+- **Chat-based fuel-price editing** — "Update Premium 95 to 73" (+ Tagalog "Palitan…"), inline **Confirm/Cancel** buttons, writes user-edited (pencil shows on Prices tab, `PriceService.update`), batch "update all prices", price check + weekly-staleness reminder, 40–200 validation. Pure `PriceChatParser.swift` (unit-tested).
+- **drivingReply fix** — "how much to drive to X" (and Tagalog phrasings the normalizer rewrites) no longer return the driving score instead of a trip cost.
+
+**State:** builds warning-clean (Swift 6, iOS 17+), **283 tests passing**, all committed + pushed (`github.com/JimwellC/aigos`, `main` at `088438f`). Build number = git commit count. **On TestFlight: build 99.** App Store screenshots live in `docs/app-store/screenshots-raw/` (unframed) and `docs/app-store/screenshots-simple/` (phone frame + amber gradient + caption), both **1284×2778 (6.5")**. The programmatic "creative" compositions were scrapped (elements felt disconnected — that work needs a real designer).
+
+**▶ WHEN APPROVED (action list):**
+1. **Click "Release"** in App Store Connect to go live (manual — the submission does NOT auto-release).
+2. **Share the App Store link** on Facebook / TikTok.
+3. **Post in Filipino driver groups.**
+4. **Start v1.1 planning.** ⚠️ Note: the three items originally named for v1.1 — **GPS improvements, conversation memory, price-update-via-chat — ALREADY SHIPPED in build 99.** So v1.1 = polish/iterate on those + the remaining roadmap (remote DOE price fetch, gas-station finder, widgets, Apple Watch; see the v1.1 Roadmap section below).
+5. **Create the `v1.1` branch AFTER v1.0 goes live.**
+
+**Build & Deploy note:** the old "code frozen — don't commit before first upload" rule is now moot (v1.0 is submitted). Normal flow resumes: keep committing to `main`; `fastlane beta`/`release` only on explicit request each time (Build & Deploy Rules still apply).
 
 **Earlier session-5 work (all committed):** builds 74–84 (three v1.1 features + foreground-only tracking crash fix + Feature 4 Smart Driving Insights + haptics pass + bug sweep), then: **minimal-haptics** rule (only 6 completion/confirmation haptics), the **FoodPanda/Grab tracking bar redesign** (minimized bar default + tap-to-expand bottom sheet, global in `ContentView`), the **first-End black-screen fix** (`.sheet(item:)` so the comparison data is never nil at present time + a too-short guard), the **calm-animation pass** (springs → easeOut, no matchedGeometry/bounce, `.opacity` transitions — kept only the result cost count-up spring), the **Talk auto-scroll fix**, and the **onboarding feature-highlights screen** (new 5-screen flow: Welcome → Feature highlights → Add vehicle → Driving → Prices; progress bar denominator 3→4). See the per-topic blocks below for detail.
 
