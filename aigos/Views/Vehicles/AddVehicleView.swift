@@ -30,6 +30,7 @@ struct AddVehicleView: View {
     @State private var didLoad = false
     @State private var showingForm = false     // false = database search step (new vehicles)
     @State private var selectedModel: String?  // the picked DB model (for the checkmark)
+    @State private var saveError: String?      // non-nil → save-failed alert; never dismiss silently
 
     private var isEditing: Bool { editing != nil }
 
@@ -73,6 +74,14 @@ struct AddVehicleView: View {
                 }
             }
             .onAppear(perform: load)
+            .alert("Couldn't save vehicle", isPresented: Binding(
+                get: { saveError != nil },
+                set: { if !$0 { saveError = nil } }
+            )) {
+                Button("OK", role: .cancel) { saveError = nil }
+            } message: {
+                Text(saveError ?? "")
+            }
             .navigationTitle(navTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Color.aigosAmberDeep, for: .navigationBar)
@@ -220,10 +229,20 @@ struct AddVehicleView: View {
     }
 
     private func save() {
-        guard let efficiency else { return }
-        let kmL = fuelUnit.kmL(fromDisplay: efficiency)   // store canonical km/L
+        // Validation — defensive; the Save button is already gated by `canSave`, but
+        // never proceed (or dismiss) on invalid input. Surface a reason instead.
         let trimmedName = name.trimmingCharacters(in: .whitespaces)
+        guard !trimmedName.isEmpty else {
+            saveError = "Please enter a name for your vehicle."
+            return
+        }
+        guard let efficiency, efficiency > 0 else {
+            saveError = "Enter a fuel efficiency greater than 0 (\(fuelUnit.label))."
+            return
+        }
+        let kmL = fuelUnit.kmL(fromDisplay: efficiency)   // store canonical km/L
 
+        let succeeded: Bool
         if let v = editing {
             v.name = trimmedName
             v.type = type
@@ -232,13 +251,9 @@ struct AddVehicleView: View {
             v.tankCapacityL = tankCapacityL
             v.manufacturingYear = year
             v.maintenanceStatus = maintenance
-            if makeDefault {
-                // Fetch-clears-sets-saves once via the single safe path.
-                VehicleProfile.setAsDefault(v, context: context)
-            } else {
-                saveContext()
-            }
-            selectedVehicleID = v.id
+            // setAsDefault fetch-clears-sets-saves once and reports success/failure.
+            succeeded = makeDefault ? VehicleProfile.setAsDefault(v, context: context) : persist()
+            if succeeded { selectedVehicleID = v.id }
         } else {
             let makeItDefault = makeDefault || vehicles.isEmpty
             let vehicle = VehicleProfile(
@@ -250,22 +265,34 @@ struct AddVehicleView: View {
             vehicle.drivingProfile = profile
             context.insert(vehicle)
             context.insert(profile)
-            if makeItDefault {
-                // Clears any other default and saves once, atomically.
-                VehicleProfile.setAsDefault(vehicle, context: context)
+            succeeded = makeItDefault ? VehicleProfile.setAsDefault(vehicle, context: context) : persist()
+            if succeeded {
+                selectedVehicleID = vehicle.id
             } else {
-                saveContext()
+                // Roll back so a failed save doesn't leave orphaned, unpersisted objects.
+                context.delete(vehicle)
+                context.delete(profile)
             }
-            selectedVehicleID = vehicle.id
         }
-        dismiss()
+
+        if succeeded {
+            Haptics.success()   // confirmation the vehicle was saved (a completion event)
+            dismiss()
+        } else {
+            saveError = "Something went wrong saving your vehicle. Please try again."
+        }
     }
 
-    private func saveContext() {
-        do { try context.save() } catch {
+    /// Persist the context, returning whether it succeeded (never silently swallows).
+    private func persist() -> Bool {
+        do {
+            try context.save()
+            return true
+        } catch {
             #if DEBUG
             print("⚠️ AddVehicleView save failed: \(error)")
             #endif
+            return false
         }
     }
 }

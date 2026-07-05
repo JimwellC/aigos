@@ -298,7 +298,8 @@ enum GazetteerData {
             ("Cardinal Santos Medical Center", 14.6010, 121.0490, ["cardinal santos"]),
             ("PITX", 14.5090, 120.9930, ["pitx", "paranaque integrated terminal"]),
             ("Malacañang Palace", 14.5940, 120.9940, ["malacanang", "malacañang"]),
-            ("LTO East Avenue", 14.6480, 121.0500, ["lto main", "lto east ave"]),
+            // "LTO East Avenue" removed: stored coord was ~840 m off the actual office
+            // (MKLocalSearch-verified). Better to omit than ship a wrong landmark pin.
             ("DFA Aseana", 14.5290, 120.9910, ["dfa", "dfa aseana"]),
             ("NAIA Terminal 3", 14.5090, 121.0170, ["naia", "naia t3", "naia terminal 3", "airport", "manila airport"]),
             ("Manila North Harbor", 14.6080, 120.9640, ["north harbor", "pier 4", "manila pier"]),
@@ -443,7 +444,8 @@ enum GazetteerData {
             ("Robinsons Cabanatuan", 15.45986, 120.94986, ["robinsons cabanatuan"]),
             ("Palayan City", 15.54550, 121.08710, ["palayan"]),
             ("San Jose City", 15.79026, 120.98925, ["san jose nueva ecija"]),
-            ("Nueva Ecija Provincial Capitol", 15.55646, 121.09476, ["nueva ecija capitol"]),
+            // "Nueva Ecija Provincial Capitol" removed: stored coord was ~2.5 km off the
+            // actual capitol (MKLocalSearch-verified). Palayan City covers the area.
         ])
         g("Zambales", [
             ("Subic Bay Freeport Zone", 14.78899, 120.27987, ["sbma", "subic freeport", "subic bay"]),

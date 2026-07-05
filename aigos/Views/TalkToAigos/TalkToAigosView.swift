@@ -535,7 +535,7 @@ struct TalkToAigosView: View {
         if let ferry = TravelRoutes.ferry(from: fromHub, to: toHub) {
             var t = "🚢 Ferry — \(fromHub) → \(toHub): ~\(hoursText(ferry.hours)), \(rangeText(ferry.minPHP, ferry.maxPHP))"
             if let op = ferry.operatorName { t += " (\(op))" }
-            if let car = ferry.withCarPHP { t += "; +PHP \(Int(car)) with a car (ro-ro)" }
+            if let car = ferry.withCarPHP { t += "; about +PHP \(Int(car).formatted()) with a car (ro-ro, estimated)" }
             lines.append(t + ".")
         }
         if TravelRoutes.flight(from: fromHub, to: toHub) == nil && TravelRoutes.ferry(from: fromHub, to: toHub) == nil {
@@ -568,7 +568,7 @@ struct TalkToAigosView: View {
     }
 
     private func rangeText(_ lo: Double, _ hi: Double) -> String {
-        "PHP \(Int(lo).formatted()) – \(Int(hi).formatted())"
+        "PHP \(Int(lo).formatted()) – \(Int(hi).formatted()) (estimated)"
     }
 
     private func estimate(for query: TripQuery) -> ChatMessage {

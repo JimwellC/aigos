@@ -100,4 +100,33 @@ final class PlaceSearchTests: XCTestCase {
         XCTAssertGreaterThan(GazetteerRouteResolver.entries.count, 150)
         XCTAssertTrue(GazetteerRouteResolver.entries.allSatisfy { !$0.subtitle.isEmpty && !$0.title.isEmpty })
     }
+
+    // MARK: - F-3: a tapped suggestion always resolves to its exact coordinate
+
+    /// Each gazetteer suggestion embeds the entry's precise coordinate (like a map
+    /// pin), so selecting it can never re-resolve to a different same-named place.
+    func testSuggestionKeyResolvesToExactCoordinate() {
+        for q in ["Manila", "Batangas City", "Cebu City", "Baguio", "Davao"] {
+            guard let s = PlaceSearch.suggestions(for: q, personalPlaces: [])
+                .first(where: { !$0.isPersonal }) else {
+                XCTFail("no gazetteer suggestion for \(q)"); continue
+            }
+            XCTAssertTrue(s.resolveKey.hasPrefix("@pin:"), "\(q): key should embed a coordinate")
+            guard let resolved = PlaceResolver.point(for: s.resolveKey, personalPlaces: []),
+                  let expected = GazetteerRouteResolver.entry(for: s.title)?.point else {
+                XCTFail("\(q): key did not resolve"); continue
+            }
+            XCTAssertEqual(resolved.lat, expected.lat, accuracy: 0.0001, "\(q) lat")
+            XCTAssertEqual(resolved.lon, expected.lon, accuracy: 0.0001, "\(q) lon")
+        }
+    }
+
+    /// F-9 regression: coordinates removed for being wrong are gone; nearby valid
+    /// places still resolve.
+    func testRemovedWrongLandmarksAreGone() {
+        XCTAssertNil(GazetteerRouteResolver.index["lto east ave"])
+        XCTAssertNil(GazetteerRouteResolver.index["nueva ecija capitol"])
+        XCTAssertTrue(GazetteerRouteResolver.isPlace("palayan"))   // still covered nearby
+        XCTAssertTrue(GazetteerRouteResolver.isPlace("dfa"))       // verified entry kept
+    }
 }

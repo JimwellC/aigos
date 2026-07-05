@@ -51,9 +51,14 @@ enum PlaceSearch {
         for entry in ranked {
             guard !seenKeys.contains(entry.key) else { continue }
             seenKeys.insert(entry.key)
+            // Resolve to the entry's EXACT coordinate (encoded like a map pin) rather
+            // than re-looking-up by title-key. Titles collide (e.g. two "San Fernando",
+            // "Binondo", "Boracay"), and `index`/`entry(for:)` keep only the first —
+            // so a title-key could resolve to a different place than the one tapped.
+            // Embedding the coordinate guarantees the picked suggestion is what's used.
             results.append(PlaceSuggestion(
                 id: entry.key, title: entry.title, subtitle: entry.subtitle,
-                resolveKey: entry.key, isPersonal: false
+                resolveKey: "@pin:\(entry.point.lat),\(entry.point.lon)", isPersonal: false
             ))
             if results.count >= limit { break }
         }
