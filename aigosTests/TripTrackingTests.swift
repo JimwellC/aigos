@@ -48,6 +48,64 @@ final class TripTrackingTests: XCTestCase {
         XCTAssertEqual(TripMetrics.avgSpeedKmh(distanceKm: 60, seconds: 0), 0)       // guard
     }
 
+    // MARK: - GPS quality gating
+
+    func testAcceptGPSPoint() {
+        // Good fix: fine accuracy, valid speed.
+        XCTAssertTrue(TripMetrics.acceptGPSPoint(horizontalAccuracy: 8, speedMetersPerSec: 12))
+        XCTAssertTrue(TripMetrics.acceptGPSPoint(horizontalAccuracy: 0, speedMetersPerSec: 0))
+        // Coarse accuracy (>= 50 m) rejected.
+        XCTAssertFalse(TripMetrics.acceptGPSPoint(horizontalAccuracy: 50, speedMetersPerSec: 12))
+        XCTAssertFalse(TripMetrics.acceptGPSPoint(horizontalAccuracy: 120, speedMetersPerSec: 12))
+        // Invalid negative accuracy (CoreLocation sentinel) rejected.
+        XCTAssertFalse(TripMetrics.acceptGPSPoint(horizontalAccuracy: -1, speedMetersPerSec: 12))
+        // Invalid negative speed rejected.
+        XCTAssertFalse(TripMetrics.acceptGPSPoint(horizontalAccuracy: 8, speedMetersPerSec: -1))
+    }
+
+    func testPlausibleSegment() {
+        // Normal driving legs are kept.
+        XCTAssertTrue(TripMetrics.isPlausibleSegment(meters: 12, seconds: 1))
+        XCTAssertTrue(TripMetrics.isPlausibleSegment(meters: 400, seconds: 15))
+        // A 500 m+ jump within a second is noise.
+        XCTAssertFalse(TripMetrics.isPlausibleSegment(meters: 600, seconds: 1))
+        XCTAssertFalse(TripMetrics.isPlausibleSegment(meters: 800, seconds: 0))
+        // Implied speed > 100 m/s (~360 km/h) is impossible for a car.
+        XCTAssertFalse(TripMetrics.isPlausibleSegment(meters: 1500, seconds: 10))
+    }
+
+    // MARK: - Trip-quality thresholds
+
+    func testShortTripAndDuration() {
+        XCTAssertTrue(TripMetrics.isShortTrip(distanceKm: 1.2))
+        XCTAssertTrue(TripMetrics.isShortTrip(distanceKm: 2.99))
+        XCTAssertFalse(TripMetrics.isShortTrip(distanceKm: 3))
+        XCTAssertFalse(TripMetrics.isShortTrip(distanceKm: 12))
+        XCTAssertTrue(TripMetrics.shortTripMessage(distanceKm: 1.2).contains("1.2 km"))
+
+        XCTAssertFalse(TripMetrics.isTrackingLongEnough(seconds: 29))
+        XCTAssertTrue(TripMetrics.isTrackingLongEnough(seconds: 30))
+        XCTAssertTrue(TripMetrics.isTrackingLongEnough(seconds: 300))
+    }
+
+    func testAccuracyContextBands() {
+        XCTAssertEqual(TripMetrics.accuracyContext(percent: 100), "🎯 Very accurate estimate!")
+        XCTAssertEqual(TripMetrics.accuracyContext(percent: 90), "🎯 Very accurate estimate!")
+        XCTAssertEqual(TripMetrics.accuracyContext(percent: 82), "👍 Good estimate")
+        XCTAssertEqual(TripMetrics.accuracyContext(percent: 60), "📊 Moderate — factors like traffic and detours affected this")
+        XCTAssertEqual(TripMetrics.accuracyContext(percent: 40), "📍 Large difference — this may be due to GPS signal, detours, or a very short trip")
+    }
+
+    func testShouldSuggestProfileUpdate() {
+        // Inaccurate AND short → suppress.
+        XCTAssertFalse(TripMetrics.shouldSuggestProfileUpdate(accuracyPercent: 55, distanceKm: 2))
+        XCTAssertFalse(TripMetrics.shouldSuggestProfileUpdate(accuracyPercent: 69, distanceKm: 4.9))
+        // Accurate (even if short) → allow.
+        XCTAssertTrue(TripMetrics.shouldSuggestProfileUpdate(accuracyPercent: 95, distanceKm: 2))
+        // Long (even if inaccurate) → allow.
+        XCTAssertTrue(TripMetrics.shouldSuggestProfileUpdate(accuracyPercent: 55, distanceKm: 20))
+    }
+
     func testActualKmLFromFillUps() {
         // 45,230 → 45,680 = 450 km on 34.2 L → ~13.16 km/L.
         XCTAssertEqual(TripMetrics.actualKmL(odometerStart: 45230, odometerEnd: 45680, litresAtEnd: 34.2)!,

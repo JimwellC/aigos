@@ -33,7 +33,7 @@ struct ContentView: View {
     @State private var expanded = false
     @State private var showingEndConfirm = false
     @State private var comparison: ComparisonData?   // non-nil → comparison sheet shows
-    @State private var showingTooShort = false
+    @State private var tooShortMessage: String?      // non-nil → "trip too short" alert shows
 
     var body: some View {
         currentScreen
@@ -97,10 +97,13 @@ struct ContentView: View {
                 Button("End Trip", role: .destructive, action: endTracking)
                 Button("Cancel", role: .cancel) {}
             }
-            .alert("Trip too short to compare", isPresented: $showingTooShort) {
-                Button("OK", role: .cancel) {}
+            .alert("Trip too short", isPresented: Binding(
+                get: { tooShortMessage != nil },
+                set: { if !$0 { tooShortMessage = nil } }
+            )) {
+                Button("OK", role: .cancel) { tooShortMessage = nil }
             } message: {
-                Text("Drive at least 1 km for tracking to give useful results.")
+                Text(tooShortMessage ?? "")
             }
             // Tracking always starts MINIMIZED — the full dashboard only appears when
             // the user taps the bar. Reset on end, and minimize when switching tabs.
@@ -140,10 +143,17 @@ struct ContentView: View {
         Haptics.success()   // End Trip confirmation
         collapse()          // fade the bar out (isLive is now false → bar removes)
 
-        // Too short to compare (tapped Track then End, or no GPS points recorded).
+        // Ended almost immediately (tapped Track then End) — not enough time for a
+        // meaningful measurement. Don't save and don't present a comparison.
+        guard TripMetrics.isTrackingLongEnough(seconds: summary.actualDurationSeconds) else {
+            tooShortMessage = "Trip too short to measure accurately. Drive for at least 1 minute for tracking to work."
+            return
+        }
+
+        // Too short in distance to compare (no GPS points recorded / barely moved).
         // Don't save a junk 0-km trip and don't present a blank sheet.
         guard summary.actualDistanceKm >= 0.5 else {
-            showingTooShort = true
+            tooShortMessage = "Drive at least 1 km for tracking to give useful results."
             return
         }
 

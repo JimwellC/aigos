@@ -191,30 +191,63 @@ struct TripComparisonView: View {
                 }
                 .padding(Space.lg).glassCard(cornerRadius: Radius.lg)
 
-                Text("📊 Your estimate was \(Int(summary.accuracyPercent.rounded()))% accurate.")
-                    .rounded(16, weight: .bold).foregroundStyle(.white)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                Text("💡 Your \(vehicleName) worked out to about \(fmt(impliedKmL)) km/L on this route (rated: \(fmt(ratedKmL)) km/L).")
-                    .rounded(14).foregroundStyle(.white.opacity(0.85))
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                VStack(spacing: Space.sm) {
-                    Button {
-                        onUpdateProfile(impliedKmL)
-                        dismiss()
-                    } label: {
-                        Text("Update my profile →")
-                            .rounded(17, weight: .bold).foregroundStyle(Color.aigosAmberDeep)
-                            .frame(maxWidth: .infinity).padding(.vertical, 16)
-                            .background(Color.aigosAmber, in: Capsule())
+                // Short trips are dominated by GPS noise — show guidance, not a
+                // misleading accuracy percentage.
+                if TripMetrics.isShortTrip(distanceKm: summary.actualDistanceKm) {
+                    Text(TripMetrics.shortTripMessage(distanceKm: summary.actualDistanceKm))
+                        .rounded(15, weight: .semibold).foregroundStyle(.white)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Your estimate was \(Int(summary.accuracyPercent.rounded()))% accurate.")
+                            .rounded(16, weight: .bold).foregroundStyle(.white)
+                        Text(TripMetrics.accuracyContext(percent: summary.accuracyPercent))
+                            .rounded(14, weight: .semibold).foregroundStyle(.white.opacity(0.85))
+                            .fixedSize(horizontal: false, vertical: true)
                     }
-                    .buttonStyle(.plain)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                // Only offer to learn from trips reliable enough to trust.
+                if TripMetrics.shouldSuggestProfileUpdate(
+                    accuracyPercent: summary.accuracyPercent, distanceKm: summary.actualDistanceKm) {
+                    Text("💡 Your \(vehicleName) worked out to about \(fmt(impliedKmL)) km/L on this route (rated: \(fmt(ratedKmL)) km/L).")
+                        .rounded(14).foregroundStyle(.white.opacity(0.85))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    VStack(spacing: Space.sm) {
+                        Button {
+                            onUpdateProfile(impliedKmL)
+                            dismiss()
+                        } label: {
+                            Text("Update my profile →")
+                                .rounded(17, weight: .bold).foregroundStyle(Color.aigosAmberDeep)
+                                .frame(maxWidth: .infinity).padding(.vertical, 16)
+                                .background(Color.aigosAmber, in: Capsule())
+                        }
+                        .buttonStyle(.plain)
+                        Button {
+                            onKeep(); dismiss()
+                        } label: {
+                            Text("Keep current")
+                                .rounded(16, weight: .semibold).foregroundStyle(.white)
+                                .frame(maxWidth: .infinity).padding(.vertical, 14)
+                                .background(Color.white.opacity(0.14), in: Capsule())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                } else {
+                    Text("Drive a longer trip (10+ km) for a reliable profile update.")
+                        .rounded(14, weight: .semibold).foregroundStyle(.white.opacity(0.85))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
                     Button {
                         onKeep(); dismiss()
                     } label: {
-                        Text("Keep current")
+                        Text("Done")
                             .rounded(16, weight: .semibold).foregroundStyle(.white)
                             .frame(maxWidth: .infinity).padding(.vertical, 14)
                             .background(Color.white.opacity(0.14), in: Capsule())

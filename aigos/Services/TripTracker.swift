@@ -61,8 +61,11 @@ final class TripTracker: NSObject, CLLocationManagerDelegate, @unchecked Sendabl
     override init() {
         super.init()
         manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyHundredMeters   // battery-efficient
-        manager.distanceFilter = 50                                  // 50 m between updates
+        // High accuracy: HundredMeters was too coarse for short trips. We're
+        // foreground-only, so the extra battery draw is acceptable for the win in
+        // route precision. Bad fixes are filtered out in didUpdateLocations.
+        manager.desiredAccuracy = kCLLocationAccuracyBest            // was HundredMeters
+        manager.distanceFilter = 10                                 // 10 m between updates (was 50)
         manager.activityType = .automotiveNavigation
         manager.pausesLocationUpdatesAutomatically = true            // auto-pause when parked
         // FOREGROUND-ONLY (v1.0): no background location mode, so when the app
@@ -207,10 +210,19 @@ final class TripTracker: NSObject, CLLocationManagerDelegate, @unchecked Sendabl
     func locationManager(_ m: CLLocationManager, didUpdateLocations locs: [CLLocation]) {
         guard isTracking else { return }
         for loc in locs {
+            // Drop low-quality fixes (coarse/invalid accuracy, or invalid speed)
+            // before they pollute the route or the distance total.
+            guard TripMetrics.acceptGPSPoint(
+                horizontalAccuracy: loc.horizontalAccuracy,
+                speedMetersPerSec: loc.speed) else { continue }
             if let last = lastLocation {
-                let km = loc.distance(from: last) / 1000.0
-                // Ignore implausible jumps (GPS noise) — 50 m filter, so >5 km is bogus.
-                if km.isFinite, km < 5 { distanceKm += km }
+                let meters = loc.distance(from: last)
+                let dt = loc.timestamp.timeIntervalSince(last.timestamp)
+                // Discard GPS "teleports" (e.g. 500 m+ in a second). Keep the last
+                // good fix so the next point is measured against it, not the glitch.
+                guard TripMetrics.isPlausibleSegment(meters: meters, seconds: dt) else { continue }
+                let km = meters / 1000.0
+                if km.isFinite { distanceKm += km }
             }
             lastLocation = loc
             routeFlat.append(loc.coordinate.latitude)
